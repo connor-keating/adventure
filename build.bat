@@ -11,7 +11,7 @@ pushd "src"
 set assembly=application
 set compiler_flags=-g -std=c++20 -Wvarargs -Wall -Werror -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable
 set includes=-I/src/ -I../external/
-set linker_flags=-luser32
+set linker_flags=-luser32 -ld3d11 -ldxgi
 :: set defines=
 
 echo %assembly% compiling...
