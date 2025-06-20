@@ -56,7 +56,7 @@ void window_init(HWND *handle, HINSTANCE *instance)
   // Create win32 window class.
   WNDCLASSEXA window_class = {};
   window_class.cbSize = sizeof(window_class);
-  window_class.style = CS_HREDRAW|CS_VREDRAW, // |CS_OWNDC;
+  window_class.style = CS_HREDRAW|CS_VREDRAW; // |CS_OWNDC;
   window_class.lpfnWndProc = win32_message_callback;
   window_class.hInstance = *instance;
   window_class.hCursor = LoadCursor(0, IDC_ARROW);
@@ -124,12 +124,13 @@ int main(int argc, char **argv)
   window_init(&handle, &instance);
   i32 display_flags = SW_SHOW;
   ShowWindow(handle, display_flags);
+  UpdateWindow(handle);
   
   // Initialize D3D11
   IDXGISwapChain* swapchain;
   ID3D11Device* device;
   ID3D11DeviceContext* context;
-  ID3D11RenderTargetView* render_target;
+  ID3D11RenderTargetView* render_target; // Pointer to object containing render target info
 
   DXGI_SWAP_CHAIN_DESC scd = {};
   scd.BufferCount       = 1;                               // One backbuffer
@@ -156,11 +157,27 @@ int main(int argc, char **argv)
   );
 
   // Create render target view
-  ID3D11Texture2D* backBuffer = nullptr;
-  swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer);
-  device->CreateRenderTargetView(backBuffer, nullptr, &render_target);
-  backBuffer->Release();
+  ID3D11Texture2D* backbuffer = nullptr;
+  swapchain->GetBuffer(
+    0,                          // Number of backbuffers we only have one so 0
+    __uuidof(ID3D11Texture2D),  // ID of the COM object
+    (void**)&backbuffer         // Location of texture object.
+  );
+  // Create the render target object
+  device->CreateRenderTargetView(backbuffer, nullptr, &render_target);
+  // Release pointer because its now being handled by render target
+  backbuffer->Release();
   context->OMSetRenderTargets(1, &render_target, nullptr);
+  
+  // Set the viewport
+  RECT rect;
+  GetClientRect(handle, &rect);
+  D3D11_VIEWPORT viewport = {};
+  viewport.TopLeftX     = rect.left;
+  viewport.TopLeftY     = rect.top;
+  viewport.Width        = rect.right;
+  viewport.Height       = rect.bottom;
+  context->RSSetViewports(1, &viewport);
 
   is_running = true;
   while (is_running)
@@ -168,7 +185,7 @@ int main(int argc, char **argv)
     message_process(handle);
 
     // Render frame
-    float color[4] = { 0.1f, 0.1f, 0.2f, 1.0f };
+    f32 color[4] = { 0.5f, 0.0f, 0.0f, 1.0f };
     context->ClearRenderTargetView(render_target, color);
     swapchain->Present(1, 0); // vsync on
   }
