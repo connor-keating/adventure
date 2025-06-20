@@ -1,0 +1,10 @@
+# Directories
+bin/
+stash/
+assets/
+external/
+backup/
+
+# Files
+scratch.h
+todo.md
