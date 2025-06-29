@@ -185,7 +185,7 @@ int main(int argc, char **argv)
     message_process(handle);
 
     // Render frame
-    f32 color[4] = { 0.5f, 0.0f, 0.0f, 1.0f };
+    f32 color[4] = {0.0f, 0.325f, 0.282f, 1.0f};
     context->ClearRenderTargetView(render_target, color);
     swapchain->Present(1, 0); // vsync on
   }
