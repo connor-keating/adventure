@@ -3,10 +3,16 @@
 
 #include <windows.h>
 #include <stdio.h>
-#include <d3d11.h>
-#include <dxgi.h>
-#include <d3dcompiler.h>
 
+#if defined(DX11)
+
+#include "render_dx11.cpp"
+
+#elif defined(OPENGL)
+printf("OpenGL\n");
+#else
+printf("No renderer selected.");
+#endif
 
 global bool is_running;
 
@@ -37,7 +43,7 @@ void message_process(HWND handle)
   bool32 message_current = true;
   while (message_current)
   {
-    message_current = PeekMessageA(&message, handle, 0, 0, PM_REMOVE);
+    message_current = PeekMessageA(&message, NULL, 0, 0, PM_REMOVE);
     // This section basically sends the message to the loop we setup with our window. (win32_message_procedure_ansi)
     TranslateMessage(&message); // turn keystrokes into characters
     DispatchMessageA(&message); // tell OS to call window procedure
@@ -125,8 +131,11 @@ int main(int argc, char **argv)
   i32 display_flags = SW_SHOW;
   ShowWindow(handle, display_flags);
   UpdateWindow(handle);
+
   
   // Initialize D3D11
+  render_state *renderer = render_init();
+
   IDXGISwapChain* swapchain;
   ID3D11Device* device;
   ID3D11DeviceContext* context;
@@ -190,6 +199,7 @@ int main(int argc, char **argv)
     swapchain->Present(1, 0); // vsync on
   }
 
+  render_close(renderer);
   // close and release all existing COM objects
   swapchain->Release();
   device->Release();
