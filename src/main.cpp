@@ -1,24 +1,11 @@
-
 #include "core.cpp"
 
 #include <windows.h>
 #include <stdio.h>
-
 #include <d3d11.h>
 #include <dxgi.h>
 #include <d3dcompiler.h>
 
-
-#if defined(DX11)
-
-// #include "render_dx11.cpp"
-
-#elif defined(OPENGL)
-
-#include "render_opengl.cpp"
-
-#else
-#endif
 
 global bool is_running;
 
@@ -49,7 +36,7 @@ void message_process(HWND handle)
   bool32 message_current = true;
   while (message_current)
   {
-    message_current = PeekMessageA(&message, NULL, 0, 0, PM_REMOVE);
+    message_current = PeekMessageA(&message, handle, 0, 0, PM_REMOVE);
     // This section basically sends the message to the loop we setup with our window. (win32_message_procedure_ansi)
     TranslateMessage(&message); // turn keystrokes into characters
     DispatchMessageA(&message); // tell OS to call window procedure
@@ -138,74 +125,60 @@ int main(int argc, char **argv)
   ShowWindow(handle, display_flags);
   UpdateWindow(handle);
 
- // Initialize D3D11
   IDXGISwapChain* swapchain;
   ID3D11Device* device;
   ID3D11DeviceContext* context;
-  ID3D11RenderTargetView* render_target; // Pointer to object containing render target info
+  ID3D11RenderTargetView* render_target;
 
   DXGI_SWAP_CHAIN_DESC scd = {};
-  scd.BufferCount       = 1;                               // One backbuffer
-  scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;      // 32-bit color
-  scd.BufferUsage       = DXGI_USAGE_RENDER_TARGET_OUTPUT; // How to use the swapchain
-  scd.OutputWindow      = handle;                          // window handle
-  scd.SampleDesc.Count  = 1;                               // How many multisamples
-  scd.Windowed          = true;                            // windowed / full-screen mode
+  scd.BufferCount = 1;
+  scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+  scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+  scd.OutputWindow = handle;                  // <-- your Win32 HWND
+  scd.SampleDesc.Count = 1;
+  scd.Windowed = TRUE;
 
-  D3D_FEATURE_LEVEL actual_level;
-  UINT flags = D3D11_CREATE_DEVICE_DEBUG;
   D3D11CreateDeviceAndSwapChain(
       nullptr,
       D3D_DRIVER_TYPE_HARDWARE,
       nullptr,
-      flags,
+      0,
       nullptr, 0,
       D3D11_SDK_VERSION,
       &scd,
       &swapchain,
       &device,
-      &actual_level,
+      nullptr,
       &context
   );
 
   // Create render target view
-  ID3D11Texture2D* backbuffer = nullptr;
-  swapchain->GetBuffer(
-    0,                          // Number of backbuffers we only have one so 0
-    __uuidof(ID3D11Texture2D),  // ID of the COM object
-    (void**)&backbuffer         // Location of texture object.
-  );
-  // Create the render target object
-  device->CreateRenderTargetView(backbuffer, nullptr, &render_target);
-  // Release pointer because its now being handled by render target
-  backbuffer->Release();
+  ID3D11Texture2D* backBuffer = nullptr;
+  swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer);
+  device->CreateRenderTargetView(backBuffer, nullptr, &render_target);
+  backBuffer->Release();
   context->OMSetRenderTargets(1, &render_target, nullptr);
-  
-  // Set the viewport
-  RECT rect;
-  GetClientRect(handle, &rect);
-  D3D11_VIEWPORT viewport = {};
-  viewport.TopLeftX     = rect.left;
-  viewport.TopLeftY     = rect.top;
-  viewport.Width        = rect.right;
-  viewport.Height       = rect.bottom;
-  context->RSSetViewports(1, &viewport);
 
+  
   is_running = true;
   while (is_running)
   {
     message_process(handle);
 
     // Render frame
-    f32 color[4] = {0.0f, 0.325f, 0.282f, 1.0f};
+    f32 color[4] = { 0.5f, 0.0f, 0.0f, 1.0f };
     context->ClearRenderTargetView(render_target, color);
     swapchain->Present(1, 0); // vsync on
+
   }
 
   // close and release all existing COM objects
+  render_target->Release();
   swapchain->Release();
-  device->Release();
   context->Release();
+  device->Release();
 
-  return 0; 
+
+  return 0;
 }
+
