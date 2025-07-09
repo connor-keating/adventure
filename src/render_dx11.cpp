@@ -12,3 +12,9 @@ struct render_state
   ID3D11DeviceContext* context;
   ID3D11RenderTargetView* render_target; // Pointer to object containing render target info
 };
+
+render_state render_init()
+{
+  render_state state = {};
+  return state;
+}

@@ -125,7 +125,7 @@ int main(int argc, char **argv)
   UpdateWindow(handle);
 
   // Initialize renderer
-  render_state renderer = {};
+  render_state renderer = render_init();
 
 
   DXGI_SWAP_CHAIN_DESC scd = {};
