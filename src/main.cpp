@@ -11,6 +11,9 @@
 struct render_state
 {
   IDXGISwapChain* swapchain;
+  ID3D11Device* device;
+  ID3D11DeviceContext* context;
+  ID3D11RenderTargetView* render_target;
 };
 
 
@@ -136,9 +139,6 @@ int main(int argc, char **argv)
   // Initialize renderer
   render_state renderer = {};
 
-  ID3D11Device* device;
-  ID3D11DeviceContext* context;
-  ID3D11RenderTargetView* render_target;
 
   DXGI_SWAP_CHAIN_DESC scd = {};
   scd.BufferCount = 1;
@@ -157,17 +157,17 @@ int main(int argc, char **argv)
       D3D11_SDK_VERSION,
       &scd,
       &renderer.swapchain,
-      &device,
+      &renderer.device,
       nullptr,
-      &context
+      &renderer.context
   );
 
   // Create render target view
   ID3D11Texture2D* backBuffer = nullptr;
   renderer.swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer);
-  device->CreateRenderTargetView(backBuffer, nullptr, &render_target);
+  renderer.device->CreateRenderTargetView(backBuffer, nullptr, &renderer.render_target);
   backBuffer->Release();
-  context->OMSetRenderTargets(1, &render_target, nullptr);
+  renderer.context->OMSetRenderTargets(1, &renderer.render_target, nullptr);
 
   
   is_running = true;
@@ -177,16 +177,16 @@ int main(int argc, char **argv)
 
     // Render frame
     f32 color[4] = {0.0f, 0.325f, 0.282f, 1.0f};
-    context->ClearRenderTargetView(render_target, color);
+    renderer.context->ClearRenderTargetView(renderer.render_target, color);
     renderer.swapchain->Present(1, 0); // vsync on
 
   }
 
   // close and release all existing COM objects
-  render_target->Release();
+  renderer.render_target->Release();
   renderer.swapchain->Release();
-  context->Release();
-  device->Release();
+  renderer.context->Release();
+  renderer.device->Release();
 
 
   return 0;
