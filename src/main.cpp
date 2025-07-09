@@ -125,39 +125,8 @@ int main(int argc, char **argv)
   UpdateWindow(handle);
 
   // Initialize renderer
-  render_state renderer = render_init();
+  render_state renderer = render_init(handle);
 
-
-  DXGI_SWAP_CHAIN_DESC scd = {};
-  scd.BufferCount = 1;
-  scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-  scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-  scd.OutputWindow = handle;                  // <-- your Win32 HWND
-  scd.SampleDesc.Count = 1;
-  scd.Windowed = TRUE;
-
-  D3D11CreateDeviceAndSwapChain(
-      nullptr,
-      D3D_DRIVER_TYPE_HARDWARE,
-      nullptr,
-      0,
-      nullptr, 0,
-      D3D11_SDK_VERSION,
-      &scd,
-      &renderer.swapchain,
-      &renderer.device,
-      nullptr,
-      &renderer.context
-  );
-
-  // Create render target view
-  ID3D11Texture2D* backBuffer = nullptr;
-  renderer.swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer);
-  renderer.device->CreateRenderTargetView(backBuffer, nullptr, &renderer.render_target);
-  backBuffer->Release();
-  renderer.context->OMSetRenderTargets(1, &renderer.render_target, nullptr);
-
-  
   is_running = true;
   while (is_running)
   {
