@@ -138,10 +138,7 @@ int main(int argc, char **argv)
   }
 
   // close and release all existing COM objects
-  renderer.render_target->Release();
-  renderer.swapchain->Release();
-  renderer.context->Release();
-  renderer.device->Release();
+  render_close(&renderer);
 
 
   return 0;

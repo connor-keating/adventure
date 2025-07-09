@@ -56,3 +56,11 @@ void frame_render(render_state *state)
   state->context->ClearRenderTargetView(state->render_target, color);
   state->swapchain->Present(1, 0); // vsync on
 }
+
+void render_close(render_state *state)
+{
+  state->render_target->Release();
+  state->swapchain->Release();
+  state->context->Release();
+  state->device->Release();
+}
