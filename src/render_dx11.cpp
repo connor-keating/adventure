@@ -7,19 +7,17 @@
 struct render_state
 {
   IDXGISwapChain* swapchain;
+  ID3D11Device* device;
+  ID3D11DeviceContext* context;
+  ID3D11RenderTargetView* render_target; // Pointer to object containing render target info
 };
 
 
-render_state *render_init()
+render_state render_init(HWND handle)
 {
   printf("Initializing D3D11.\n");
   // TODO: What from this function needs to go in here?
   render_state state = {};
-
-  IDXGISwapChain* swapchain;
-  ID3D11Device* device;
-  ID3D11DeviceContext* context;
-  ID3D11RenderTargetView* render_target; // Pointer to object containing render target info
 
   DXGI_SWAP_CHAIN_DESC scd = {};
   scd.BufferCount       = 1;                               // One backbuffer
@@ -39,24 +37,24 @@ render_state *render_init()
       nullptr, 0,
       D3D11_SDK_VERSION,
       &scd,
-      &swapchain,
-      &device,
+      &state.swapchain,
+      &state.device,
       &actual_level,
-      &context
+      &state.context
   );
 
   // Create render target view
   ID3D11Texture2D* backbuffer = nullptr;
-  swapchain->GetBuffer(
+  state.swapchain->GetBuffer(
     0,                          // Number of backbuffers we only have one so 0
     __uuidof(ID3D11Texture2D),  // ID of the COM object
     (void**)&backbuffer         // Location of texture object.
   );
   // Create the render target object
-  device->CreateRenderTargetView(backbuffer, nullptr, &render_target);
+  state.device->CreateRenderTargetView(backbuffer, nullptr, &state.render_target);
   // Release pointer because its now being handled by render target
   backbuffer->Release();
-  context->OMSetRenderTargets(1, &render_target, nullptr);
+  state.context->OMSetRenderTargets(1, &state.render_target, nullptr);
   
   // Set the viewport
   RECT rect;
@@ -66,16 +64,16 @@ render_state *render_init()
   viewport.TopLeftY     = rect.top;
   viewport.Width        = rect.right;
   viewport.Height       = rect.bottom;
-  context->RSSetViewports(1, &viewport);
-  return &state;
+  state.context->RSSetViewports(1, &viewport);
+  return state;
 }
 
 
-void render_frame(render_state  *state)
+void render_frame(render_state *state)
 {
   f32 color[4] = {0.0f, 0.325f, 0.282f, 1.0f};
-  context->ClearRenderTargetView(render_target, color);
-  swapchain->Present(1, 0); // vsync on
+  state->context->ClearRenderTargetView(state->render_target, color);
+  state->swapchain->Present(1, 0); // vsync on
 }
 
 
@@ -83,7 +81,7 @@ void render_close(render_state *state)
 {
   printf("Closing renderer.\n");
   // close and release all existing COM objects
-  swapchain->Release();
-  device->Release();
-  context->Release();
+  state->swapchain->Release();
+  state->device->Release();
+  state->context->Release();
 }
