@@ -1,20 +1,8 @@
 #include "core.cpp"
+#include "render_dx11.cpp"
 
 #include <windows.h>
 #include <stdio.h>
-#include <d3d11.h>
-#include <dxgi.h>
-#include <d3dcompiler.h>
-
-
-// Data types
-struct render_state
-{
-  IDXGISwapChain* swapchain;
-  ID3D11Device* device;
-  ID3D11DeviceContext* context;
-  ID3D11RenderTargetView* render_target;
-};
 
 
 // Globals
