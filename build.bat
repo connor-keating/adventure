@@ -9,7 +9,7 @@ if not exist %outdir% mkdir %outdir%
 pushd "src"
 
 set assembly=application
-set app_flags=-DOPENGL
+set app_flags=-DDX11
 set compiler_flags=-g -std=c++20 -Wvarargs -Wall -Werror -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable
 set includes=-I/src/ -I../external/
 set linker_flags=-luser32 -ld3d11 -ldxgi
