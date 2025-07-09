@@ -49,3 +49,10 @@ render_state render_init(HWND handle)
 
   return state;
 }
+
+void frame_render(render_state *state)
+{
+  f32 color[4] = {0.0f, 0.325f, 0.282f, 1.0f};
+  state->context->ClearRenderTargetView(state->render_target, color);
+  state->swapchain->Present(1, 0); // vsync on
+}

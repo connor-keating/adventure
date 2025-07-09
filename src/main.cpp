@@ -133,9 +133,7 @@ int main(int argc, char **argv)
     message_process(handle);
 
     // Render frame
-    f32 color[4] = {0.0f, 0.325f, 0.282f, 1.0f};
-    renderer.context->ClearRenderTargetView(renderer.render_target, color);
-    renderer.swapchain->Present(1, 0); // vsync on
+    frame_render(&renderer);
 
   }
 
