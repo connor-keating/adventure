@@ -3,13 +3,13 @@ struct render_state
 {
 };
 
-render_state render_init()
+render_state render_init(HWND handle)
 {
   render_state state = {};
   return state;
 }
 
-void render_frame(render_state *state)
+void frame_render(render_state *state)
 {
 }
 
