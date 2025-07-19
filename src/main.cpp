@@ -1,8 +1,11 @@
-#include "core.cpp"
-#include "render_dx11.cpp"
 
 #include <windows.h>
 #include <stdio.h>
+
+
+#include "core.cpp"
+#include "render_dx11.cpp"
+
 
 
 // Globals
