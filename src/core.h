@@ -180,6 +180,7 @@ void              arena_free_all(arena *a);
   {                                      \
     if(!(expression))                  \
     {                                  \
+      printf(message);                   \
       DEBUG_BREAK;                 \
     }                                  \
   }                                      
