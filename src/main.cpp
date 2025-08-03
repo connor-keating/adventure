@@ -4,7 +4,12 @@
 
 
 #include "core.cpp"
+
+#ifdef _DX11
 #include "render_dx11.cpp"
+#elif _OPENGL
+#include "render_opengl.cpp"
+#endif
 
 
 
