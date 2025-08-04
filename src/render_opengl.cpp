@@ -60,10 +60,20 @@ typedef ptrdiff_t   GLintptr;
 #define WGL_CONTEXT_FLAGS_ARB             0x2094
 #define WGL_CONTEXT_DEBUG_BIT_ARB         0x00000001
 #define WGL_CONTEXT_CORE_PROFILE_BIT_ARB  0x00000001
+#define GL_DEBUG_SEVERITY_HIGH            0x9146
+#define GL_DEBUG_SEVERITY_MEDIUM          0x9147
+#define GL_DEBUG_SEVERITY_LOW             0x9148
+#define GL_DEBUG_SOURCE_APPLICATION       0x824A
+#define GL_DEBUG_TYPE_ERROR               0x824C
 #pragma endregion
 
 
 #pragma region OpenGL Functions
+// Unique windows functions not supposed to be loaded with the others.
+typedef BOOL WINAPI glfunc_wglChoosePixelFormatARB(HDC hdc, const int *piAttribIList, const FLOAT *pfAttribFList, UINT nMaxFormats, int *piFormats, UINT *nNumFormats);
+typedef HGLRC WINAPI glfunc_wglCreateContextAttribsARB (HDC hDC, HGLRC hShareContext, const int *attribList);
+
+
 typedef void (APIENTRY  *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
 
 #define GL_FUNC_SIGNATURE(ret, name, ...) typedef ret WINAPI glfunc_##name(__VA_ARGS__);
@@ -101,7 +111,10 @@ typedef void (APIENTRY  *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum
     GL_FUNC_SIGNATURE(void, glUniform1i, GLint location, GLint v0)                                                                                          \
     GL_FUNC_SIGNATURE(void, glUniform4f, GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3)                                                    \
     GL_FUNC_SIGNATURE(void, glBufferSubData, GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid *data)                                           \
-    GL_FUNC_SIGNATURE(void, glDebugMessageCallback, GLDEBUGPROC callback, void *userParam) \
+    GL_FUNC_SIGNATURE(void, glDebugMessageCallback, GLDEBUGPROC callback, void *userParam)                                                                  \
+    GL_FUNC_SIGNATURE(void, glDebugMessageControl,	GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint *ids, GLboolean enabled)       \
+    GL_FUNC_SIGNATURE(void, glDebugMessageInsert, GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const char *message)               \
+
 
 
     // end of list 
@@ -142,29 +155,141 @@ bool opengl_load_functions(void)
 #pragma endregion
 
 
+#ifdef _DEBUG
 
-render_state render_init(HWND handle)
+static void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* user)
+{
+  if(severity == GL_DEBUG_SEVERITY_LOW || 
+     severity == GL_DEBUG_SEVERITY_MEDIUM ||
+     severity == GL_DEBUG_SEVERITY_HIGH)
+  {
+    char sentence_buffer[8192] = {0};
+    i32 char_written_count = sprintf_s(sentence_buffer, sizeof(sentence_buffer), "OpenGL Error: %s \033[0m", message);
+    ASSERT(false, sentence_buffer);
+  }
+  else
+  {
+    printf("OpenGL Error: %s\n", message);
+  }
+}
+
+#endif
+
+render_state render_init(HWND *handle_ptr, HINSTANCE *instance_ptr)
 {
   render_state state = {};
 
-  state.context = GetDC(handle);
-  // Set pixel format
-  PIXELFORMATDESCRIPTOR requestedPixelFormat = {}; 
-  requestedPixelFormat.nSize = sizeof(requestedPixelFormat); 
-  requestedPixelFormat.nVersion = 1; 
-  requestedPixelFormat.dwFlags = PFD_DRAW_TO_WINDOW|PFD_SUPPORT_OPENGL|PFD_DOUBLEBUFFER; 
-  requestedPixelFormat.cColorBits = 32; 
-  requestedPixelFormat.cAlphaBits = 8;
-  int givenPixelFormat = ChoosePixelFormat(state.context, &requestedPixelFormat);
-  // We got a format from windows
-  PIXELFORMATDESCRIPTOR givenFormatFilled = {};
-  DescribePixelFormat(state.context, givenPixelFormat, sizeof(givenPixelFormat), &givenFormatFilled);
-  bool successfullySetPixelFormat = SetPixelFormat(state.context, givenPixelFormat, &givenFormatFilled);
-  // Create context
-  HGLRC OpenGLRC = wglCreateContext(state.context);
-  bool successfullySetContext = wglMakeCurrent(state.context, OpenGLRC);
+  glfunc_wglChoosePixelFormatARB *wglChoosePixelFormatARB = 0;
+  glfunc_wglCreateContextAttribsARB *wglCreateContextAttribsARB = 0;
+
+  HWND handle = *handle_ptr;
+  // Use first window to load OpenGL stuff
+  {
+    HDC fakeDC = GetDC(handle);
+    PIXELFORMATDESCRIPTOR pixelFormat = {0};
+    pixelFormat.nSize = sizeof(pixelFormat);
+    pixelFormat.nVersion = 1;
+    pixelFormat.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+    pixelFormat.iPixelType = PFD_TYPE_RGBA;
+    pixelFormat.cColorBits = 32;
+    pixelFormat.cAlphaBits = 8;
+    pixelFormat.cDepthBits = 24;
+  
+    int chosenPixelFormat = ChoosePixelFormat(fakeDC, &pixelFormat);
+    ASSERT(chosenPixelFormat != 0, "ERROR: Failed to choose pixel format descriptor.");
+
+    int isPixelFormatSet = SetPixelFormat(fakeDC, chosenPixelFormat, &pixelFormat);
+    ASSERT(isPixelFormatSet != 0, "ERROR: Failed to set the pixel format descriptor.");
+
+    HGLRC fakeRC = wglCreateContext(fakeDC);
+    ASSERT(fakeRC != 0, "ERROR: Failed to create fake rendering context.");
+
+    int isFakeCurrent = wglMakeCurrent(fakeDC, fakeRC);
+    ASSERT(isFakeCurrent != 0, "ERROR: Failed to make the OpenGL rendering context the current rendering context.");
+
+    wglChoosePixelFormatARB    = (glfunc_wglChoosePixelFormatARB*) wglGetProcAddress("wglChoosePixelFormatARB");
+    wglCreateContextAttribsARB = (glfunc_wglCreateContextAttribsARB*) wglGetProcAddress("wglCreateContextAttribsARB");
+    bool loading_failed = (wglChoosePixelFormatARB == 0 || wglCreateContextAttribsARB == 0);
+    ASSERT(loading_failed == false, "ERROR: Failed to load OpenGL functions.");
+    wglMakeCurrent(fakeDC, 0);
+    wglDeleteContext(fakeRC);
+    ReleaseDC(handle, fakeDC);
+    DestroyWindow(handle);
+    UnregisterClassA("WINDOW_CLASS", *instance_ptr);
+    *handle_ptr = nullptr;
+    *instance_ptr = nullptr;
+  }
+
+  // Create the real window
+  {
+    // Re-create the window
+    window_init(handle_ptr, instance_ptr);
+    handle = *handle_ptr;
+    // Get the device context
+    state.context = GetDC(handle);
+    ASSERT(state.context != 0, "ERROR: Failed to get device context.");
+    const int pixelAttribs[] =
+    {
+      WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
+      WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
+      WGL_DOUBLE_BUFFER_ARB,  GL_TRUE,
+      WGL_SWAP_METHOD_ARB,    WGL_SWAP_COPY_ARB,
+      WGL_PIXEL_TYPE_ARB,     WGL_TYPE_RGBA_ARB,
+      WGL_ACCELERATION_ARB,   WGL_FULL_ACCELERATION_ARB,
+      WGL_COLOR_BITS_ARB,     32,
+      WGL_ALPHA_BITS_ARB,     8,
+      WGL_DEPTH_BITS_ARB,     24,
+      0 // Terminate with 0, otherwise OpenGL will throw an Error!
+    };
+    UINT numPixelFormats;
+    int pixelFormat = 0;
+    BOOL chosenPixelFormatARB = wglChoosePixelFormatARB(
+      state.context,
+      pixelAttribs,
+      0, // Float List
+      1, // Max Formats
+      &pixelFormat,
+      &numPixelFormats
+    );
+    ASSERT(chosenPixelFormatARB != 0, "ERROR: Failed to wglChoosePixelFormatARB");
+    PIXELFORMATDESCRIPTOR pixelFormatDescriptor = {0};
+    DescribePixelFormat(state.context, pixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pixelFormatDescriptor);
+    BOOL isPixelFormatSet = SetPixelFormat(state.context, pixelFormat, &pixelFormatDescriptor);
+    ASSERT(isPixelFormatSet != 0, "ERROR: Failed to set the pixel format.");
+    const int contextAttribs[] = {
+        WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+        WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+        WGL_CONTEXT_PROFILE_MASK_ARB, 
+        WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+        WGL_CONTEXT_FLAGS_ARB, 
+        WGL_CONTEXT_DEBUG_BIT_ARB,
+        0 // Terminate the Array
+    };
+    HGLRC renderingContext = wglCreateContextAttribsARB(state.context, 0, contextAttribs);
+    ASSERT(renderingContext != 0, "ERROR: Failed to create rendering context.");
+    BOOL isContextSet = wglMakeCurrent(state.context, renderingContext);
+    ASSERT(isContextSet != 0, "ERROR: Failed to set the device and rendering context.");
+  }
   // Load OpenGL functions
   opengl_load_functions();
+  // Enable debug function
+  glDebugMessageCallback(&gl_debug_callback, nullptr);
+  glEnable(GL_DEBUG_OUTPUT);
+  glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); 
+
+  /*
+  // Testing OpenGL debugging
+  glDebugMessageInsert(
+    GL_DEBUG_SOURCE_APPLICATION,
+    GL_DEBUG_TYPE_ERROR,
+    1,
+    GL_DEBUG_SEVERITY_HIGH,
+    -1,
+    "Manual test message\n"
+  );
+  */
+
+  glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
   // Set the viewport
   RECT rect;
   GetClientRect(handle, &rect);
