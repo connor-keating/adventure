@@ -114,6 +114,18 @@ void * platform_memory_alloc(void *mem_base, size_t mem_size)
 }
 
 
+int file_exists(const char *filepath)
+{
+  int exists = 0;
+  FILE *file = fopen(filepath, "r");
+  if (file) {
+    fclose(file);
+    exists =  1;
+  }
+  return exists;
+}
+
+
 /// @brief 
 /// @param file 
 /// @param scratch 
