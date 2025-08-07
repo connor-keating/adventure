@@ -309,8 +309,8 @@ void frame_render(render_state *state, arena *scratch)
   {
     size_t byte_count;
     // Vertex shader source
-    ASSERT(file_exists("assets\\shaders\\points.vert") == true, "ERROR Shader not found.");
-    const char* vertex_shader_source = read_file("assets\\shaders\\points.vert", scratch, &byte_count);
+    ASSERT(file_exists("shaders\\points.vert") == true, "ERROR Shader not found.");
+    const char* vertex_shader_source = read_file("shaders\\points.vert", scratch, &byte_count);
     /*
     const char* vertex_shader_source = 
       "#version 330 core\n"
