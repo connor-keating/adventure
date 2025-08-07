@@ -28,6 +28,13 @@ int main(int argc, char **argv)
   HWND handle;
   HINSTANCE instance;
 
+  // Allocate all program memory upfront.
+  void *memory_base = 0;
+  size_t memory_size = (size_t) Gigabytes(1);
+  void *raw_memory = platform_memory_alloc(memory_base, memory_size);
+  arena memory;
+  arena_init(&memory, raw_memory, memory_size);
+
   window_init(&handle, &instance);
 
   // Initialize renderer

@@ -105,6 +105,15 @@ void window_init(HWND *handle, HINSTANCE *instance)
   ASSERT(window_success, "Failed to resize and open window.");
 }
 
+
+void * platform_memory_alloc(void *mem_base, size_t mem_size)
+{
+  void *memory = VirtualAlloc(mem_base, mem_size, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+  ASSERT(memory, "ERROR: Unable to allocate application memory.");
+  return memory;
+}
+
+
 /// @brief 
 /// @param file 
 /// @param scratch 
