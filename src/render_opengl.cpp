@@ -308,6 +308,8 @@ void frame_render(render_state *state)
   if (!initialized)
   {
     // Vertex shader source
+    const char* vertex_shader_source = read_file("assets\\shaders\\points.vert", &scratch_arena);
+    /*
     const char* vertex_shader_source = 
       "#version 330 core\n"
       "layout (location = 0) in vec3 position;\n"
@@ -316,6 +318,7 @@ void frame_render(render_state *state)
       "    gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
       "    gl_PointSize = 10.0;\n"
       "}\n";
+    */
 
     // Fragment shader source  
     const char* fragment_shader_source = 
