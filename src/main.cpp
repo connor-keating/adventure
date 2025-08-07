@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     message_process(handle);
 
     // Render frame
-    frame_render(&renderer);
+    frame_render(&renderer, &memory);
 
   }
 

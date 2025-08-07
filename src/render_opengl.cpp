@@ -298,7 +298,7 @@ render_state render_init(HWND *handle_ptr, HINSTANCE *instance_ptr)
   return state;
 }
 
-void frame_render(render_state *state)
+void frame_render(render_state *state, arena *scratch)
 {
   static bool initialized = false;
   static GLuint point_shader_program = 0;
@@ -307,8 +307,10 @@ void frame_render(render_state *state)
   
   if (!initialized)
   {
+    size_t byte_count;
     // Vertex shader source
-    const char* vertex_shader_source = read_file("assets\\shaders\\points.vert", &scratch_arena);
+    ASSERT(file_exists("assets\\shaders\\points.vert") == true, "ERROR Shader not found.");
+    const char* vertex_shader_source = read_file("assets\\shaders\\points.vert", scratch, &byte_count);
     /*
     const char* vertex_shader_source = 
       "#version 330 core\n"
