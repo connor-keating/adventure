@@ -438,8 +438,11 @@ void frame_render(render_state *state)
 }
 
 
-void render_close(render_state *state)
+void render_close(render_state *state, render_program *prog)
 {
+  glDeleteVertexArrays(1, &prog->vao);
+  // glDeleteBuffers(1, &prog->vbo);
+  glDeleteProgram(prog->shader_program);
   HWND handle = WindowFromDC(state->context);
   ReleaseDC(handle, state->context);
 }

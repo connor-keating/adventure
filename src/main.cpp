@@ -62,7 +62,7 @@ int main(int argc, char **argv)
   }
 
   // close and release all existing COM objects
-  render_close(&renderer);
+  render_close(&renderer, &prog);
 
 
   return 0;
