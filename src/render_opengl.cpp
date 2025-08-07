@@ -359,6 +359,51 @@ void point_setup(arena *scratch, render_program *prog)
 }
 
 
+void tri_setup(arena *scratch, render_program *prog)
+{
+  f32 verts[] = {
+    -0.5f, -0.5f, 0.0f, // left
+     0.5f, -0.5f, 0.0f, // right
+     0.0f,  0.5f, 0.0f, // top
+  };
+  // Set up vertex attribute
+  glGenVertexArrays(1, &prog->vao);
+  // Bind VAO
+  glBindVertexArray(prog->vao);
+  // Set up vertex buffer object
+  u32 vbo;
+  glGenBuffers(1, &vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(verts[0]), (void*)0);
+  glEnableVertexAttribArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  // Shader program
+  size_t byte_count;
+  // Vertx shader source
+  const char* vertex_shader_source = read_file("shaders\\tri.vert", scratch, &byte_count);
+  // Fragment shader source  
+  const char* fragment_shader_source = read_file("shaders\\tri.frag", scratch, &byte_count);
+  // Create vertex shader
+  GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
+  glCompileShader(vertex_shader);
+  // Create fragment shader
+  GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
+  glCompileShader(fragment_shader);
+  // Create shader program
+  prog->shader_program = glCreateProgram();
+  glAttachShader(prog->shader_program, vertex_shader);
+  glAttachShader(prog->shader_program, fragment_shader);
+  glLinkProgram(prog->shader_program);
+  // Clean up shaders
+  glDeleteShader(vertex_shader);
+  glDeleteShader(fragment_shader);
+
+}
+
+
 void frame_init(render_state *state)
 {
   // Clear screen
@@ -366,13 +411,24 @@ void frame_init(render_state *state)
   glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void draw(render_program *prog)
+
+void draw_points(render_program *prog)
 {
   // Bind our program
   glUseProgram(prog->shader_program);
   glBindVertexArray(prog->vao);
   // Draw the point
   glDrawArrays(GL_POINTS, 0, 1);
+}
+
+
+void draw_triangles(render_program *prog)
+{
+  // Bind our program
+  glUseProgram(prog->shader_program);
+  glBindVertexArray(prog->vao);
+  // Draw the point
+  glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
   

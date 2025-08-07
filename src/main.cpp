@@ -42,7 +42,8 @@ int main(int argc, char **argv)
 
   // Set up point program
   render_program prog;
-  point_setup(&memory, &prog);
+  // point_setup(&memory, &prog);
+  tri_setup(&memory, &prog);
   arena_free_all(&memory);
 
   i32 display_flags = SW_SHOW;
@@ -55,7 +56,7 @@ int main(int argc, char **argv)
 
     // Render frame
     frame_init(&renderer);
-    draw(&prog);
+    draw_triangles(&prog);
     frame_render(&renderer);
 
   }
