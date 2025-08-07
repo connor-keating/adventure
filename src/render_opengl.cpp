@@ -311,25 +311,9 @@ void frame_render(render_state *state, arena *scratch)
     // Vertex shader source
     ASSERT(file_exists("shaders\\points.vert") == true, "ERROR Shader not found.");
     const char* vertex_shader_source = read_file("shaders\\points.vert", scratch, &byte_count);
-    /*
-    const char* vertex_shader_source = 
-      "#version 330 core\n"
-      "layout (location = 0) in vec3 position;\n"
-      "void main()\n"
-      "{\n"
-      "    gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
-      "    gl_PointSize = 10.0;\n"
-      "}\n";
-    */
 
     // Fragment shader source  
-    const char* fragment_shader_source = 
-      "#version 330 core\n"
-      "out vec4 FragColor;\n"
-      "void main()\n"
-      "{\n"
-      "    FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n"
-      "}\n";
+    const char* fragment_shader_source = read_file("shaders\\points.frag", scratch, &byte_count);
 
     // Create vertex shader
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
