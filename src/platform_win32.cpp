@@ -104,3 +104,25 @@ void window_init(HWND *handle, HINSTANCE *instance)
   );
   ASSERT(window_success, "Failed to resize and open window.");
 }
+
+/// @brief 
+/// @param file 
+/// @param scratch 
+/// @return 
+/// @note If reading text files you have to add a \0 char.
+const char * read_file(const char *file, arena *scratch, size_t *out_size)
+{
+  FILE *stream;
+  char *contents = 0;
+  fopen_s(&stream, file, "rb");
+  ASSERT(stream, "ERROR: Failed to read file.");
+  fseek(stream, 0, SEEK_END);
+  *out_size = ftell(stream);
+  contents = (char*) arena_alloc(scratch, *out_size);
+  fseek(stream, 0, SEEK_SET);
+  size_t bytes_read = fread(contents, 1, *out_size, stream);
+  bool8 success = bytes_read == *out_size;
+  ASSERT(success, "ERROR: Read incorrect number of bytes from file.");
+  fclose(stream);
+  return contents;
+}
