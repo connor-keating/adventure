@@ -7,7 +7,11 @@ struct render_state
   HDC context;
 };
 
-
+struct opengl_program
+{
+  GLuint vao;
+  GLuint shader_program;
+};
 
 typedef char        GLchar;
 typedef ptrdiff_t   GLsizeiptr;
@@ -298,75 +302,76 @@ render_state render_init(HWND *handle_ptr, HINSTANCE *instance_ptr)
   return state;
 }
 
+
+void point_setup(arena *scratch)
+{
+  GLuint point_shader_program = 0;
+  GLuint point_vao = 0;
+  GLuint point_vbo = 0;
+  
+  size_t byte_count;
+  // Vertex shader source
+  ASSERT(file_exists("shaders\\points.vert") == true, "ERROR Shader not found.");
+  const char* vertex_shader_source = read_file("shaders\\points.vert", scratch, &byte_count);
+
+  // Fragment shader source  
+  const char* fragment_shader_source = read_file("shaders\\points.frag", scratch, &byte_count);
+
+  // Create vertex shader
+  GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
+  glCompileShader(vertex_shader);
+
+  // Create fragment shader
+  GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
+  glCompileShader(fragment_shader);
+
+  // Create shader program
+  point_shader_program = glCreateProgram();
+  glAttachShader(point_shader_program, vertex_shader);
+  glAttachShader(point_shader_program, fragment_shader);
+  glLinkProgram(point_shader_program);
+
+  // Clean up shaders
+  glDeleteShader(vertex_shader);
+  glDeleteShader(fragment_shader);
+
+  // Point at center (0,0,0) in normalized device coordinates
+  float point_vertex[] = {
+    0.0f, 0.0f, 0.0f
+  };
+
+  // Generate VAO and VBO
+  glGenVertexArrays(1, &point_vao);
+  glGenBuffers(1, &point_vbo);
+
+  glBindVertexArray(point_vao);
+  glBindBuffer(GL_ARRAY_BUFFER, point_vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(point_vertex), point_vertex, GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
+
+  // Enable point size control from vertex shader
+  glEnable(GL_PROGRAM_POINT_SIZE);
+  // Bind our program
+  glUseProgram(point_shader_program);
+  glBindVertexArray(point_vao);
+}
+
+
 void frame_render(render_state *state, arena *scratch)
 {
-  static bool initialized = false;
-  static GLuint point_shader_program = 0;
-  static GLuint point_vao = 0;
-  static GLuint point_vbo = 0;
-  
-  if (!initialized)
-  {
-    size_t byte_count;
-    // Vertex shader source
-    ASSERT(file_exists("shaders\\points.vert") == true, "ERROR Shader not found.");
-    const char* vertex_shader_source = read_file("shaders\\points.vert", scratch, &byte_count);
-
-    // Fragment shader source  
-    const char* fragment_shader_source = read_file("shaders\\points.frag", scratch, &byte_count);
-
-    // Create vertex shader
-    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
-    glCompileShader(vertex_shader);
-
-    // Create fragment shader
-    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
-    glCompileShader(fragment_shader);
-
-    // Create shader program
-    point_shader_program = glCreateProgram();
-    glAttachShader(point_shader_program, vertex_shader);
-    glAttachShader(point_shader_program, fragment_shader);
-    glLinkProgram(point_shader_program);
-
-    // Clean up shaders
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
-
-    // Point at center (0,0,0) in normalized device coordinates
-    float point_vertex[] = {
-      0.0f, 0.0f, 0.0f
-    };
-
-    // Generate VAO and VBO
-    glGenVertexArrays(1, &point_vao);
-    glGenBuffers(1, &point_vbo);
-
-    glBindVertexArray(point_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, point_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(point_vertex), point_vertex, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-    initialized = true;
-  }
-
   // Clear screen
   glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  // Enable point size control from vertex shader
-  glEnable(GL_PROGRAM_POINT_SIZE);
 
   // Draw the point
-  glUseProgram(point_shader_program);
-  glBindVertexArray(point_vao);
   glDrawArrays(GL_POINTS, 0, 1);
   
   SwapBuffers(state->context);

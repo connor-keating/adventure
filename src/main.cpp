@@ -40,6 +40,9 @@ int main(int argc, char **argv)
   // Initialize renderer
   render_state renderer = render_init(&handle, &instance);
 
+  // Set up point program
+  point_setup(&memory);
+
   i32 display_flags = SW_SHOW;
   ShowWindow(handle, display_flags);
   UpdateWindow(handle);
