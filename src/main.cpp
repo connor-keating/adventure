@@ -41,7 +41,9 @@ int main(int argc, char **argv)
   render_state renderer = render_init(&handle, &instance);
 
   // Set up point program
-  point_setup(&memory);
+  render_program prog;
+  point_setup(&memory, &prog);
+  arena_free_all(&memory);
 
   i32 display_flags = SW_SHOW;
   ShowWindow(handle, display_flags);
@@ -52,7 +54,9 @@ int main(int argc, char **argv)
     message_process(handle);
 
     // Render frame
-    frame_render(&renderer, &memory);
+    frame_init(&renderer);
+    draw(&prog);
+    frame_render(&renderer);
 
   }
 

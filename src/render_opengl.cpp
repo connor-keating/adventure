@@ -7,7 +7,7 @@ struct render_state
   HDC context;
 };
 
-struct opengl_program
+struct render_program
 {
   GLuint vao;
   GLuint shader_program;
@@ -303,10 +303,8 @@ render_state render_init(HWND *handle_ptr, HINSTANCE *instance_ptr)
 }
 
 
-void point_setup(arena *scratch)
+void point_setup(arena *scratch, render_program *prog)
 {
-  GLuint point_shader_program = 0;
-  GLuint point_vao = 0;
   GLuint point_vbo = 0;
   
   size_t byte_count;
@@ -328,10 +326,10 @@ void point_setup(arena *scratch)
   glCompileShader(fragment_shader);
 
   // Create shader program
-  point_shader_program = glCreateProgram();
-  glAttachShader(point_shader_program, vertex_shader);
-  glAttachShader(point_shader_program, fragment_shader);
-  glLinkProgram(point_shader_program);
+  prog->shader_program = glCreateProgram();
+  glAttachShader(prog->shader_program, vertex_shader);
+  glAttachShader(prog->shader_program, fragment_shader);
+  glLinkProgram(prog->shader_program);
 
   // Clean up shaders
   glDeleteShader(vertex_shader);
@@ -343,10 +341,10 @@ void point_setup(arena *scratch)
   };
 
   // Generate VAO and VBO
-  glGenVertexArrays(1, &point_vao);
+  glGenVertexArrays(1, &prog->vao);
   glGenBuffers(1, &point_vbo);
 
-  glBindVertexArray(point_vao);
+  glBindVertexArray(prog->vao);
   glBindBuffer(GL_ARRAY_BUFFER, point_vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(point_vertex), point_vertex, GL_STATIC_DRAW);
 
@@ -358,24 +356,31 @@ void point_setup(arena *scratch)
 
   // Enable point size control from vertex shader
   glEnable(GL_PROGRAM_POINT_SIZE);
-  // Bind our program
-  glUseProgram(point_shader_program);
-  glBindVertexArray(point_vao);
 }
 
 
-void frame_render(render_state *state, arena *scratch)
+void frame_init(render_state *state)
 {
   // Clear screen
   glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
+}
 
-
+void draw(render_program *prog)
+{
+  // Bind our program
+  glUseProgram(prog->shader_program);
+  glBindVertexArray(prog->vao);
   // Draw the point
   glDrawArrays(GL_POINTS, 0, 1);
+}
+
   
+void frame_render(render_state *state)
+{
   SwapBuffers(state->context);
 }
+
 
 void render_close(render_state *state)
 {
