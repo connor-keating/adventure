@@ -3,6 +3,7 @@ bin/
 stash/
 assets/
 backup/
+glm/
 
 # Files
 scratch.h
