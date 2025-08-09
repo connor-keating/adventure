@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 
     // Render frame
     frame_init(&renderer);
-    draw_triangles(&prog);
+    draw_lines(&prog);
     frame_render(&renderer);
 
   }

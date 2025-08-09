@@ -442,16 +442,17 @@ void cube_setup(arena *scratch, render_program *prog)
   // position (x, y, z) + color (r, g, b)
   f32 verts[] = {
     // positions        // colors
-    -0.5f,-0.5f,-0.5f,  1.0f, 0.0f, 0.0f, // 0 red
-     0.5f,-0.5f,-0.5f,  0.0f, 1.0f, 0.0f, // 1 green
-     0.5f, 0.5f,-0.5f,  0.0f, 0.0f, 1.0f, // 2 blue
-    -0.5f, 0.5f,-0.5f,  1.0f, 1.0f, 0.0f, // 3 yellow
-    -0.5f,-0.5f, 0.5f,  1.0f, 0.0f, 1.0f, // 4 magenta
-     0.5f,-0.5f, 0.5f,  0.0f, 1.0f, 1.0f, // 5 indigo
-     0.5f, 0.5f, 0.5f,  0.6f, 0.0f, 0.6f, // 6 violet
-    -0.5f, 0.5f, 0.5f,  1.0f, 1.0f, 1.0f  // 7 magenta
+    -1.0f,-1.0f,-1.0f,  1.0f, 0.0f, 0.0f, // 0 red
+     1.0f,-1.0f,-1.0f,  0.0f, 1.0f, 0.0f, // 1 green
+     1.0f, 1.0f,-1.0f,  0.0f, 0.0f, 1.0f, // 2 blue
+    -1.0f, 1.0f,-1.0f,  1.0f, 1.0f, 0.0f, // 3 yellow
+    -1.0f,-1.0f, 1.0f,  1.0f, 0.0f, 1.0f, // 4 magenta
+     1.0f,-1.0f, 1.0f,  0.0f, 1.0f, 1.0f, // 5 indigo
+     1.0f, 1.0f, 1.0f,  0.6f, 0.0f, 0.6f, // 6 violet
+    -1.0f, 1.0f, 1.0f,  1.0f, 1.0f, 1.0f  // 7 magenta
   };
 
+  /*
   unsigned int indices[] = {
     0,1,2,  2,3,0, // front
     4,6,5,  6,4,7, // back
@@ -459,6 +460,13 @@ void cube_setup(arena *scratch, render_program *prog)
     1,5,6,  6,2,1, // right
     3,2,6,  6,7,3, // top
     0,4,5,  5,1,0  // bottom
+  };
+  */
+
+  uint32_t indices[] = {
+    0,1, 1,2, 2,3, 3,0,        // bottom
+    4,5, 5,6, 6,7, 7,4,        // top
+    0,4, 1,5, 2,6, 3,7         // verticals
   };
   // Set up vertex attribute
   glGenVertexArrays(1, &prog->vao);
@@ -520,7 +528,8 @@ void cube_setup(arena *scratch, render_program *prog)
 void frame_init(render_state *state)
 {
   // Clear screen
-  glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+  glClearColor(0.01, 0.06, 0.06, 1.0f);
+
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -532,6 +541,30 @@ void draw_points(render_program *prog)
   glBindVertexArray(prog->vao);
   // Draw the point
   glDrawArrays(GL_POINTS, 0, 1);
+}
+
+
+void draw_lines(render_program *prog)
+{
+  // Bind our program
+  glUseProgram(prog->shader_program);
+  // fmat4 mvp = {};
+  // fmat4_identity(mvp);
+  // make_mvp(mvp, g_angle);
+  g_angle += 0.01f; // tweak speed here (radians per frame)
+  float dist = 5.0f;                 // camera distance
+  float fovY_deg = 45.0f;            // pick your FOV
+  float width = 976.0f, height = 579.0f;
+  float aspect   = width / height; // keep updated on resize
+  glm::mat4 model = glm::rotate(glm::mat4(1.0f), g_angle, glm::vec3(0,1,0));
+  glm::mat4 view = glm::lookAt(glm::vec3(0,2.0f,dist), glm::vec3(0,0.0f,0), glm::vec3(0,1,0));
+  glm::mat4 proj = glm::perspective(glm::radians(fovY_deg), aspect, 0.1f, 100.0f);
+  glm::mat4 mvp = proj * view * model;
+  GLint loc = glGetUniformLocation( prog->shader_program, "uMVP");
+  glUniformMatrix4fv( loc, 1, GL_FALSE, &mvp[0][0]);
+  glBindVertexArray(prog->vao);
+  // Draw the point
+  glDrawElements(GL_LINES, 24, GL_UNSIGNED_INT, 0);
 }
 
 
