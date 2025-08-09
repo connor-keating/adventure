@@ -1,5 +1,9 @@
 #include <math.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+
 #include "core.h"
 #define PI 	3.14159265358979323846f
 #define DegreesToRadians(degrees) (degrees*(PI/180.0f))
@@ -205,5 +209,4 @@ void fmat4_lookat(fmat4 out, fvec3 eye, fvec3 center, fvec3 up)
   out[3][1] = -dot3(u, eye);
   out[3][2] =  dot3(f, eye);
 }
-
 
