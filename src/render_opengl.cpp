@@ -283,6 +283,8 @@ render_state render_init(HWND *handle_ptr, HINSTANCE *instance_ptr)
   glDebugMessageCallback(&gl_debug_callback, nullptr);
   glEnable(GL_DEBUG_OUTPUT);
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); 
+  glEnable(GL_DEPTH_TEST);
+  glDisable(GL_CULL_FACE);
 
   /*
   // Testing OpenGL debugging
@@ -363,6 +365,7 @@ void point_setup(arena *scratch, render_program *prog)
 
 void tri_setup(arena *scratch, render_program *prog)
 {
+  // Triangle
   /*
   f32 verts[] = {
     -0.5f, -0.5f, 0.0f, // left
@@ -371,6 +374,7 @@ void tri_setup(arena *scratch, render_program *prog)
   };
   */
 
+  // Rectangle
   f32 verts[] = {
     // positions      
      0.5f,  0.5f, 0.0f,
@@ -425,11 +429,99 @@ void tri_setup(arena *scratch, render_program *prog)
 }
 
 
+void cube_setup(arena *scratch, render_program *prog)
+{
+  /*
+  f32 verts[] = {
+    -0.5f, -0.5f, 0.0f, // left
+     0.5f, -0.5f, 0.0f, // right
+     0.0f,  0.5f, 0.0f, // top
+  };
+  */
+
+  // position (x, y, z) + color (r, g, b)
+  f32 verts[] = {
+    // positions        // colors
+    -0.5f,-0.5f,-0.5f,  1.0f, 0.0f, 0.0f, // 0 red
+     0.5f,-0.5f,-0.5f,  1.0f, 0.5f, 0.0f, // 1 orange
+     0.5f, 0.5f,-0.5f,  1.0f, 1.0f, 0.0f, // 2 yellow
+    -0.5f, 0.5f,-0.5f,  0.0f, 1.0f, 0.0f, // 3 green
+    -0.5f,-0.5f, 0.5f,  0.0f, 0.0f, 1.0f, // 4 blue
+     0.5f,-0.5f, 0.5f,  0.3f, 0.0f, 0.5f, // 5 indigo
+     0.5f, 0.5f, 0.5f,  0.6f, 0.0f, 0.6f, // 6 violet
+    -0.5f, 0.5f, 0.5f,  1.0f, 0.0f, 1.0f  // 7 magenta
+  };
+
+  unsigned int indices[] = {
+    0,1,2,  2,3,0, // front
+    4,6,5,  6,4,7, // back
+    0,3,7,  7,4,0, // left
+    1,5,6,  6,2,1, // right
+    3,2,6,  6,7,3, // top
+    0,4,5,  5,1,0  // bottom
+  };
+  // Set up vertex attribute
+  glGenVertexArrays(1, &prog->vao);
+  // Bind VAO
+  glBindVertexArray(prog->vao);
+  // Set up vertex buffer object
+  u32 vbo;
+  glGenBuffers(1, &vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+
+  // Just position
+  // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(verts[0]), (void*)0);
+
+  // position attribute (location = 0)
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(f32), (void*)0);
+  glEnableVertexAttribArray(0);
+
+  // color attribute (location = 1)
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(f32), (void*)(3 * sizeof(f32)));
+  glEnableVertexAttribArray(1);
+
+
+  glEnableVertexAttribArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  // Set up EBO
+  GLuint ebo;
+  glGenBuffers(1, &ebo);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+  // Shader program
+  size_t byte_count;
+  // Vertx shader source
+  const char* vertex_shader_source = read_file("shaders\\cube.vert", scratch, &byte_count);
+  // Fragment shader source  
+  const char* fragment_shader_source = read_file("shaders\\cube.frag", scratch, &byte_count);
+  // Create vertex shader
+  GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
+  glCompileShader(vertex_shader);
+  // Create fragment shader
+  GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
+  glCompileShader(fragment_shader);
+  // Create shader program
+  prog->shader_program = glCreateProgram();
+  ASSERT(prog->shader_program != 0, "ERROR: Failed to compile shaders.");
+  glAttachShader(prog->shader_program, vertex_shader);
+  glAttachShader(prog->shader_program, fragment_shader);
+  glLinkProgram(prog->shader_program);
+  ASSERT(prog->shader_program != 0, "ERROR: Failed to link shaders.");
+  // Clean up shaders
+  glDeleteShader(vertex_shader);
+  glDeleteShader(fragment_shader);
+
+}
+
+
 void frame_init(render_state *state)
 {
   // Clear screen
   glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 
@@ -447,10 +539,25 @@ void draw_triangles(render_program *prog)
 {
   // Bind our program
   glUseProgram(prog->shader_program);
+  // fmat4 mvp = {};
+  // fmat4_identity(mvp);
+  // make_mvp(mvp, g_angle);
+  g_angle += 0.01f; // tweak speed here (radians per frame)
+  float dist = 5.0f;                 // camera distance
+  float fovY_deg = 45.0f;            // pick your FOV
+  float width = 976.0f, height = 579.0f;
+  float aspect   = width / height; // keep updated on resize
+  glm::mat4 model = glm::rotate(glm::mat4(1.0f), g_angle, glm::vec3(0,1,0));
+  glm::mat4 view = glm::lookAt(glm::vec3(0,2.0f,dist), glm::vec3(0,0.0f,0), glm::vec3(0,1,0));
+  glm::mat4 proj = glm::perspective(glm::radians(fovY_deg), aspect, 0.1f, 100.0f);
+  glm::mat4 mvp = proj * view * model;
+  GLint loc = glGetUniformLocation( prog->shader_program, "uMVP");
+  glUniformMatrix4fv( loc, 1, GL_FALSE, &mvp[0][0]);
   glBindVertexArray(prog->vao);
   // Draw the point
   // glDrawArrays(GL_TRIANGLES, 0, 3);
-  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+  // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
 
   

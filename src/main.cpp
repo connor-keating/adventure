@@ -4,9 +4,11 @@
 
 
 #include "core.cpp"
+#include "linalg.cpp"
 
 // Globals
 global bool is_running;
+float g_angle = 0.0f;
 
 
 // Merge source code into single translation unit
@@ -43,7 +45,7 @@ int main(int argc, char **argv)
   // Set up point program
   render_program prog;
   // point_setup(&memory, &prog);
-  tri_setup(&memory, &prog);
+  cube_setup(&memory, &prog);
   arena_free_all(&memory);
 
   i32 display_flags = SW_SHOW;
