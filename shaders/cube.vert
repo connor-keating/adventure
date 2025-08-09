@@ -7,8 +7,9 @@ out vec3 vColor;
 
 uniform mat4 uMVP;
 
-void main() {
-    vColor = aColor;
-    gl_Position = uMVP * vec4(aPos, 1.0);
+void main() 
+{
+  vColor = aColor;
+  gl_Position = uMVP * vec4(aPos, 1.0);
 }
 
