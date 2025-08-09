@@ -12,4 +12,3 @@ void main()
   vColor = aColor;
   gl_Position = uMVP * vec4(aPos, 1.0);
 }
-

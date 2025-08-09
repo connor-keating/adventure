@@ -443,13 +443,13 @@ void cube_setup(arena *scratch, render_program *prog)
   f32 verts[] = {
     // positions        // colors
     -0.5f,-0.5f,-0.5f,  1.0f, 0.0f, 0.0f, // 0 red
-     0.5f,-0.5f,-0.5f,  1.0f, 0.5f, 0.0f, // 1 orange
-     0.5f, 0.5f,-0.5f,  1.0f, 1.0f, 0.0f, // 2 yellow
-    -0.5f, 0.5f,-0.5f,  0.0f, 1.0f, 0.0f, // 3 green
-    -0.5f,-0.5f, 0.5f,  0.0f, 0.0f, 1.0f, // 4 blue
-     0.5f,-0.5f, 0.5f,  0.3f, 0.0f, 0.5f, // 5 indigo
+     0.5f,-0.5f,-0.5f,  0.0f, 1.0f, 0.0f, // 1 green
+     0.5f, 0.5f,-0.5f,  0.0f, 0.0f, 1.0f, // 2 blue
+    -0.5f, 0.5f,-0.5f,  1.0f, 1.0f, 0.0f, // 3 yellow
+    -0.5f,-0.5f, 0.5f,  1.0f, 0.0f, 1.0f, // 4 magenta
+     0.5f,-0.5f, 0.5f,  0.0f, 1.0f, 1.0f, // 5 indigo
      0.5f, 0.5f, 0.5f,  0.6f, 0.0f, 0.6f, // 6 violet
-    -0.5f, 0.5f, 0.5f,  1.0f, 0.0f, 1.0f  // 7 magenta
+    -0.5f, 0.5f, 0.5f,  1.0f, 1.0f, 1.0f  // 7 magenta
   };
 
   unsigned int indices[] = {
