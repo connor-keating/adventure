@@ -552,13 +552,23 @@ void draw_lines(render_program *prog)
   // fmat4_identity(mvp);
   // make_mvp(mvp, g_angle);
   g_angle += 0.01f; // tweak speed here (radians per frame)
-  float dist = 5.0f;                 // camera distance
-  float fovY_deg = 45.0f;            // pick your FOV
+  float fov_deg = 45.0f;            // pick your FOV
   float width = 976.0f, height = 579.0f;
   float aspect   = width / height; // keep updated on resize
-  glm::mat4 model = glm::rotate(glm::mat4(1.0f), g_angle, glm::vec3(0,1,0));
-  glm::mat4 view = glm::lookAt(glm::vec3(0,2.0f,dist), glm::vec3(0,0.0f,0), glm::vec3(0,1,0));
-  glm::mat4 proj = glm::perspective(glm::radians(fovY_deg), aspect, 0.1f, 100.0f);
+  // rotate
+  glm::mat4 model = glm::mat4(1.0f);
+  glm::vec3 rotation_axis_norm = glm::vec3(0,1,0);
+  model = glm::rotate(model, g_angle, rotation_axis_norm);
+  // look at
+  glm::vec3 camera_pos    = glm::vec3(0, 2.0f, 5.0f);
+  glm::vec3 camera_target = glm::vec3(0,0,0);
+  glm::vec3 camera_up     = glm::vec3(0,1,0);
+  glm::mat4 view = glm::lookAt(camera_pos, camera_target, camera_up);
+  // perspective
+  f32 fov_rad = glm::radians(fov_deg);
+  f32 znear = 0.1f;
+  f32 zfar = 100.0f;
+  glm::mat4 proj = glm::perspective(fov_rad, aspect, znear, zfar);
   glm::mat4 mvp = proj * view * model;
   GLint loc = glGetUniformLocation( prog->shader_program, "uMVP");
   glUniformMatrix4fv( loc, 1, GL_FALSE, &mvp[0][0]);
