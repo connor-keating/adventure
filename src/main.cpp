@@ -29,6 +29,7 @@ int main(int argc, char **argv)
 {
   HWND handle;
   HINSTANCE instance;
+  platform_window window = {};
 
   // Allocate all program memory upfront.
   void *memory_base = 0;
@@ -56,9 +57,20 @@ int main(int argc, char **argv)
   {
     message_process(handle);
 
-    // Render frame
+    // Check window dimensions
+    window_size_get(&window);
+    // Initialize frame
     frame_init(&renderer);
+    // Set uniform
+    g_angle += 0.01f; // tweak speed here (radians per frame)
+    float fov_deg = 45.0f;            // pick your FOV
+    float width = window.width;
+    float height = window.height; // TODO: Don't hardcode this
+    float aspect   = width / height; // keep updated on resize
+    uniform_set(&prog, g_angle, fov_deg, aspect);
+    // Draw call
     draw_lines(&prog);
+    // Finalize and draw frame
     frame_render(&renderer);
 
   }

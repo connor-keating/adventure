@@ -1,6 +1,14 @@
 
 #include <windows.h>
 
+struct platform_window
+{
+  HWND handle;
+  f32 width;
+  f32 height;
+};
+
+
 internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT message_id, WPARAM param_w, LPARAM param_l)
 {
   LRESULT result = 0;
@@ -103,6 +111,16 @@ void window_init(HWND *handle, HINSTANCE *instance)
     0
   );
   ASSERT(window_success, "Failed to resize and open window.");
+}
+
+
+void window_size_get(platform_window *wind)
+{
+  // Get window dimension
+  RECT size;
+  GetClientRect(wind->handle, &size);
+  wind->width  = size.right;
+  wind->height = size.bottom;
 }
 
 
