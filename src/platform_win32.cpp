@@ -4,6 +4,7 @@
 struct platform_window
 {
   HWND handle;
+  HINSTANCE instance;
   f32 width;
   f32 height;
 };
@@ -43,9 +44,9 @@ void message_process(HWND handle)
 }
 
 
-void window_init(HWND *handle, HINSTANCE *instance)
+void window_init(platform_window *wind)
 {
-  *instance = GetModuleHandleA(0);
+  wind->instance = GetModuleHandleA(0);
   i32 window_x = 50;
   i32 window_y = 90;
   i32 window_w = 50;
@@ -56,7 +57,7 @@ void window_init(HWND *handle, HINSTANCE *instance)
   window_class.cbSize = sizeof(window_class);
   window_class.style = CS_HREDRAW|CS_VREDRAW; // |CS_OWNDC;
   window_class.lpfnWndProc = win32_message_callback;
-  window_class.hInstance = *instance;
+  window_class.hInstance = wind->instance;
   window_class.hCursor = LoadCursor(0, IDC_ARROW);
   // window_class.hbrBackground = CreateSolidBrush(RGB(255, 0, 255)); // Magenta background
   window_class.hbrBackground = (HBRUSH)COLOR_WINDOW;
@@ -65,7 +66,7 @@ void window_init(HWND *handle, HINSTANCE *instance)
   ASSERT(window_id, "ERROR: Failed to register window.");
   
   // Create the window we described.
-  *handle = CreateWindowExA(
+  wind->handle = CreateWindowExA(
     WS_EX_CLIENTEDGE,            // style_extended: has list of possible values.    
     window_class.lpszClassName,  // class_name: null-terminated string.         
     window_name,                  // name: string window name to display in title bar.              
@@ -76,22 +77,22 @@ void window_init(HWND *handle, HINSTANCE *instance)
     window_h,                          // height: Window height in screen coordinates
     0,                          // window_parent: Handle to the parent window.
     0,                          // window_menu: Optional child window ID.
-    *instance,      // window_handle: handle to this window's module.
+    wind->instance,      // window_handle: handle to this window's module.
     0                          // window_data_pointer: Pointer to CREATESTRUCT var that sends a message to the window.
   );
-  ASSERT(handle, "ERROR: Failed to create window.");
+  ASSERT(wind->handle, "ERROR: Failed to create window.");
 
   // Get monitor info and resize the window.
   MONITORINFO monitor_info = {};
   monitor_info.cbSize = sizeof(MONITORINFO);
-  HMONITOR monitor_handle = MonitorFromWindow(*handle, MONITOR_DEFAULTTOPRIMARY);
+  HMONITOR monitor_handle = MonitorFromWindow(wind->handle, MONITOR_DEFAULTTOPRIMARY);
   BOOL monitor_info_success = GetMonitorInfoA(monitor_handle, &monitor_info);
   ASSERT(monitor_info_success, "ERROR: Failed to get monitor info.");
   i32 monitor_width  = monitor_info.rcMonitor.right - monitor_info.rcMonitor.left;
   i32 monitor_height = monitor_info.rcMonitor.bottom - monitor_info.rcMonitor.top;
   // Calculate our desired window dimensions.
   // Get DPI scaling factor
-  u32 dpi = GetDpiForWindow(*handle);
+  u32 dpi = GetDpiForWindow(wind->handle);
   f32 scale_factor = dpi / 96.0f; // Scaling factor (1.0 at 96 DPI, 1.5 at 144 DPI, etc.)
   i32 client_w = MulDiv(monitor_width, 1, 2 * scale_factor);
   i32 client_h = MulDiv(monitor_height, 1, 2 * scale_factor);
@@ -102,7 +103,7 @@ void window_init(HWND *handle, HINSTANCE *instance)
   window_x = (monitor_width  - window_w) / 2;
   window_y = (monitor_height - window_h) / 2;
   BOOL window_success = SetWindowPos(
-    *handle,
+    wind->handle,
     HWND_TOP,
     window_x,
     window_y,

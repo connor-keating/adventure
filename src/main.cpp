@@ -27,8 +27,6 @@ float g_angle = 0.0f;
 
 int main(int argc, char **argv)
 {
-  HWND handle;
-  HINSTANCE instance;
   platform_window window = {};
 
   // Allocate all program memory upfront.
@@ -38,10 +36,10 @@ int main(int argc, char **argv)
   arena memory;
   arena_init(&memory, raw_memory, memory_size);
 
-  window_init(&handle, &instance);
+  window_init(&window);
 
   // Initialize renderer
-  render_state renderer = render_init(&handle, &instance);
+  render_state renderer = render_init(&window);
 
   // Set up point program
   render_program prog;
@@ -50,14 +48,18 @@ int main(int argc, char **argv)
   arena_free_all(&memory);
 
   i32 display_flags = SW_SHOW;
-  ShowWindow(handle, display_flags);
-  UpdateWindow(handle);
+  ShowWindow(window.handle, display_flags);
+  UpdateWindow(window.handle);
   is_running = true;
   while (is_running)
   {
-    message_process(handle);
+    message_process(window.handle);
 
     // Check window dimensions
+    /*
+      1. Check the handle is properly set in window.
+      2. 
+    */
     window_size_get(&window);
     // Initialize frame
     frame_init(&renderer);

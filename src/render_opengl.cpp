@@ -182,14 +182,14 @@ static void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GL
 
 #endif
 
-render_state render_init(HWND *handle_ptr, HINSTANCE *instance_ptr)
+render_state render_init(platform_window *window)
 {
   render_state state = {};
 
   glfunc_wglChoosePixelFormatARB *wglChoosePixelFormatARB = 0;
   glfunc_wglCreateContextAttribsARB *wglCreateContextAttribsARB = 0;
 
-  HWND handle = *handle_ptr;
+  HWND handle = window->handle;
   // Use first window to load OpenGL stuff
   {
     HDC fakeDC = GetDC(handle);
@@ -222,16 +222,16 @@ render_state render_init(HWND *handle_ptr, HINSTANCE *instance_ptr)
     wglDeleteContext(fakeRC);
     ReleaseDC(handle, fakeDC);
     DestroyWindow(handle);
-    UnregisterClassA("WINDOW_CLASS", *instance_ptr);
-    *handle_ptr = nullptr;
-    *instance_ptr = nullptr;
+    UnregisterClassA("WINDOW_CLASS", window->instance);
+    window->handle = nullptr;
+    window->instance = nullptr;
   }
 
   // Create the real window
   {
     // Re-create the window
-    window_init(handle_ptr, instance_ptr);
-    handle = *handle_ptr;
+    window_init(window);
+    handle = window->handle;
     // Get the device context
     state.context = GetDC(handle);
     ASSERT(state.context != 0, "ERROR: Failed to get device context.");
