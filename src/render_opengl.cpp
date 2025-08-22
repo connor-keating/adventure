@@ -534,12 +534,12 @@ void frame_init(render_state *state)
 }
 
 
-void uniform_set(render_program *prog, f32 g_angle, f32 fov_deg, f32 aspect)
+void uniform_set(render_program *prog, f32 angle, f32 fov_deg, f32 aspect)
 {
   glUseProgram(prog->shader_program);
   glm::mat4 model = glm::mat4(1.0f);
   glm::vec3 rotation_axis_norm = glm::vec3(0,1,0);
-  model = glm::rotate(model, g_angle, rotation_axis_norm);
+  model = glm::rotate(model, angle, rotation_axis_norm);
   // look at
   glm::vec3 camera_pos    = glm::vec3(0, 2.0f, 5.0f);
   glm::vec3 camera_target = glm::vec3(0,0,0);
@@ -581,15 +581,12 @@ void draw_triangles(render_program *prog)
 {
   // Bind our program
   glUseProgram(prog->shader_program);
-  // fmat4 mvp = {};
-  // fmat4_identity(mvp);
-  // make_mvp(mvp, g_angle);
-  g_angle += 0.01f; // tweak speed here (radians per frame)
+  f32 angle = 0.0f; // tweak speed here (radians per frame)
   float dist = 5.0f;                 // camera distance
   float fovY_deg = 45.0f;            // pick your FOV
   float width = 976.0f, height = 579.0f;
   float aspect   = width / height; // keep updated on resize
-  glm::mat4 model = glm::rotate(glm::mat4(1.0f), g_angle, glm::vec3(0,1,0));
+  glm::mat4 model = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0,1,0));
   glm::mat4 view = glm::lookAt(glm::vec3(0,2.0f,dist), glm::vec3(0,0.0f,0), glm::vec3(0,1,0));
   glm::mat4 proj = glm::perspective(glm::radians(fovY_deg), aspect, 0.1f, 100.0f);
   glm::mat4 mvp = proj * view * model;

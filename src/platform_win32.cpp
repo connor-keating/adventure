@@ -10,6 +10,16 @@ struct platform_window
 };
 
 
+struct clock
+{
+  f64 secs_per_frame; // The amount of time between frames (seconds).
+  f64 ticks_per_sec;  // The frequencey of the performance counter which is fixed at start up and constant (Hz).
+  i64 curr;           // The current value of the counter at the start of the frame (ticks).
+  i64 prev;           // The value of the counter at the start of the previous frame (ticks).
+  f64 delta;          // The amount of seconds that have passed from the beginning of the frame to the end (secs).
+};
+
+
 internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT message_id, WPARAM param_w, LPARAM param_l)
 {
   LRESULT result = 0;
@@ -165,4 +175,36 @@ const char * read_file(const char *file, arena *scratch, size_t *out_size)
   ASSERT(success, "ERROR: Read incorrect number of bytes from file.");
   fclose(stream);
   return contents;
+}
+
+
+i64 clock_time()
+{
+  LARGE_INTEGER temp;
+  QueryPerformanceCounter(&temp);
+  return temp.QuadPart;
+}
+
+
+clock clock_init(f64 fps_target)
+{
+  clock c = {};
+  c.secs_per_frame = 1.0 / fps_target;
+  LARGE_INTEGER temp;
+  QueryPerformanceFrequency(&temp);
+  c.ticks_per_sec = (f64) temp.QuadPart;
+  c.prev = clock_time();
+  return c;
+}
+
+
+void clock_update(clock *c)
+{
+  c->curr = clock_time();
+  // The amount of ticks that have passed from the beginning of the frame to the end (ticks).
+  // TODO: Should this be its own function?
+  f64 delta_ticks = (f64) (c->curr - c->prev);
+  c->delta = delta_ticks / c->ticks_per_sec;
+  // TODO: End wall clock diff
+  c->prev = c->curr;
 }

@@ -8,7 +8,6 @@
 
 // Globals
 global bool is_running;
-float g_angle = 0.0f;
 
 
 // Merge source code into single translation unit
@@ -38,6 +37,10 @@ int main(int argc, char **argv)
 
   window_init(&window);
 
+  // Application clock
+  f64 fps_target = 60;                // The amount of frames presented in a second.
+  clock app_clock = clock_init(fps_target);
+
   // Initialize renderer
   render_state renderer = render_init(&window);
 
@@ -47,12 +50,22 @@ int main(int argc, char **argv)
   cube_setup(&memory, &prog);
   arena_free_all(&memory);
 
+  // Set up the angular speed variable for the rotation
+  f32 angle_velocity = PI/4.0f;
+  f32 angle = 0.0f;
+
+  // VSynch
+  wglSwapIntervalEXT(1); // 1 is on 0 is off.
+  // Show window
   i32 display_flags = SW_SHOW;
   ShowWindow(window.handle, display_flags);
   UpdateWindow(window.handle);
   is_running = true;
   while (is_running)
   {
+    // Frame start
+    clock_update(&app_clock);
+    // printf("Target: %f, Delta: %f\n", app_clock.secs_per_frame, app_clock.delta);
     message_process(window.handle);
 
     // Check window dimensions
@@ -60,15 +73,16 @@ int main(int argc, char **argv)
     // Initialize frame
     frame_init(&renderer);
     // Set uniform
-    g_angle += 0.01f; // tweak speed here (radians per frame)
+    // wrap angle so it doesn't explode
+    angle += angle_velocity * app_clock.delta; // rad += (rad/s)*s
+    if (angle > 2.0*PI) angle -= 2.0*PI;
     f32 fov_deg = 45.0f;            // pick your FOV
     f32 aspect  = window.width / window.height; // keep updated on resize
-    uniform_set(&prog, g_angle, fov_deg, aspect);
+    uniform_set(&prog, angle, fov_deg, aspect);
     // Draw call
     draw_lines(&prog);
     // Finalize and draw frame
     frame_render(&renderer);
-
   }
 
   // close and release all existing COM objects
