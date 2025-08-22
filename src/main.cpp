@@ -56,19 +56,13 @@ int main(int argc, char **argv)
     message_process(window.handle);
 
     // Check window dimensions
-    /*
-      1. Check the handle is properly set in window.
-      2. 
-    */
     window_size_get(&window);
     // Initialize frame
     frame_init(&renderer);
     // Set uniform
     g_angle += 0.01f; // tweak speed here (radians per frame)
-    float fov_deg = 45.0f;            // pick your FOV
-    float width = window.width;
-    float height = window.height; // TODO: Don't hardcode this
-    float aspect   = width / height; // keep updated on resize
+    f32 fov_deg = 45.0f;            // pick your FOV
+    f32 aspect  = window.width / window.height; // keep updated on resize
     uniform_set(&prog, g_angle, fov_deg, aspect);
     // Draw call
     draw_lines(&prog);
