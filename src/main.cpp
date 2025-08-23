@@ -84,7 +84,7 @@ int main(int argc, char **argv)
     uniform_set(&prog, angle, fov_deg, aspect);
 
     // Draw spinning cube
-    draw_lines(&prog);
+    // draw_lines(&prog);
 
     // Draw instance cube
     uniform_set(&prog2, angle, fov_deg, aspect);

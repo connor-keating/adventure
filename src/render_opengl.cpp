@@ -592,11 +592,12 @@ render_program instance_setup(arena *scratch)
   glm::mat4 *modelmats = arena_alloc_array(scratch, cube_count, glm::mat4); 
   for (int i = 0; i < cube_count; i++)
   {
+    // Transformations are applied in reverse multiplication order.
     glm::mat4 transform = glm::mat4(1.0f);
-    transform = glm::scale(transform, glm::vec3(0.5f, 1.0f, 1.0f));
-    f32 x_offset = ( i==0 ) ? -1.0 : 1.0f;
+    f32 x_offset = ( i==0 ) ? -0.5 : 0.5f;
     transform = glm::translate(transform, glm::vec3(x_offset, 0.0f, 0.0f));
-    transform = glm::scale(transform, glm::vec3(0.95f, 0.95f, 0.95f));
+    transform = glm::scale(transform, glm::vec3(0.5f, 1.0f, 1.0f));
+    // transform = glm::scale(transform, glm::vec3(0.95f, 0.95f, 0.95f));
     modelmats[i] = transform;
   }
   // configure instanced array
@@ -747,6 +748,7 @@ void program_close(render_program *prog)
   // glDeleteBuffers(1, &prog->vbo);
   glDeleteProgram(prog->shader_program);
 }
+
 
 void render_close(render_state *state)
 {
