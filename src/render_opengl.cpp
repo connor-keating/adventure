@@ -1,6 +1,10 @@
 #include <windows.h>
 #include <gl/GL.h>
 
+/*
+YOU MUST USE SETUP A VBO BEFORE YOU CALL glVertexAttribPointer() 
+OTHERWISE YOU'LL CRASH.
+*/ 
 
 struct render_state
 {
@@ -118,7 +122,9 @@ typedef void (APIENTRY  *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum
     GL_FUNC_SIGNATURE(void, glBufferSubData, GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid *data)                                           \
     GL_FUNC_SIGNATURE(void, glDebugMessageCallback, GLDEBUGPROC callback, void *userParam)                                                                  \
     GL_FUNC_SIGNATURE(void, glDebugMessageControl,	GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint *ids, GLboolean enabled)       \
-    GL_FUNC_SIGNATURE(void, glDebugMessageInsert, GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const char *message)               \
+    GL_FUNC_SIGNATURE(void, glDebugMessageInsert, GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const char *message)              \
+    GL_FUNC_SIGNATURE(void, glVertexAttribDivisor, GLuint index, GLuint divisor)                                                                            \
+    GL_FUNC_SIGNATURE(void, glDrawElementsInstanced, GLenum mode, GLsizei count, GLenum type, const void * indices, GLsizei primcount)                      \
 
 
 
@@ -429,15 +435,9 @@ void tri_setup(arena *scratch, render_program *prog)
 }
 
 
-void cube_setup(arena *scratch, render_program *prog)
+render_program cube_setup(arena *scratch)
 {
-  /*
-  f32 verts[] = {
-    -0.5f, -0.5f, 0.0f, // left
-     0.5f, -0.5f, 0.0f, // right
-     0.0f,  0.5f, 0.0f, // top
-  };
-  */
+  render_program prog = {};
 
   // position (x, y, z) + color (r, g, b)
   f32 verts[] = {
@@ -469,9 +469,9 @@ void cube_setup(arena *scratch, render_program *prog)
     0,4, 1,5, 2,6, 3,7         // verticals
   };
   // Set up vertex attribute
-  glGenVertexArrays(1, &prog->vao);
+  glGenVertexArrays(1, &prog.vao);
   // Bind VAO
-  glBindVertexArray(prog->vao);
+  glBindVertexArray(prog.vao);
   // Set up vertex buffer object
   u32 vbo;
   glGenBuffers(1, &vbo);
@@ -512,16 +512,133 @@ void cube_setup(arena *scratch, render_program *prog)
   glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
   glCompileShader(fragment_shader);
   // Create shader program
-  prog->shader_program = glCreateProgram();
-  ASSERT(prog->shader_program != 0, "ERROR: Failed to compile shaders.");
-  glAttachShader(prog->shader_program, vertex_shader);
-  glAttachShader(prog->shader_program, fragment_shader);
-  glLinkProgram(prog->shader_program);
-  ASSERT(prog->shader_program != 0, "ERROR: Failed to link shaders.");
+  prog.shader_program = glCreateProgram();
+  ASSERT(prog.shader_program != 0, "ERROR: Failed to compile shaders.");
+  glAttachShader(prog.shader_program, vertex_shader);
+  glAttachShader(prog.shader_program, fragment_shader);
+  glLinkProgram(prog.shader_program);
+  ASSERT(prog.shader_program != 0, "ERROR: Failed to link shaders.");
   // Clean up shaders
   glDeleteShader(vertex_shader);
   glDeleteShader(fragment_shader);
 
+  return prog;
+}
+
+
+u32 shader_compile(const char *filepath, i32 type, arena *scratch)
+{
+  size_t byte_count;
+  const char* source = read_file(filepath, scratch, &byte_count);
+  u32 shader = glCreateShader(type);
+  glShaderSource(shader, 1, &source, NULL);
+  glCompileShader(shader);
+  return shader;
+}
+
+
+render_program instance_setup(arena *scratch)
+{
+  // init output var
+  render_program prog = {};
+
+  f32 verts[] = {
+    // positions        // colors
+    -1.0f,-1.0f,-1.0f,  0.0f, 1.0f, 0.0f, // 0 green
+     1.0f,-1.0f,-1.0f,  0.0f, 1.0f, 0.0f, // 1 green
+     1.0f, 1.0f,-1.0f,  0.0f, 1.0f, 0.0f, // 2 green
+    -1.0f, 1.0f,-1.0f,  0.0f, 1.0f, 0.0f, // 3 green
+    -1.0f,-1.0f, 1.0f,  0.0f, 1.0f, 0.0f, // 4 green
+     1.0f,-1.0f, 1.0f,  0.0f, 1.0f, 0.0f, // 5 green
+     1.0f, 1.0f, 1.0f,  0.0f, 1.0f, 0.0f, // 6 green
+    -1.0f, 1.0f, 1.0f,  0.0f, 1.0f, 0.0f  // 7 green
+  };
+  u32 indices[] = {
+    0,1, 1,2, 2,3, 3,0,        // bottom
+    4,5, 5,6, 6,7, 7,4,        // top
+    0,4, 1,5, 2,6, 3,7         // verticals
+  };
+  // Initialize data
+  u32 vbo, ebo;
+  // Create and bind VAO
+  glGenVertexArrays(1, &prog.vao);
+  glBindVertexArray(prog.vao);
+  // Set up vertex buffer object
+  glGenBuffers(1, &vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+
+  // Tell OpenGL how to interpret the data
+  // position attribute (location = 0)
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(f32), (void*)0);
+  // color attribute (location = 1)
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(f32), (void*)(3 * sizeof(f32)));
+
+  // Enable the vertex attributes (0 and 1)
+  glEnableVertexAttribArray(0);
+  glEnableVertexAttribArray(1);
+
+  // Set up EBO
+  glGenBuffers(1, &ebo);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+  // Create instance transforms
+  u32 cube_count = 2;
+  glm::mat4 *modelmats = arena_alloc_array(scratch, cube_count, glm::mat4); 
+  for (int i = 0; i < cube_count; i++)
+  {
+    glm::mat4 transform = glm::mat4(1.0f);
+    transform = glm::scale(transform, glm::vec3(0.5f, 1.0f, 1.0f));
+    f32 x_offset = ( i==0 ) ? -1.0 : 1.0f;
+    transform = glm::translate(transform, glm::vec3(x_offset, 0.0f, 0.0f));
+    transform = glm::scale(transform, glm::vec3(0.95f, 0.95f, 0.95f));
+    modelmats[i] = transform;
+  }
+  // configure instanced array
+  u32 buffer;
+  glGenBuffers(1, &buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, buffer);
+  glBufferData(
+    GL_ARRAY_BUFFER,
+    cube_count * sizeof(glm::mat4),
+    &modelmats[0],
+    GL_STATIC_DRAW
+  );
+
+  glBindVertexArray(prog.vao);
+  // set attribute pointers for matrix (4 times vec4)
+  glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+  glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+  glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+  glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+  // Enable those attribute positions
+  glEnableVertexAttribArray(3);
+  glEnableVertexAttribArray(4);
+  glEnableVertexAttribArray(5);
+  glEnableVertexAttribArray(6);
+
+  glVertexAttribDivisor(3, 1);
+  glVertexAttribDivisor(4, 1);
+  glVertexAttribDivisor(5, 1);
+  glVertexAttribDivisor(6, 1);
+
+  glBindVertexArray(0);
+
+  u32 vertex_shader   = shader_compile("shaders\\instance.vert", GL_VERTEX_SHADER, scratch);
+  u32 fragment_shader = shader_compile("shaders\\cube.frag", GL_FRAGMENT_SHADER, scratch);
+  // Create shader program
+  prog.shader_program = glCreateProgram();
+  ASSERT(prog.shader_program != 0, "ERROR: Failed to create shader program.");
+  glAttachShader(prog.shader_program, vertex_shader);
+  glAttachShader(prog.shader_program, fragment_shader);
+  glLinkProgram(prog.shader_program);
+  ASSERT(prog.shader_program != 0, "ERROR: Failed to link shaders.");
+  // Clean up shaders
+  glDeleteShader(vertex_shader);
+  glDeleteShader(fragment_shader);
+
+  return prog;
 }
 
 
@@ -570,10 +687,24 @@ void draw_lines(render_program *prog)
 {
   // Bind our program
   glUseProgram(prog->shader_program);
-  // rotate
   glBindVertexArray(prog->vao);
   // Draw the point
   glDrawElements(GL_LINES, 24, GL_UNSIGNED_INT, 0);
+}
+
+
+void draw_lines_instanced(render_program *prog)
+{
+  // Bind our program
+  glUseProgram(prog->shader_program);
+  glBindVertexArray(prog->vao);
+  glDrawElementsInstanced(
+    GL_LINES,// 	GLenum mode,
+    24, // GLsizei count,
+    GL_UNSIGNED_INT, // GLenum type,
+    0, // const void * indices, // Bound in EBO
+    2 // GLsizei primcount
+  );
 }
 
 

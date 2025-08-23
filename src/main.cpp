@@ -23,6 +23,7 @@ global bool is_running;
 
 
 
+// TODO: Why does app crash when I share it with discord?
 
 int main(int argc, char **argv)
 {
@@ -45,9 +46,9 @@ int main(int argc, char **argv)
   render_state renderer = render_init(&window);
 
   // Set up point program
-  render_program prog;
   // point_setup(&memory, &prog);
-  cube_setup(&memory, &prog);
+  render_program prog = cube_setup(&memory);
+  render_program prog2 = instance_setup(&memory);
   arena_free_all(&memory);
 
   // Set up the angular speed variable for the rotation
@@ -55,7 +56,7 @@ int main(int argc, char **argv)
   f32 angle = 0.0f;
 
   // VSynch
-  wglSwapIntervalEXT(1); // 1 is on 0 is off.
+  wglSwapIntervalEXT(0); // 1 is on 0 is off.
   // Show window
   i32 display_flags = SW_SHOW;
   ShowWindow(window.handle, display_flags);
@@ -65,7 +66,6 @@ int main(int argc, char **argv)
   {
     // Frame start
     clock_update(&app_clock);
-    // printf("Target: %f, Delta: %f\n", app_clock.secs_per_frame, app_clock.delta);
     message_process(window.handle);
 
     // Check window dimensions
@@ -73,6 +73,8 @@ int main(int argc, char **argv)
     // Initialize frame
     frame_init(&renderer);
     // Set uniform
+
+    // Draw spinning cube
     // wrap angle so it doesn't explode
     angle += angle_velocity * app_clock.delta; // rad += (rad/s)*s
     if (angle > 2.0*PI) angle -= 2.0*PI;
@@ -81,12 +83,16 @@ int main(int argc, char **argv)
     uniform_set(&prog, angle, fov_deg, aspect);
     // Draw call
     draw_lines(&prog);
+
+    // Draw instance cube
+    uniform_set(&prog2, angle, fov_deg, aspect);
+    draw_lines_instanced(&prog2);
     // Finalize and draw frame
     frame_render(&renderer);
   }
 
   // close and release all existing COM objects
-  render_close(&renderer, &prog);
+  render_close(&renderer, &prog2);
 
 
   return 0;
