@@ -313,8 +313,10 @@ render_state render_init(platform_window *window)
 }
 
 
-void point_setup(arena *scratch, render_program *prog)
+render_program point_setup(arena *scratch)
 {
+  render_program prog = {};
+
   GLuint point_vbo = 0;
   
   size_t byte_count;
@@ -336,10 +338,10 @@ void point_setup(arena *scratch, render_program *prog)
   glCompileShader(fragment_shader);
 
   // Create shader program
-  prog->shader_program = glCreateProgram();
-  glAttachShader(prog->shader_program, vertex_shader);
-  glAttachShader(prog->shader_program, fragment_shader);
-  glLinkProgram(prog->shader_program);
+  prog.shader_program = glCreateProgram();
+  glAttachShader(prog.shader_program, vertex_shader);
+  glAttachShader(prog.shader_program, fragment_shader);
+  glLinkProgram(prog.shader_program);
 
   // Clean up shaders
   glDeleteShader(vertex_shader);
@@ -351,10 +353,10 @@ void point_setup(arena *scratch, render_program *prog)
   };
 
   // Generate VAO and VBO
-  glGenVertexArrays(1, &prog->vao);
+  glGenVertexArrays(1, &prog.vao);
   glGenBuffers(1, &point_vbo);
 
-  glBindVertexArray(prog->vao);
+  glBindVertexArray(prog.vao);
   glBindBuffer(GL_ARRAY_BUFFER, point_vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(point_vertex), point_vertex, GL_STATIC_DRAW);
 
@@ -366,6 +368,8 @@ void point_setup(arena *scratch, render_program *prog)
 
   // Enable point size control from vertex shader
   glEnable(GL_PROGRAM_POINT_SIZE);
+
+  return prog;
 }
 
 

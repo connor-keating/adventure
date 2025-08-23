@@ -46,7 +46,7 @@ int main(int argc, char **argv)
   render_state renderer = render_init(&window);
 
   // Set up point program
-  // point_setup(&memory, &prog);
+  render_program prog_points = point_setup(&memory);
   render_program prog = cube_setup(&memory);
   render_program prog2 = instance_setup(&memory);
   arena_free_all(&memory);
@@ -72,16 +72,18 @@ int main(int argc, char **argv)
     window_size_get(&window);
     // Initialize frame
     frame_init(&renderer);
-    // Set uniform
 
-    // Draw spinning cube
+    // Draw the editor
+    draw_points(&prog_points);
+
     // wrap angle so it doesn't explode
     angle += angle_velocity * app_clock.delta; // rad += (rad/s)*s
     if (angle > 2.0*PI) angle -= 2.0*PI;
     f32 fov_deg = 45.0f;            // pick your FOV
     f32 aspect  = window.width / window.height; // keep updated on resize
     uniform_set(&prog, angle, fov_deg, aspect);
-    // Draw call
+
+    // Draw spinning cube
     draw_lines(&prog);
 
     // Draw instance cube
