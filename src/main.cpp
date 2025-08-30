@@ -9,6 +9,10 @@
 // Globals
 global bool is_running;
 
+void handle_input()
+{
+  printf("Handling Input");
+}
 
 // Merge source code into single translation unit
 #ifdef PLATFORM_WINDOWS
@@ -22,21 +26,13 @@ global bool is_running;
 #endif
 
 
-enum control_bindings
-{
-  click,
-  control_count,
-};
-
 // TODO: Why does app crash when I share it with discord?
+
+
 
 int main(int argc, char **argv)
 {
   // Arrays indexed directly by control_bindings values
-  // int         input_map[control_count];
-  // InputState  input_state[control_count];
-  // printf("%d \n", control_count);
-  // return 0;
 
   platform_window window = {};
 
@@ -52,6 +48,13 @@ int main(int argc, char **argv)
   // Application clock
   f64 fps_target = 60;                // The amount of frames presented in a second.
   clock app_clock = clock_init(fps_target);
+
+  // Initialize input map
+  i32           input_map[control_count];
+  control_state input_state[control_count];
+
+  // Set the bindings
+  platform_control_set(input_map);
 
   // Initialize renderer
   render_state renderer = render_init(&window);
@@ -77,7 +80,7 @@ int main(int argc, char **argv)
   {
     // Frame start
     clock_update(&app_clock);
-    message_process(window.handle);
+    message_process(window.handle, input_map);
 
     // Check window dimensions
     window_size_get(&window);

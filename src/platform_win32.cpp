@@ -20,13 +20,31 @@ struct clock
 };
 
 
-enum button_state
+enum control_bindings
+{
+  action1,
+  action2,
+  action3,
+  control_count,
+};
+
+enum control_state
 {
   up,
   pressed,
   down,
   released,
 };
+
+
+void platform_control_set(i32 *input_map)
+{
+  // TODO: How to make a function that listens for next input and sets this map to that key.
+  // TODO: I should write the key bindings to a file and read from that, if it doesn't exist make it when starting up.
+  input_map[action1] = WM_LBUTTONDOWN;
+  input_map[action2] = WM_RBUTTONDOWN;
+  input_map[action3] = 'A';
+}
 
 
 static const char* msg_name(UINT m) {
@@ -69,21 +87,49 @@ internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT messag
 }
 
 
-void message_process(HWND handle)
+void message_process(HWND handle, i32 *input_map)
 {
   MSG message = {};
   // This has to be in condition otherwise you'll process the message twice.
   while (PeekMessageA(&message, handle, 0, 0, PM_REMOVE))
   {
-    // u32 vkcode = (u32) message.wParam;
+    u32 vkcode = (u32) message.wParam;
     // const char* name = msg_name(message.message);
     u32 message_id = message.message;
     switch (message_id)
     {
-      case (WM_LBUTTONDOWN):
+      case(WM_LBUTTONDOWN):
       {
-        POINTS p = MAKEPOINTS(message.lParam);
-        printf("%s time=%lu pos=(%d,%d)\n", "Left mouse click", message.time, p.x, p.y);
+        if (WM_LBUTTONDOWN == input_map[action1])
+        {
+          handle_input();
+          POINTS p = MAKEPOINTS(message.lParam);
+          printf("%s time=%lu pos=(%d,%d)\n", "Left mouse click", message.time, p.x, p.y);
+        }
+        else if (WM_LBUTTONDOWN == input_map[action2])
+        {
+          printf("Right click\n");
+        }
+        else if (WM_LBUTTONDOWN == input_map[action3])
+        {
+          printf("Action 3\n");
+        }
+      }
+      case(WM_KEYDOWN):
+      {
+        if (vkcode == input_map[action1])
+        {
+          POINTS p = MAKEPOINTS(message.lParam);
+          printf("%s time=%lu pos=(%d,%d)\n", "Left mouse click", message.time, p.x, p.y);
+        }
+        else if (vkcode == input_map[action2])
+        {
+          printf("Right click\n");
+        }
+        else if (vkcode == input_map[action3])
+        {
+          printf("Action 3\n");
+        }
         break;
       }
     }
