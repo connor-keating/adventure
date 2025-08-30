@@ -20,9 +20,32 @@ struct clock
 };
 
 
+enum button_state
+{
+  up,
+  pressed,
+  down,
+  released,
+};
+
+
+static const char* msg_name(UINT m) {
+    switch (m) {
+    case WM_LBUTTONDOWN:    return "WM_LBUTTONDOWN";
+    case WM_LBUTTONUP:      return "WM_LBUTTONUP";
+    case WM_LBUTTONDBLCLK:  return "WM_LBUTTONDBLCLK";
+    case WM_NCLBUTTONDOWN:  return "WM_NCLBUTTONDOWN";
+    case WM_NCLBUTTONUP:    return "WM_NCLBUTTONUP";
+    case WM_NCLBUTTONDBLCLK:return "WM_NCLBUTTONDBLCLK";
+    default:                return nullptr;
+    }
+}
+
+
 internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT message_id, WPARAM param_w, LPARAM param_l)
 {
   LRESULT result = 0;
+  // u32 vkcode = (u32) param_w;
   switch (message_id) 
   {
     case WM_CLOSE:
@@ -30,6 +53,12 @@ internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT messag
       is_running = false;
       PostQuitMessage(0);
       break;
+    }
+    case WM_SIZE: 
+    {
+      // Save the new width and height of the client area. 
+      // dwClientX = LOWORD(lParam); 
+      // dwClientY = HIWORD(lParam); 
     }
     default: 
     {
@@ -43,10 +72,21 @@ internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT messag
 void message_process(HWND handle)
 {
   MSG message = {};
-  bool32 message_current = true;
-  while (message_current)
+  // This has to be in condition otherwise you'll process the message twice.
+  while (PeekMessageA(&message, handle, 0, 0, PM_REMOVE))
   {
-    message_current = PeekMessageA(&message, handle, 0, 0, PM_REMOVE);
+    // u32 vkcode = (u32) message.wParam;
+    // const char* name = msg_name(message.message);
+    u32 message_id = message.message;
+    switch (message_id)
+    {
+      case (WM_LBUTTONDOWN):
+      {
+        POINTS p = MAKEPOINTS(message.lParam);
+        printf("%s time=%lu pos=(%d,%d)\n", "Left mouse click", message.time, p.x, p.y);
+        break;
+      }
+    }
     // This section basically sends the message to the loop we setup with our window. (win32_message_procedure_ansi)
     TranslateMessage(&message); // turn keystrokes into characters
     DispatchMessageA(&message); // tell OS to call window procedure
@@ -132,6 +172,10 @@ void window_size_get(platform_window *wind)
   GetClientRect(wind->handle, &size);
   wind->width  = size.right;
   wind->height = size.bottom;
+  if ((wind->width == 0) && (wind->height == 0))
+  {
+    printf("minimized\n");
+  }
 }
 
 
