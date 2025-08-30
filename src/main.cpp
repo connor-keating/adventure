@@ -22,11 +22,22 @@ global bool is_running;
 #endif
 
 
+enum control_bindings
+{
+  click,
+  control_count,
+};
 
 // TODO: Why does app crash when I share it with discord?
 
 int main(int argc, char **argv)
 {
+  // Arrays indexed directly by control_bindings values
+  // int         input_map[control_count];
+  // InputState  input_state[control_count];
+  // printf("%d \n", control_count);
+  // return 0;
+
   platform_window window = {};
 
   // Allocate all program memory upfront.
@@ -70,6 +81,9 @@ int main(int argc, char **argv)
 
     // Check window dimensions
     window_size_get(&window);
+    // Set render window dimensions (for now the whole canvas)
+    renderer.width = window.width;
+    renderer.height = window.height;
     // Initialize frame
     frame_init(&renderer);
 
@@ -80,7 +94,7 @@ int main(int argc, char **argv)
     angle += angle_velocity * app_clock.delta; // rad += (rad/s)*s
     if (angle > 2.0*PI) angle -= 2.0*PI;
     f32 fov_deg = 45.0f;            // pick your FOV
-    f32 aspect  = window.width / window.height; // keep updated on resize
+    f32 aspect  = window.width / (window.height + 0.000001); // keep updated on resize
     uniform_set(&prog, angle, fov_deg, aspect);
 
     // Draw spinning cube
