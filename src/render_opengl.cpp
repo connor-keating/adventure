@@ -9,6 +9,8 @@ OTHERWISE YOU'LL CRASH.
 struct render_state
 {
   HDC context;
+  f32 width;
+  f32 height;
 };
 
 struct render_program
@@ -649,6 +651,7 @@ render_program instance_setup(arena *scratch)
 
 void frame_init(render_state *state)
 {
+  glViewport(0, 0, state->width, state->height);
   // Clear screen
   glClearColor(0.01, 0.06, 0.06, 1.0f);
 
