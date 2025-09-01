@@ -31,7 +31,7 @@ enum control_bindings
 enum control_state
 {
   CONTROL_UP,
-  CONTROL_PRESSED,
+  CONTROL_HELD,
   CONTROL_DOWN,
   CONTROL_RELEASED,
 };
@@ -39,7 +39,7 @@ enum control_state
 const char* control_state_log(control_state s) {
   switch (s) {
   case CONTROL_UP:       return "up";
-  case CONTROL_PRESSED:  return "pressed";
+  case CONTROL_HELD:  return "held";
   case CONTROL_DOWN:     return "down";
   case CONTROL_RELEASED: return "released";
   default:       return "unknown";
@@ -151,7 +151,7 @@ void message_process(HWND handle, i32 *input_map, control_state *input_state)
         bool32 is_down = ((message.lParam & (1 << 31)) == 0);
         control_state down_state;
         control_state state;
-        down_state = was_down ? CONTROL_PRESSED : CONTROL_DOWN;
+        down_state = was_down ? CONTROL_HELD : CONTROL_DOWN;
         state = is_down ?  down_state : CONTROL_RELEASED;
         input_check(input_map, input_state, vkcode, state);
         break;
