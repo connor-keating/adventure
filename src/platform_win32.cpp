@@ -162,7 +162,7 @@ void message_process(HWND handle, i32 *input_map, control_state *input_state)
       case(WM_LBUTTONUP):
       {
         // POINTS p = MAKEPOINTS(message.lParam);
-        // printf("%s time=%lu pos=(%d,%d)\n", "Left mouse click", message.time, p.x, p.y);
+        // printf("%s time=%lu pos=(%d,%d)\n", "Left mouse release", message.time, p.x, p.y);
         platform_input_state_set(input_map, input_state, WM_LBUTTONDOWN, CONTROL_RELEASED);
         break;
       }
@@ -178,7 +178,7 @@ void message_process(HWND handle, i32 *input_map, control_state *input_state)
       case(WM_RBUTTONUP):
       {
         // POINTS p = MAKEPOINTS(message.lParam);
-        // printf("%s time=%lu pos=(%d,%d)\n", "Left mouse click", message.time, p.x, p.y);
+        // printf("%s time=%lu pos=(%d,%d)\n", "Right mouse release", message.time, p.x, p.y);
         platform_input_state_set(input_map, input_state, WM_RBUTTONDOWN, CONTROL_RELEASED);
         break;
       }
