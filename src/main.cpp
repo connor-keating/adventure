@@ -39,6 +39,11 @@ void input_reset(control_state *input_state)
       input_state[i] = CONTROL_UP;
       printf("Action %d, up\n", i+1);
     }
+    else if (input_state[i] == CONTROL_DOWN)
+    {
+      input_state[i] = CONTROL_HELD;
+      printf("Action %d, held\n", i+1);
+    }
   }
 }
 
@@ -82,6 +87,9 @@ int main(int argc, char **argv)
   f32 angle_velocity = PI/4.0f;
   f32 angle = 0.0f;
 
+  // Instance shader toggle
+  bool toggle = 0;
+
   // VSynch
   wglSwapIntervalEXT(0); // 1 is on 0 is off.
   // Show window
@@ -114,9 +122,25 @@ int main(int argc, char **argv)
     uniform_set(&prog, angle, fov_deg, aspect);
 
     // Set color
+    if (input_state[ACTION1] == CONTROL_DOWN)
+    {
+      toggle = !toggle;
+    }
+    f32 color[3];
+    if (toggle)
+    {
+      color[0] = 0.0f;
+      color[1] = 1.0f;
+      color[2] = 0.0f;
+    }
+    else 
+    {
+      color[0] = 1.0f;
+      color[1] = 0.0f;
+      color[2] = 0.0f;
+    }
     glUseProgram(prog2.shader_program);
     GLint loc = glGetUniformLocation( prog2.shader_program, "mycolor");
-    f32 color[3] = {0.0f, 1.0f, 1.0f};
     glUniform3fv( loc, 1, color);
 
     // Draw spinning cube
