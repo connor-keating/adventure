@@ -97,7 +97,7 @@ internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT messag
 }
 
 
-void input_check(i32* input_map, control_state *input_state, i32 input, control_state state)
+void platform_input_state_set(i32* input_map, control_state *input_state, i32 input, control_state state)
 {
   const char *type = control_state_log(state);
   if (input_map[ACTION1] == input)
@@ -118,6 +118,27 @@ void input_check(i32* input_map, control_state *input_state, i32 input, control_
 }
 
 
+control_state mouse_input(i32 *input_map, control_state *input_state, i32 button)
+{
+  i32 i;
+  for (i = 0; i < ACTION_COUNT; ++i)
+  {
+    if (input_map[i] == button) break;
+  }
+  // Get previous state
+  control_state previous = input_state[i];
+  if (previous == CONTROL_UP || previous == CONTROL_RELEASED)
+  {
+    return CONTROL_DOWN;
+  }
+  else
+  {
+    // TODO: Mouse input on windows doesn't send held messages, so I'll just have to know when to transition it.
+    return CONTROL_HELD;
+  }
+}
+
+
 void message_process(HWND handle, i32 *input_map, control_state *input_state)
 {
   MSG message = {};
@@ -133,14 +154,32 @@ void message_process(HWND handle, i32 *input_map, control_state *input_state)
       {
         // POINTS p = MAKEPOINTS(message.lParam);
         // printf("%s time=%lu pos=(%d,%d)\n", "Left mouse click", message.time, p.x, p.y);
-        input_check(input_map, input_state, WM_LBUTTONDOWN, CONTROL_DOWN);
+        i32 target = WM_LBUTTONDOWN;
+        control_state s = mouse_input(input_map, input_state, target);
+        platform_input_state_set(input_map, input_state, target, s);
+        break;
+      }
+      case(WM_LBUTTONUP):
+      {
+        // POINTS p = MAKEPOINTS(message.lParam);
+        // printf("%s time=%lu pos=(%d,%d)\n", "Left mouse click", message.time, p.x, p.y);
+        platform_input_state_set(input_map, input_state, WM_LBUTTONDOWN, CONTROL_RELEASED);
         break;
       }
       case(WM_RBUTTONDOWN):
       {
         // POINTS p = MAKEPOINTS(message.lParam);
         // printf("%s time=%lu pos=(%d,%d)\n", "Right mouse click", message.time, p.x, p.y);
-        input_check(input_map, input_state, WM_RBUTTONDOWN, CONTROL_DOWN);
+        i32 target = WM_RBUTTONDOWN;
+        control_state s = mouse_input(input_map, input_state, target);
+        platform_input_state_set(input_map, input_state, target, s);
+        break;
+      }
+      case(WM_RBUTTONUP):
+      {
+        // POINTS p = MAKEPOINTS(message.lParam);
+        // printf("%s time=%lu pos=(%d,%d)\n", "Left mouse click", message.time, p.x, p.y);
+        platform_input_state_set(input_map, input_state, WM_RBUTTONDOWN, CONTROL_RELEASED);
         break;
       }
       case(WM_KEYDOWN):
@@ -154,7 +193,7 @@ void message_process(HWND handle, i32 *input_map, control_state *input_state)
         control_state state;
         down_state = was_down ? CONTROL_HELD : CONTROL_DOWN;
         state = is_down ?  down_state : CONTROL_RELEASED;
-        input_check(input_map, input_state, vkcode, state);
+        platform_input_state_set(input_map, input_state, vkcode, state);
         break;
       }
     }
