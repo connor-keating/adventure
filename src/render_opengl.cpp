@@ -633,7 +633,7 @@ render_program instance_setup(arena *scratch)
   glBindVertexArray(0);
 
   u32 vertex_shader   = shader_compile("shaders\\instance.vert", GL_VERTEX_SHADER, scratch);
-  u32 fragment_shader = shader_compile("shaders\\cube.frag", GL_FRAGMENT_SHADER, scratch);
+  u32 fragment_shader = shader_compile("shaders\\instance.frag", GL_FRAGMENT_SHADER, scratch);
   // Create shader program
   prog.shader_program = glCreateProgram();
   ASSERT(prog.shader_program != 0, "ERROR: Failed to create shader program.");
