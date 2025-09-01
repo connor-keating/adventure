@@ -97,25 +97,28 @@ internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT messag
 }
 
 
-void input_check(int* input_map, int input, control_state state)
+void input_check(i32* input_map, control_state *input_state, i32 input, control_state state)
 {
   const char *type = control_state_log(state);
   if (input_map[ACTION1] == input)
   {
     printf("Action 1, %s\n", type);
+    input_state[ACTION1] = state;
   }
   else if (input_map[ACTION2] == input)
   {
     printf("Action 2, %s\n", type);
+    input_state[ACTION2] = state;
   }
   else if (input_map[ACTION3] == input)
   {
     printf("Action 3, %s\n", type);
+    input_state[ACTION3] = state;
   }
 }
 
 
-void message_process(HWND handle, i32 *input_map)
+void message_process(HWND handle, i32 *input_map, control_state *input_state)
 {
   MSG message = {};
   // This has to be in condition otherwise you'll process the message twice.
@@ -130,14 +133,14 @@ void message_process(HWND handle, i32 *input_map)
       {
         // POINTS p = MAKEPOINTS(message.lParam);
         // printf("%s time=%lu pos=(%d,%d)\n", "Left mouse click", message.time, p.x, p.y);
-        input_check(input_map, WM_LBUTTONDOWN, CONTROL_DOWN);
+        input_check(input_map, input_state, WM_LBUTTONDOWN, CONTROL_DOWN);
         break;
       }
       case(WM_RBUTTONDOWN):
       {
         // POINTS p = MAKEPOINTS(message.lParam);
         // printf("%s time=%lu pos=(%d,%d)\n", "Right mouse click", message.time, p.x, p.y);
-        input_check(input_map, WM_RBUTTONDOWN, CONTROL_DOWN);
+        input_check(input_map, input_state, WM_RBUTTONDOWN, CONTROL_DOWN);
         break;
       }
       case(WM_KEYDOWN):
@@ -150,7 +153,7 @@ void message_process(HWND handle, i32 *input_map)
         control_state state;
         down_state = was_down ? CONTROL_PRESSED : CONTROL_DOWN;
         state = is_down ?  down_state : CONTROL_RELEASED;
-        input_check(input_map, vkcode, state);
+        input_check(input_map, input_state, vkcode, state);
         break;
       }
     }

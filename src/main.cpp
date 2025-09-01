@@ -29,6 +29,19 @@ void handle_input()
 // TODO: Why does app crash when I share it with discord?
 
 
+void input_reset(control_state *input_state)
+{
+  for (i32 i=0; i < ACTION_COUNT; ++i)
+  {
+    // Get the state, if it is released make it up (idle)
+    if (input_state[i] == CONTROL_RELEASED)
+    {
+      input_state[i] = CONTROL_UP;
+      printf("Action %d, up\n", i+1);
+    }
+  }
+}
+
 
 int main(int argc, char **argv)
 {
@@ -80,7 +93,7 @@ int main(int argc, char **argv)
   {
     // Frame start
     clock_update(&app_clock);
-    message_process(window.handle, input_map);
+    message_process(window.handle, input_map, input_state);
 
     // Check window dimensions
     window_size_get(&window);
@@ -108,6 +121,8 @@ int main(int argc, char **argv)
     draw_lines_instanced(&prog2);
     // Finalize and draw frame
     frame_render(&renderer);
+    // Reset input after processing everything
+    input_reset(input_state);
   }
 
   // close and release all existing COM objects
