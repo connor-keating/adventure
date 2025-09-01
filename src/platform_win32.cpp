@@ -148,6 +148,7 @@ void message_process(HWND handle, i32 *input_map, control_state *input_state)
       {
         // bit 30: The previous key state. The value is 1 if the key is down before the message is sent, or it is zero if the key is up.
         bool32 was_down = (message.lParam & (1 << 30));
+        // bit 31: The transition state. The value is always 0 for a WM_KEYDOWN message.
         bool32 is_down = ((message.lParam & (1 << 31)) == 0);
         control_state down_state;
         control_state state;
