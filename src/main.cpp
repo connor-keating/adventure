@@ -88,7 +88,7 @@ int main(int argc, char **argv)
   f32 angle = 0.0f;
 
   // Instance shader toggle
-  bool toggle = 0;
+  bool toggle = 1;
 
   // VSynch
   wglSwapIntervalEXT(0); // 1 is on 0 is off.
