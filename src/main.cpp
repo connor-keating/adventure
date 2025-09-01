@@ -50,8 +50,8 @@ int main(int argc, char **argv)
   clock app_clock = clock_init(fps_target);
 
   // Initialize input map
-  i32           input_map[control_count];
-  control_state input_state[control_count];
+  i32           input_map[ACTION_COUNT];
+  control_state input_state[ACTION_COUNT];
 
   // Set the bindings
   platform_control_set(input_map);

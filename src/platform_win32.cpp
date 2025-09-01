@@ -22,28 +22,38 @@ struct clock
 
 enum control_bindings
 {
-  action1,
-  action2,
-  action3,
-  control_count,
+  ACTION1,
+  ACTION2,
+  ACTION3,
+  ACTION_COUNT,
 };
 
 enum control_state
 {
-  up,
-  pressed,
-  down,
-  released,
+  CONTROL_UP,
+  CONTROL_PRESSED,
+  CONTROL_DOWN,
+  CONTROL_RELEASED,
 };
+
+const char* control_state_log(control_state s) {
+  switch (s) {
+  case CONTROL_UP:       return "up";
+  case CONTROL_PRESSED:  return "pressed";
+  case CONTROL_DOWN:     return "down";
+  case CONTROL_RELEASED: return "released";
+  default:       return "unknown";
+  }
+}
 
 
 void platform_control_set(i32 *input_map)
 {
   // TODO: How to make a function that listens for next input and sets this map to that key.
   // TODO: I should write the key bindings to a file and read from that, if it doesn't exist make it when starting up.
-  input_map[action1] = WM_LBUTTONDOWN;
-  input_map[action2] = WM_RBUTTONDOWN;
-  input_map[action3] = 'A';
+  input_map[ACTION1] = WM_LBUTTONDOWN;
+  input_map[ACTION2] = WM_RBUTTONDOWN;
+  input_map[ACTION3] = 'A';
 }
 
 
@@ -87,19 +97,20 @@ internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT messag
 }
 
 
-void input_check(int* input_map, int input)
+void input_check(int* input_map, int input, control_state state)
 {
-  if (input_map[action1] == input)
+  const char *type = control_state_log(state);
+  if (input_map[ACTION1] == input)
   {
-    printf("Action 1\n");
+    printf("Action 1, %s\n", type);
   }
-  else if (input_map[action2] == input)
+  else if (input_map[ACTION2] == input)
   {
-    printf("Action 2\n");
+    printf("Action 2, %s\n", type);
   }
-  else if (input_map[action3] == input)
+  else if (input_map[ACTION3] == input)
   {
-    printf("Action 3\n");
+    printf("Action 3, %s\n", type);
   }
 }
 
@@ -119,19 +130,19 @@ void message_process(HWND handle, i32 *input_map)
       {
         // POINTS p = MAKEPOINTS(message.lParam);
         // printf("%s time=%lu pos=(%d,%d)\n", "Left mouse click", message.time, p.x, p.y);
-        input_check(input_map, WM_LBUTTONDOWN);
+        input_check(input_map, WM_LBUTTONDOWN, CONTROL_DOWN);
         break;
       }
       case(WM_RBUTTONDOWN):
       {
         // POINTS p = MAKEPOINTS(message.lParam);
         // printf("%s time=%lu pos=(%d,%d)\n", "Right mouse click", message.time, p.x, p.y);
-        input_check(input_map, WM_RBUTTONDOWN);
+        input_check(input_map, WM_RBUTTONDOWN, CONTROL_DOWN);
         break;
       }
       case(WM_KEYDOWN):
       {
-        input_check(input_map, vkcode);
+        input_check(input_map, vkcode, CONTROL_DOWN);
         break;
       }
     }
