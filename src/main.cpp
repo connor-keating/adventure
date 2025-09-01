@@ -113,6 +113,12 @@ int main(int argc, char **argv)
     f32 aspect  = window.width / (window.height + 0.000001); // keep updated on resize
     uniform_set(&prog, angle, fov_deg, aspect);
 
+    // Set color
+    glUseProgram(prog2.shader_program);
+    GLint loc = glGetUniformLocation( prog2.shader_program, "mycolor");
+    f32 color[3] = {0.0f, 1.0f, 1.0f};
+    glUniform3fv( loc, 1, color);
+
     // Draw spinning cube
     // draw_lines(&prog);
 

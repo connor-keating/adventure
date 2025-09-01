@@ -549,15 +549,15 @@ render_program instance_setup(arena *scratch)
   render_program prog = {};
 
   f32 verts[] = {
-    // positions        // colors
-    -1.0f,-1.0f,-1.0f,  0.0f, 1.0f, 0.0f, // 0 green
-     1.0f,-1.0f,-1.0f,  0.0f, 1.0f, 0.0f, // 1 green
-     1.0f, 1.0f,-1.0f,  0.0f, 1.0f, 0.0f, // 2 green
-    -1.0f, 1.0f,-1.0f,  0.0f, 1.0f, 0.0f, // 3 green
-    -1.0f,-1.0f, 1.0f,  0.0f, 1.0f, 0.0f, // 4 green
-     1.0f,-1.0f, 1.0f,  0.0f, 1.0f, 0.0f, // 5 green
-     1.0f, 1.0f, 1.0f,  0.0f, 1.0f, 0.0f, // 6 green
-    -1.0f, 1.0f, 1.0f,  0.0f, 1.0f, 0.0f  // 7 green
+    // positions      
+    -1.0f,-1.0f,-1.0f,
+     1.0f,-1.0f,-1.0f,
+     1.0f, 1.0f,-1.0f,
+    -1.0f, 1.0f,-1.0f,
+    -1.0f,-1.0f, 1.0f,
+     1.0f,-1.0f, 1.0f,
+     1.0f, 1.0f, 1.0f,
+    -1.0f, 1.0f, 1.0f,
   };
   u32 indices[] = {
     0,1, 1,2, 2,3, 3,0,        // bottom
@@ -576,13 +576,10 @@ render_program instance_setup(arena *scratch)
 
   // Tell OpenGL how to interpret the data
   // position attribute (location = 0)
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(f32), (void*)0);
-  // color attribute (location = 1)
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(f32), (void*)(3 * sizeof(f32)));
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(f32), (void*)0);
 
-  // Enable the vertex attributes (0 and 1)
+  // Enable the vertex attributes (0 because its only position)
   glEnableVertexAttribArray(0);
-  glEnableVertexAttribArray(1);
 
   // Set up EBO
   glGenBuffers(1, &ebo);
