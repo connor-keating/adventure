@@ -87,6 +87,23 @@ internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT messag
 }
 
 
+void input_check(int* input_map, int input)
+{
+  if (input_map[action1] == input)
+  {
+    printf("Action 1\n");
+  }
+  else if (input_map[action2] == input)
+  {
+    printf("Action 2\n");
+  }
+  else if (input_map[action3] == input)
+  {
+    printf("Action 3\n");
+  }
+}
+
+
 void message_process(HWND handle, i32 *input_map)
 {
   MSG message = {};
@@ -100,36 +117,21 @@ void message_process(HWND handle, i32 *input_map)
     {
       case(WM_LBUTTONDOWN):
       {
-        if (WM_LBUTTONDOWN == input_map[action1])
-        {
-          handle_input();
-          POINTS p = MAKEPOINTS(message.lParam);
-          printf("%s time=%lu pos=(%d,%d)\n", "Left mouse click", message.time, p.x, p.y);
-        }
-        else if (WM_LBUTTONDOWN == input_map[action2])
-        {
-          printf("Right click\n");
-        }
-        else if (WM_LBUTTONDOWN == input_map[action3])
-        {
-          printf("Action 3\n");
-        }
+        // POINTS p = MAKEPOINTS(message.lParam);
+        // printf("%s time=%lu pos=(%d,%d)\n", "Left mouse click", message.time, p.x, p.y);
+        input_check(input_map, WM_LBUTTONDOWN);
+        break;
+      }
+      case(WM_RBUTTONDOWN):
+      {
+        // POINTS p = MAKEPOINTS(message.lParam);
+        // printf("%s time=%lu pos=(%d,%d)\n", "Right mouse click", message.time, p.x, p.y);
+        input_check(input_map, WM_RBUTTONDOWN);
+        break;
       }
       case(WM_KEYDOWN):
       {
-        if (vkcode == input_map[action1])
-        {
-          POINTS p = MAKEPOINTS(message.lParam);
-          printf("%s time=%lu pos=(%d,%d)\n", "Left mouse click", message.time, p.x, p.y);
-        }
-        else if (vkcode == input_map[action2])
-        {
-          printf("Right click\n");
-        }
-        else if (vkcode == input_map[action3])
-        {
-          printf("Action 3\n");
-        }
+        input_check(input_map, vkcode);
         break;
       }
     }
