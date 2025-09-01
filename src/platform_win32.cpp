@@ -141,8 +141,16 @@ void message_process(HWND handle, i32 *input_map)
         break;
       }
       case(WM_KEYDOWN):
+      case(WM_KEYUP):
       {
-        input_check(input_map, vkcode, CONTROL_DOWN);
+        // bit 30: The previous key state. The value is 1 if the key is down before the message is sent, or it is zero if the key is up.
+        bool32 was_down = (message.lParam & (1 << 30));
+        bool32 is_down = ((message.lParam & (1 << 31)) == 0);
+        control_state down_state;
+        control_state state;
+        down_state = was_down ? CONTROL_PRESSED : CONTROL_DOWN;
+        state = is_down ?  down_state : CONTROL_RELEASED;
+        input_check(input_map, vkcode, state);
         break;
       }
     }
