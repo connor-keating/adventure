@@ -178,7 +178,7 @@ static void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GL
   {
     char sentence_buffer[8192] = {0};
     i32 char_written_count = sprintf_s(sentence_buffer, sizeof(sentence_buffer), "OpenGL Error: %s \033[0m", message);
-    ASSERT(false, sentence_buffer);
+    // ASSERT(false, sentence_buffer);
   }
   /*
   else
@@ -315,6 +315,84 @@ render_state render_init(platform_window *window)
 }
 
 
+u32 shader_compile(const char *filepath, i32 type, arena *scratch)
+{
+  size_t byte_count;
+  const char* source = read_textfile(filepath, scratch, &byte_count);
+  u32 shader = glCreateShader(type);
+  glShaderSource(shader, 1, &source, NULL);
+  glCompileShader(shader);
+  return shader;
+}
+
+
+render_program ui_init(render_state *state, arena *scratch)
+{
+  // Initialize program
+  render_program prog = {};
+
+  // The quad vertices
+  f32 verts[] = {
+    // Position          UV coords
+    -1.0f, -1.0f, 0.0f, //  0.0f, 0.0f, // Lower left
+     1.0f, -1.0f, 0.0f, //  1.0f, 0.0f, // Lower right
+    -1.0f,  1.0f, 0.0f, //  0.0f, 1.0f, // Upper left
+     1.0f,  1.0f, 0.0f, //  1.0f, 1.0f, // Upper right
+  };
+  
+  // Set up vertex attribute
+  glGenVertexArrays(1, &prog.vao);
+  // Bind VAO
+  glBindVertexArray(prog.vao);
+  // Set up vertex buffer object
+  u32 vbo;
+  glGenBuffers(1, &vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+
+  // Just position
+  // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(verts[0]), (void*)0);
+
+  // position attribute (location = 0)
+  size_t vert_size = 3 * sizeof(f32);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vert_size, (void*)0);
+  glEnableVertexAttribArray(0);
+
+  // texture attribute (location = 1)
+  // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, vert_size, (void*)(3 * sizeof(f32)));
+  // glEnableVertexAttribArray(1);
+
+
+  glEnableVertexAttribArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+  // Set up shaders 
+  u32 vertex_shader   = shader_compile("shaders\\text.vert", GL_VERTEX_SHADER, scratch);
+  u32 fragment_shader = shader_compile("shaders\\text.frag", GL_FRAGMENT_SHADER, scratch);
+  // Create shader program
+  prog.shader_program = glCreateProgram();
+  ASSERT(prog.shader_program != 0, "ERROR: Failed to create shader program.");
+  glAttachShader(prog.shader_program, vertex_shader);
+  glAttachShader(prog.shader_program, fragment_shader);
+  glLinkProgram(prog.shader_program);
+  {
+    int success = 0;
+    char log[512] = {0};
+    glGetProgramiv(prog.shader_program, GL_LINK_STATUS, &success);
+    if(!success)
+    {
+        glGetProgramInfoLog(prog.shader_program, 512, 0, log);
+        ASSERT(success, log);
+    }
+  }
+  // Clean up shaders
+  glDeleteShader(vertex_shader);
+  glDeleteShader(fragment_shader);
+
+  return prog;
+}
+
+
 render_program point_setup(arena *scratch)
 {
   render_program prog = {};
@@ -324,10 +402,10 @@ render_program point_setup(arena *scratch)
   size_t byte_count;
   // Vertex shader source
   ASSERT(file_exists("shaders\\points.vert") == true, "ERROR Shader not found.");
-  const char* vertex_shader_source = read_file("shaders\\points.vert", scratch, &byte_count);
+  const char* vertex_shader_source = read_textfile("shaders\\points.vert", scratch, &byte_count);
 
   // Fragment shader source  
-  const char* fragment_shader_source = read_file("shaders\\points.frag", scratch, &byte_count);
+  const char* fragment_shader_source = read_textfile("shaders\\points.frag", scratch, &byte_count);
 
   // Create vertex shader
   GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
@@ -418,9 +496,9 @@ void tri_setup(arena *scratch, render_program *prog)
   // Shader program
   size_t byte_count;
   // Vertx shader source
-  const char* vertex_shader_source = read_file("shaders\\tri.vert", scratch, &byte_count);
+  const char* vertex_shader_source = read_textfile("shaders\\tri.vert", scratch, &byte_count);
   // Fragment shader source  
-  const char* fragment_shader_source = read_file("shaders\\tri.frag", scratch, &byte_count);
+  const char* fragment_shader_source = read_textfile("shaders\\tri.frag", scratch, &byte_count);
   // Create vertex shader
   GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
@@ -506,9 +584,9 @@ render_program cube_setup(arena *scratch)
   // Shader program
   size_t byte_count;
   // Vertx shader source
-  const char* vertex_shader_source = read_file("shaders\\cube.vert", scratch, &byte_count);
+  const char* vertex_shader_source = read_textfile("shaders\\cube.vert", scratch, &byte_count);
   // Fragment shader source  
-  const char* fragment_shader_source = read_file("shaders\\cube.frag", scratch, &byte_count);
+  const char* fragment_shader_source = read_textfile("shaders\\cube.frag", scratch, &byte_count);
   // Create vertex shader
   GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
@@ -529,17 +607,6 @@ render_program cube_setup(arena *scratch)
   glDeleteShader(fragment_shader);
 
   return prog;
-}
-
-
-u32 shader_compile(const char *filepath, i32 type, arena *scratch)
-{
-  size_t byte_count;
-  const char* source = read_file(filepath, scratch, &byte_count);
-  u32 shader = glCreateShader(type);
-  glShaderSource(shader, 1, &source, NULL);
-  glCompileShader(shader);
-  return shader;
 }
 
 
@@ -675,6 +742,13 @@ void uniform_set(render_program *prog, f32 angle, f32 fov_deg, f32 aspect)
   glm::mat4 mvp = proj * view * model;
   GLint loc = glGetUniformLocation( prog->shader_program, "uMVP");
   glUniformMatrix4fv( loc, 1, GL_FALSE, &mvp[0][0]);
+}
+
+
+void draw_ui(render_program *prog)
+{
+  glUseProgram(prog->shader_program);
+  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
 

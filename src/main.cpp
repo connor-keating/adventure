@@ -83,6 +83,10 @@ int main(int argc, char **argv)
   render_program prog2 = instance_setup(&memory);
   arena_free_all(&memory);
 
+  // Initialize UI buffer
+  render_program prog_ui = ui_init(&renderer, &memory);
+  arena_free_all(&memory);
+
   // Set up the angular speed variable for the rotation
   f32 angle_velocity = PI/4.0f;
   f32 angle = 0.0f;
@@ -111,8 +115,11 @@ int main(int argc, char **argv)
     // Initialize frame
     frame_init(&renderer);
 
+    // Draw the UI
+    draw_ui(&prog_ui);
+
     // Draw the editor
-    draw_points(&prog_points);
+    // draw_points(&prog_points);
 
     // wrap angle so it doesn't explode
     angle += angle_velocity * app_clock.delta; // rad += (rad/s)*s
@@ -139,16 +146,16 @@ int main(int argc, char **argv)
       color[1] = 0.0f;
       color[2] = 0.0f;
     }
-    glUseProgram(prog2.shader_program);
-    GLint loc = glGetUniformLocation( prog2.shader_program, "mycolor");
-    glUniform3fv( loc, 1, color);
+    // glUseProgram(prog2.shader_program);
+    // GLint loc = glGetUniformLocation( prog2.shader_program, "mycolor");
+    // glUniform3fv( loc, 1, color);
 
     // Draw spinning cube
     // draw_lines(&prog);
 
     // Draw instance cube
-    uniform_set(&prog2, angle, fov_deg, aspect);
-    draw_lines_instanced(&prog2);
+    // uniform_set(&prog2, angle, fov_deg, aspect);
+    // draw_lines_instanced(&prog2);
     // Finalize and draw frame
     frame_render(&renderer);
     // Reset input after processing everything
@@ -156,8 +163,8 @@ int main(int argc, char **argv)
   }
 
   // close and release all existing COM objects
-  program_close(&prog);
-  program_close(&prog2);
+  // program_close(&prog);
+  // program_close(&prog2);
   render_close(&renderer);
 
 
