@@ -313,7 +313,6 @@ int file_exists(const char *filepath)
 /// @param file 
 /// @param scratch 
 /// @return 
-/// @note If reading text files you have to add a \0 char.
 const char * read_file(const char *file, arena *scratch, size_t *out_size)
 {
   FILE *stream;
@@ -331,6 +330,26 @@ const char * read_file(const char *file, arena *scratch, size_t *out_size)
   return contents;
 }
 
+
+const char * read_textfile(const char *file, arena *scratch, size_t *out_size)
+{
+  FILE *stream;
+  char *contents = 0;
+  fopen_s(&stream, file, "rb");
+  ASSERT(stream, "ERROR: Failed to read file.");
+  fseek(stream, 0, SEEK_END);
+  size_t file_size = ftell(stream);
+  *out_size = file_size + 1;
+  contents = (char*) arena_alloc(scratch, *out_size);
+  fseek(stream, 0, SEEK_SET);
+  size_t bytes_read = fread(contents, 1, file_size, stream);
+  bool8 success = bytes_read == file_size;
+  ASSERT(success, "ERROR: Read incorrect number of bytes from file.");
+  fclose(stream);
+  // Null terminate the char array
+  contents[*out_size] = '\0';
+  return contents;
+}
 
 i64 clock_time()
 {
