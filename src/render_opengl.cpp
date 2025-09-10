@@ -722,6 +722,12 @@ void frame_init(render_state *state)
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+void uniform_set_mat4(render_program prog, const char *name, const f32 *data)
+{
+  glUseProgram(prog.shader_program);
+  GLint loc = glGetUniformLocation( prog.shader_program, name);
+  glUniformMatrix4fv( loc, 1, GL_FALSE, data);
+}
 
 void uniform_set(render_program *prog, f32 angle, f32 fov_deg, f32 aspect)
 {
@@ -748,6 +754,7 @@ void uniform_set(render_program *prog, f32 angle, f32 fov_deg, f32 aspect)
 void draw_ui(render_program *prog)
 {
   glUseProgram(prog->shader_program);
+  glBindVertexArray(prog->vao);
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 

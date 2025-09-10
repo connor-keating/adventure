@@ -116,6 +116,13 @@ int main(int argc, char **argv)
     frame_init(&renderer);
 
     // Draw the UI
+    f32 ui_scale_x = 0.25 * renderer.width;
+    f32 ui_scale_y = 0.25 * renderer.height;
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(renderer.width * 0.5, renderer.height * 0.5, 0.0f));
+    model = glm::scale(model, glm::vec3(ui_scale_x, ui_scale_y, 1.0f));
+    glm::mat4 ortho = glm::ortho(0.0f, renderer.width, 0.0f, renderer.height, -1.0f, 1.0f);
+    glm::mat4 proj = ortho * model;
+    uniform_set_mat4(prog_ui, "proj", &proj[0][0]);
     draw_ui(&prog_ui);
 
     // Draw the editor
