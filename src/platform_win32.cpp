@@ -404,8 +404,10 @@ const char * read_textfile(const char *file, arena *scratch, size_t *out_size)
 }
 
 
-void read_obj(const char *file, arena *memory)
+mesh read_obj(const char *file, arena *memory)
 {
+  // Initialize output
+  mesh model = {};
   // Parse the file and read that data from it.
   tinyobj_attrib_t attrib;
   tinyobj_shape_t* shapes = NULL;
@@ -413,7 +415,6 @@ void read_obj(const char *file, arena *memory)
   tinyobj_material_t* materials = NULL;
   size_t num_materials;
   u32 flags = TINYOBJ_FLAG_TRIANGULATE;
-
   i32 ret = tinyobj_parse_obj(
     &attrib,
     &shapes,
@@ -426,7 +427,6 @@ void read_obj(const char *file, arena *memory)
     flags
   );
   ASSERT(ret == TINYOBJ_SUCCESS, "ERROR: Failed to load obj.");
-  /*
   // We only have one shape
   u8 shape_idx = 0;
   tinyobj_shape_t *shape = &shapes[shape_idx];
@@ -436,10 +436,11 @@ void read_obj(const char *file, arena *memory)
   // Allocate output memory
   // u64 unique_index = 0;
   u32 element = 0;
-  *out_vert_count = attrib.num_faces;
-  *out_index_count = attrib.num_faces;
-  *out_verts = arena_alloc_array(memory, *out_vert_count, vertex);
-  *out_indices = arena_alloc_array(memory, *out_index_count, u32);
+  model.vert_count = attrib.num_faces;
+  model.index_count = attrib.num_faces;
+  model.vertices = arena_alloc_array(memory, model.vert_count, vertex);
+  model.indices = arena_alloc_array(memory, model.index_count, u32);
+
   // Metadata for loop
   u32 face_count = attrib.num_face_num_verts;
   i32 face_vert_count;// will use this when we're just iterating through verts
@@ -459,15 +460,15 @@ void read_obj(const char *file, arena *memory)
       data.pos.x = attrib.vertices[vert_offset+0];
       data.pos.y = attrib.vertices[vert_offset+1];
       data.pos.z = attrib.vertices[vert_offset+2];
-      data.texture_coords.x = attrib.texcoords[text_offset+0];
-      data.texture_coords.y = 1.0f - attrib.texcoords[text_offset+1];
-      (*out_verts)[element] = data;
-      (*out_indices)[element] = element;
+      // data.texture_coords.x = attrib.texcoords[text_offset+0];
+      // data.texture_coords.y = 1.0f - attrib.texcoords[text_offset+1];
+      model.vertices[element] = data;
+      model.indices[element] = element;
       // unique_index++;
     }
     offset += face_vert_count;
   }
-  */
+  return model;
 }
 
 

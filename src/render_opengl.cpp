@@ -292,6 +292,7 @@ render_state render_init(platform_window *window)
   glEnable(GL_DEBUG_OUTPUT);
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); 
   glEnable(GL_DEPTH_TEST);
+  glEnable(GL_PROGRAM_POINT_SIZE);
   glDisable(GL_CULL_FACE);
 
   /*
@@ -325,6 +326,27 @@ render_buffer render_buffer_init(void *data, size_t length)
   // Set up vertex attribute
   glGenVertexArrays(1, &buffer.vao);
   return buffer;
+}
+
+
+void render_buffer_attribute(render_buffer buffer, u32 index, u32 size, size_t stride, void *offset)
+{
+  // Bind the VAO and VBO
+  glBindVertexArray(buffer.vao);
+  glBindBuffer(GL_ARRAY_BUFFER, buffer.vbo);
+  // Describe it
+  glVertexAttribPointer(index, size, GL_FLOAT, GL_FALSE, stride, offset);
+  // Turn it on
+  glEnableVertexAttribArray(index);
+  /*
+  Example:
+  index = 0;
+  size = 3;
+  type = GL_FLOAT;
+  normalize = GL_FALSE;
+  stride = sizeof(vertex_array);
+  starting_offset = (void*)0;
+  */
 }
 
 
@@ -716,6 +738,7 @@ void uniform_set_mat4(u32 shader_program, const char *name, const f32 *data)
   glUniformMatrix4fv( loc, 1, GL_FALSE, data);
 }
 
+
 void uniform_set(u32 shader_program, f32 angle, f32 fov_deg, f32 aspect)
 {
   glUseProgram(shader_program);
@@ -761,17 +784,18 @@ void draw_lines_instanced(render_buffer buffer, u32 shader_program)
 }
 
 
-/*
-void draw_points(render_program *prog)
+void draw_points(render_buffer buffer, u32 shader_program, u32 amount)
 {
+  u32 index_start = 0;
   // Bind our program
-  glUseProgram(prog->shader_program);
-  glBindVertexArray(prog->vao);
+  glUseProgram(shader_program);
+  glBindVertexArray(buffer.vao);
   // Draw the point
-  glDrawArrays(GL_POINTS, 0, 1);
+  glDrawArrays(GL_POINTS, index_start, amount);
 }
 
 
+/*
 void draw_lines(render_program *prog)
 {
   // Bind our program

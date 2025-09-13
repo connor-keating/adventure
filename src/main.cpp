@@ -6,6 +6,21 @@
 #include "core.cpp"
 #include "linalg.cpp"
 
+// Application data types
+struct vertex
+{
+  fvec3 pos;
+};
+
+
+struct mesh
+{
+  vertex *vertices;
+  u32 *indices;
+  u32 vert_count;
+  u32 index_count;
+};
+
 // Globals
 global bool is_running;
 
@@ -98,7 +113,17 @@ int main(int argc, char **argv)
   arena_free_all(&memory);
 
   // Read in model data
-  read_obj("assets\\teapot.obj", &memory);
+  mesh teapot_model = read_obj("assets\\teapot.obj", &memory);
+  size_t teapot_buffer_size = sizeof(teapot_model.vertices[0]) * teapot_model.vert_count;
+  render_buffer teapot_buffer = render_buffer_init((void*)teapot_model.vertices, teapot_buffer_size);
+  render_buffer_attribute(
+    teapot_buffer,
+    0, 
+    ARRAY_COUNT(teapot_model.vertices[0].pos.array),
+    ARRAY_COUNT(teapot_model.vertices[0].pos.array) * sizeof(teapot_model.vertices[0].pos.array[0]),
+    (void *)0
+  );
+  u32 teapot_program = render_program_init(&memory, "shaders\\points.vert", "shaders\\points.frag");
 
   // Set up the angular speed variable for the rotation
   f32 angle_velocity = PI/4.0f;
@@ -136,17 +161,36 @@ int main(int argc, char **argv)
     glm::mat4 ortho = glm::ortho(0.0f, renderer.width, 0.0f, renderer.height, -1.0f, 1.0f);
     glm::mat4 proj = ortho * model;
     uniform_set_mat4(ui_program, "proj", &proj[0][0]);
-    draw_ui(ui_buffer, ui_program);
+    // draw_ui(ui_buffer, ui_program);
+
+    glm::mat4 identity = glm::mat4(1.0f);
+    // Create view and projection matrix
+    angle += angle_velocity * app_clock.delta; // rad += (rad/s)*s
+    if (angle > 2.0*PI) angle -= 2.0*PI;
+    f32 fov_deg = 45.0f;            // pick your FOV
+    f32 aspect  = window.width / (window.height + 0.000001); // keep updated on resize
+    glm::mat4 perspective_model = glm::mat4(1.0f);
+    glm::vec3 rotation_axis_norm = glm::vec3(0,1,0);
+    perspective_model = glm::rotate(perspective_model, angle, rotation_axis_norm);
+    // look at
+    glm::vec3 camera_pos    = glm::vec3(0, 5.0f, 10.0f);
+    glm::vec3 camera_target = glm::vec3(0,0,0);
+    glm::vec3 camera_up     = glm::vec3(0,1,0);
+    glm::mat4 view = glm::lookAt(camera_pos, camera_target, camera_up);
+    // perspective
+    f32 fov_rad = glm::radians(fov_deg);
+    f32 znear = 0.1f;
+    f32 zfar = 100.0f;
+    glm::mat4 perspective_proj = glm::perspective(fov_rad, aspect, znear, zfar);
+    glm::mat4 mvp = perspective_proj * view * perspective_model;
+    // Draw the model
+    uniform_set_mat4(teapot_program, "proj", &mvp[0][0]);
+    draw_points(teapot_buffer, teapot_program, teapot_model.vert_count);
 
     // Draw the editor
     // draw_points(&prog_points);
 
     // wrap angle so it doesn't explode
-    angle += angle_velocity * app_clock.delta; // rad += (rad/s)*s
-    if (angle > 2.0*PI) angle -= 2.0*PI;
-    f32 fov_deg = 45.0f;            // pick your FOV
-    f32 aspect  = window.width / (window.height + 0.000001); // keep updated on resize
-    // uniform_set(&prog, angle, fov_deg, aspect);
 
     // Set color
     if (input_state[ACTION1] == CONTROL_DOWN)
@@ -175,7 +219,7 @@ int main(int argc, char **argv)
 
     // Draw instance cube
     uniform_set(instance_program, angle, fov_deg, aspect);
-    draw_lines_instanced(instance_buffer, instance_program);
+    // draw_lines_instanced(instance_buffer, instance_program);
 
     // Finalize and draw frame
     frame_render(&renderer);
@@ -187,7 +231,6 @@ int main(int argc, char **argv)
   // program_close(&prog);
   // program_close(&prog2);
   render_close(&renderer);
-
 
   return 0;
 }
