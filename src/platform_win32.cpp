@@ -1,6 +1,11 @@
 
 #include <windows.h>
 
+#define TINYOBJ_LOADER_C_IMPLEMENTATION
+#include "tinyobj_loader_c.h"
+
+
+
 struct platform_window
 {
   HWND handle;
@@ -36,6 +41,80 @@ enum control_state
   CONTROL_RELEASED,
 };
 
+
+internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT message_id, WPARAM param_w, LPARAM param_l)
+{
+  LRESULT result = 0;
+  // u32 vkcode = (u32) param_w;
+  switch (message_id) 
+  {
+    case WM_CLOSE:
+    {
+      is_running = false;
+      PostQuitMessage(0);
+      break;
+    }
+    case WM_SIZE: 
+    {
+      // Save the new width and height of the client area. 
+      // dwClientX = LOWORD(lParam); 
+      // dwClientY = HIWORD(lParam); 
+    }
+    default: 
+    {
+      result = DefWindowProcA(window_handle, message_id, param_w, param_l); 
+    }
+  }
+  return result;
+}
+
+
+internal char* mmap_file(size_t* len, const char* filename) {
+  HANDLE file = CreateFileA(
+    filename,
+    GENERIC_READ,
+    FILE_SHARE_READ,
+    NULL,
+    OPEN_EXISTING,
+    FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
+    NULL
+  );
+  if (file == INVALID_HANDLE_VALUE) { /* E.g. Model may not have materials. */
+    return NULL;
+  }
+  HANDLE fileMapping = CreateFileMapping(file, NULL, PAGE_READONLY, 0, 0, NULL);
+  ASSERT(fileMapping != INVALID_HANDLE_VALUE, "ERROR: Failed to map file.");
+  LPVOID fileMapView = MapViewOfFile(fileMapping, FILE_MAP_READ, 0, 0, 0);
+  char* fileMapViewChar = (char*)fileMapView;
+  ASSERT(fileMapView != NULL, "ERROR: Failed to create map view.");
+  DWORD file_size = GetFileSize(file, NULL);
+  (*len) = (size_t)file_size;
+  return fileMapViewChar;
+}
+
+
+internal void get_file_data(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len)
+{
+  // NOTE: If you allocate the buffer with malloc(),
+  // You can define your own memory management struct and pass it through `ctx`
+  // to store the pointer and free memories at clean up stage(when you quit an
+  // app)
+  // This example uses mmap(), so no free() required.
+  (void)ctx;
+  if (!filename)
+  {
+    ASSERT(filename != NULL, "ERROR: Invalid file.");
+    fprintf(stderr, "null filename\n");
+    (*data) = NULL;
+    (*len) = 0;
+    return;
+  }
+  size_t data_len = 0;
+  *data = mmap_file(&data_len, filename);
+  (*len) = data_len;
+}
+
+
 const char* control_state_log(control_state s) {
   switch (s) {
   case CONTROL_UP:       return "up";
@@ -67,33 +146,6 @@ static const char* msg_name(UINT m) {
     case WM_NCLBUTTONDBLCLK:return "WM_NCLBUTTONDBLCLK";
     default:                return nullptr;
     }
-}
-
-
-internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT message_id, WPARAM param_w, LPARAM param_l)
-{
-  LRESULT result = 0;
-  // u32 vkcode = (u32) param_w;
-  switch (message_id) 
-  {
-    case WM_CLOSE:
-    {
-      is_running = false;
-      PostQuitMessage(0);
-      break;
-    }
-    case WM_SIZE: 
-    {
-      // Save the new width and height of the client area. 
-      // dwClientX = LOWORD(lParam); 
-      // dwClientY = HIWORD(lParam); 
-    }
-    default: 
-    {
-      result = DefWindowProcA(window_handle, message_id, param_w, param_l); 
-    }
-  }
-  return result;
 }
 
 
@@ -351,7 +403,75 @@ const char * read_textfile(const char *file, arena *scratch, size_t *out_size)
   return contents;
 }
 
-i64 clock_time()
+
+void read_obj(const char *file, arena *memory)
+{
+  // Parse the file and read that data from it.
+  tinyobj_attrib_t attrib;
+  tinyobj_shape_t* shapes = NULL;
+  size_t shape_count;
+  tinyobj_material_t* materials = NULL;
+  size_t num_materials;
+  u32 flags = TINYOBJ_FLAG_TRIANGULATE;
+
+  i32 ret = tinyobj_parse_obj(
+    &attrib,
+    &shapes,
+    &shape_count,
+    &materials,
+    &num_materials,
+    file,
+    get_file_data, // Required callback function read file as is.
+    NULL,
+    flags
+  );
+  ASSERT(ret == TINYOBJ_SUCCESS, "ERROR: Failed to load obj.");
+  /*
+  // We only have one shape
+  u8 shape_idx = 0;
+  tinyobj_shape_t *shape = &shapes[shape_idx];
+
+  // Loop over all verts and determine how big our arrays should be
+
+  // Allocate output memory
+  // u64 unique_index = 0;
+  u32 element = 0;
+  *out_vert_count = attrib.num_faces;
+  *out_index_count = attrib.num_faces;
+  *out_verts = arena_alloc_array(memory, *out_vert_count, vertex);
+  *out_indices = arena_alloc_array(memory, *out_index_count, u32);
+  // Metadata for loop
+  u32 face_count = attrib.num_face_num_verts;
+  i32 face_vert_count;// will use this when we're just iterating through verts
+  i32 offset = 0;
+  for (size_t face_idx = 0; face_idx < face_count; face_idx++)
+  {
+    // Get number of verts per face
+    face_vert_count = attrib.face_num_verts[face_idx];
+    // Loop over each vert
+    for (size_t vert_idx = 0; vert_idx < face_vert_count; vert_idx++)
+    {
+      element = offset + vert_idx;
+      tinyobj_vertex_index_t vert = attrib.faces[element];
+      u32 vert_offset = 3 * vert.v_idx;
+      u32 text_offset = 2 * vert.vt_idx;
+      vertex data = {};
+      data.pos.x = attrib.vertices[vert_offset+0];
+      data.pos.y = attrib.vertices[vert_offset+1];
+      data.pos.z = attrib.vertices[vert_offset+2];
+      data.texture_coords.x = attrib.texcoords[text_offset+0];
+      data.texture_coords.y = 1.0f - attrib.texcoords[text_offset+1];
+      (*out_verts)[element] = data;
+      (*out_indices)[element] = element;
+      // unique_index++;
+    }
+    offset += face_vert_count;
+  }
+  */
+}
+
+
+i64 platform_clock_time()
 {
   LARGE_INTEGER temp;
   QueryPerformanceCounter(&temp);
@@ -359,21 +479,21 @@ i64 clock_time()
 }
 
 
-clock clock_init(f64 fps_target)
+clock platform_clock_init(f64 fps_target)
 {
   clock c = {};
   c.secs_per_frame = 1.0 / fps_target;
   LARGE_INTEGER temp;
   QueryPerformanceFrequency(&temp);
   c.ticks_per_sec = (f64) temp.QuadPart;
-  c.prev = clock_time();
+  c.prev = platform_clock_time();
   return c;
 }
 
 
-void clock_update(clock *c)
+void platform_clock_update(clock *c)
 {
-  c->curr = clock_time();
+  c->curr = platform_clock_time();
   // The amount of ticks that have passed from the beginning of the frame to the end (ticks).
   // TODO: Should this be its own function?
   f64 delta_ticks = (f64) (c->curr - c->prev);
