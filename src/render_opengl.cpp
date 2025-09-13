@@ -13,10 +13,10 @@ struct render_state
   f32 height;
 };
 
-struct render_program
+struct render_buffer
 {
-  GLuint vao;
-  GLuint shader_program;
+  u32 vbo;
+  u32 vao;
 };
 
 typedef char        GLchar;
@@ -315,6 +315,19 @@ render_state render_init(platform_window *window)
 }
 
 
+render_buffer render_buffer_init(void *data, size_t length)
+{
+  render_buffer buffer = {};
+  // Set up Vertex Buffer Object
+  glGenBuffers(1, &buffer.vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, buffer.vbo);
+  glBufferData(GL_ARRAY_BUFFER, length, data, GL_STATIC_DRAW);
+  // Set up vertex attribute
+  glGenVertexArrays(1, &buffer.vao);
+  return buffer;
+}
+
+
 u32 shader_compile(const char *filepath, i32 type, arena *scratch)
 {
   size_t byte_count;
@@ -326,11 +339,39 @@ u32 shader_compile(const char *filepath, i32 type, arena *scratch)
 }
 
 
-render_program ui_init(render_state *state, arena *scratch)
+u32 render_program_init(arena *scratch, const char *vert_shader, const char *frag_shader)
 {
-  // Initialize program
-  render_program prog = {};
+  // Init output
+  u32 program;
+  // Set up shaders 
+  u32 vertex_shader   = shader_compile(vert_shader, GL_VERTEX_SHADER, scratch);
+  u32 fragment_shader = shader_compile(frag_shader, GL_FRAGMENT_SHADER, scratch);
+  // Create shader program
+  program = glCreateProgram();
+  ASSERT(program != 0, "ERROR: Failed to create shader program.");
+  glAttachShader(program, vertex_shader);
+  glAttachShader(program, fragment_shader);
+  glLinkProgram(program);
+  {
+    int success = 0;
+    char log[512] = {0};
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
+    if(!success)
+    {
+        glGetProgramInfoLog(program, 512, 0, log);
+        ASSERT(success, log);
+    }
+  }
+  // Clean up shaders
+  glDeleteShader(vertex_shader);
+  glDeleteShader(fragment_shader);
+  return program;
+}
 
+
+void ui_init(render_state *state, arena *scratch, render_buffer buffer)
+{
+  /*
   // The quad vertices
   f32 verts[] = {
     // Position          UV coords
@@ -339,19 +380,10 @@ render_program ui_init(render_state *state, arena *scratch)
     -1.0f,  1.0f, 0.0f, //  0.0f, 1.0f, // Upper left
      1.0f,  1.0f, 0.0f, //  1.0f, 1.0f, // Upper right
   };
+  */
   
-  // Set up vertex attribute
-  glGenVertexArrays(1, &prog.vao);
   // Bind VAO
-  glBindVertexArray(prog.vao);
-  // Set up vertex buffer object
-  u32 vbo;
-  glGenBuffers(1, &vbo);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
-
-  // Just position
-  // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(verts[0]), (void*)0);
+  glBindVertexArray(buffer.vao);
 
   // position attribute (location = 0)
   size_t vert_size = 3 * sizeof(f32);
@@ -362,38 +394,12 @@ render_program ui_init(render_state *state, arena *scratch)
   // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, vert_size, (void*)(3 * sizeof(f32)));
   // glEnableVertexAttribArray(1);
 
-
   glEnableVertexAttribArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-  // Set up shaders 
-  u32 vertex_shader   = shader_compile("shaders\\text.vert", GL_VERTEX_SHADER, scratch);
-  u32 fragment_shader = shader_compile("shaders\\text.frag", GL_FRAGMENT_SHADER, scratch);
-  // Create shader program
-  prog.shader_program = glCreateProgram();
-  ASSERT(prog.shader_program != 0, "ERROR: Failed to create shader program.");
-  glAttachShader(prog.shader_program, vertex_shader);
-  glAttachShader(prog.shader_program, fragment_shader);
-  glLinkProgram(prog.shader_program);
-  {
-    int success = 0;
-    char log[512] = {0};
-    glGetProgramiv(prog.shader_program, GL_LINK_STATUS, &success);
-    if(!success)
-    {
-        glGetProgramInfoLog(prog.shader_program, 512, 0, log);
-        ASSERT(success, log);
-    }
-  }
-  // Clean up shaders
-  glDeleteShader(vertex_shader);
-  glDeleteShader(fragment_shader);
-
-  return prog;
 }
 
-
-render_program point_setup(arena *scratch)
+/*
+void point_setup(arena *scratch)
 {
   render_program prog = {};
 
@@ -456,13 +462,11 @@ render_program point_setup(arena *scratch)
 void tri_setup(arena *scratch, render_program *prog)
 {
   // Triangle
-  /*
-  f32 verts[] = {
-    -0.5f, -0.5f, 0.0f, // left
-     0.5f, -0.5f, 0.0f, // right
-     0.0f,  0.5f, 0.0f, // top
+  // f32 verts[] = {
+    // -0.5f, -0.5f, 0.0f, // left
+     // 0.5f, -0.5f, 0.0f, // right
+     // 0.0f,  0.5f, 0.0f, // top
   };
-  */
 
   // Rectangle
   f32 verts[] = {
@@ -521,7 +525,6 @@ void tri_setup(arena *scratch, render_program *prog)
 
 render_program cube_setup(arena *scratch)
 {
-  render_program prog = {};
 
   // position (x, y, z) + color (r, g, b)
   f32 verts[] = {
@@ -536,16 +539,14 @@ render_program cube_setup(arena *scratch)
     -1.0f, 1.0f, 1.0f,  1.0f, 1.0f, 1.0f  // 7 magenta
   };
 
-  /*
-  unsigned int indices[] = {
-    0,1,2,  2,3,0, // front
-    4,6,5,  6,4,7, // back
-    0,3,7,  7,4,0, // left
-    1,5,6,  6,2,1, // right
-    3,2,6,  6,7,3, // top
-    0,4,5,  5,1,0  // bottom
-  };
-  */
+  // unsigned int indices[] = {
+    // 0,1,2,  2,3,0, // front
+    // 4,6,5,  6,4,7, // back
+    // 0,3,7,  7,4,0, // left
+    // 1,5,6,  6,2,1, // right
+    // 3,2,6,  6,7,3, // top
+    // 0,4,5,  5,1,0  // bottom
+  // };
 
   uint32_t indices[] = {
     0,1, 1,2, 2,3, 3,0,        // bottom
@@ -608,13 +609,11 @@ render_program cube_setup(arena *scratch)
 
   return prog;
 }
+*/
 
 
-render_program instance_setup(arena *scratch)
+render_buffer instance_setup(arena *scratch)
 {
-  // init output var
-  render_program prog = {};
-
   f32 verts[] = {
     // positions      
     -1.0f,-1.0f,-1.0f,
@@ -631,15 +630,14 @@ render_program instance_setup(arena *scratch)
     4,5, 5,6, 6,7, 7,4,        // top
     0,4, 1,5, 2,6, 3,7         // verticals
   };
+
+  render_buffer buffer = render_buffer_init((void*)verts, sizeof(verts));
   // Initialize data
-  u32 vbo, ebo;
-  // Create and bind VAO
-  glGenVertexArrays(1, &prog.vao);
-  glBindVertexArray(prog.vao);
+  u32 ebo;
+  // Bind VAO and VBO
+  glBindVertexArray(buffer.vao);
   // Set up vertex buffer object
-  glGenBuffers(1, &vbo);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, buffer.vbo);
 
   // Tell OpenGL how to interpret the data
   // position attribute (location = 0)
@@ -667,17 +665,18 @@ render_program instance_setup(arena *scratch)
     modelmats[i] = transform;
   }
   // configure instanced array
-  u32 buffer;
-  glGenBuffers(1, &buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, buffer);
+  u32 transform_buffer;
+  size_t transform_buffer_size = cube_count * sizeof(glm::mat4);
+  glGenBuffers(1, &transform_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, transform_buffer);
   glBufferData(
     GL_ARRAY_BUFFER,
-    cube_count * sizeof(glm::mat4),
+    transform_buffer_size,
     &modelmats[0],
     GL_STATIC_DRAW
   );
 
-  glBindVertexArray(prog.vao);
+  glBindVertexArray(buffer.vao);
   // set attribute pointers for matrix (4 times vec4)
   glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
   glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
@@ -696,20 +695,7 @@ render_program instance_setup(arena *scratch)
 
   glBindVertexArray(0);
 
-  u32 vertex_shader   = shader_compile("shaders\\instance.vert", GL_VERTEX_SHADER, scratch);
-  u32 fragment_shader = shader_compile("shaders\\instance.frag", GL_FRAGMENT_SHADER, scratch);
-  // Create shader program
-  prog.shader_program = glCreateProgram();
-  ASSERT(prog.shader_program != 0, "ERROR: Failed to create shader program.");
-  glAttachShader(prog.shader_program, vertex_shader);
-  glAttachShader(prog.shader_program, fragment_shader);
-  glLinkProgram(prog.shader_program);
-  ASSERT(prog.shader_program != 0, "ERROR: Failed to link shaders.");
-  // Clean up shaders
-  glDeleteShader(vertex_shader);
-  glDeleteShader(fragment_shader);
-
-  return prog;
+  return buffer;
 }
 
 
@@ -722,16 +708,17 @@ void frame_init(render_state *state)
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void uniform_set_mat4(render_program prog, const char *name, const f32 *data)
+
+void uniform_set_mat4(u32 shader_program, const char *name, const f32 *data)
 {
-  glUseProgram(prog.shader_program);
-  GLint loc = glGetUniformLocation( prog.shader_program, name);
+  glUseProgram(shader_program);
+  GLint loc = glGetUniformLocation( shader_program, name);
   glUniformMatrix4fv( loc, 1, GL_FALSE, data);
 }
 
-void uniform_set(render_program *prog, f32 angle, f32 fov_deg, f32 aspect)
+void uniform_set(u32 shader_program, f32 angle, f32 fov_deg, f32 aspect)
 {
-  glUseProgram(prog->shader_program);
+  glUseProgram(shader_program);
   glm::mat4 model = glm::mat4(1.0f);
   glm::vec3 rotation_axis_norm = glm::vec3(0,1,0);
   model = glm::rotate(model, angle, rotation_axis_norm);
@@ -746,19 +733,35 @@ void uniform_set(render_program *prog, f32 angle, f32 fov_deg, f32 aspect)
   f32 zfar = 100.0f;
   glm::mat4 proj = glm::perspective(fov_rad, aspect, znear, zfar);
   glm::mat4 mvp = proj * view * model;
-  GLint loc = glGetUniformLocation( prog->shader_program, "uMVP");
+  GLint loc = glGetUniformLocation( shader_program, "uMVP");
   glUniformMatrix4fv( loc, 1, GL_FALSE, &mvp[0][0]);
 }
 
 
-void draw_ui(render_program *prog)
+void draw_ui(render_buffer buffer, u32 shader_program)
 {
-  glUseProgram(prog->shader_program);
-  glBindVertexArray(prog->vao);
+  glUseProgram(shader_program);
+  glBindVertexArray(buffer.vao);
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
 
+void draw_lines_instanced(render_buffer buffer, u32 shader_program)
+{
+  // Bind our program
+  glUseProgram(shader_program);
+  glBindVertexArray(buffer.vao);
+  glDrawElementsInstanced(
+    GL_LINES,// 	GLenum mode,
+    24, // GLsizei count,
+    GL_UNSIGNED_INT, // GLenum type,
+    0, // const void * indices, // Bound in EBO
+    2 // GLsizei primcount
+  );
+}
+
+
+/*
 void draw_points(render_program *prog)
 {
   // Bind our program
@@ -779,19 +782,6 @@ void draw_lines(render_program *prog)
 }
 
 
-void draw_lines_instanced(render_program *prog)
-{
-  // Bind our program
-  glUseProgram(prog->shader_program);
-  glBindVertexArray(prog->vao);
-  glDrawElementsInstanced(
-    GL_LINES,// 	GLenum mode,
-    24, // GLsizei count,
-    GL_UNSIGNED_INT, // GLenum type,
-    0, // const void * indices, // Bound in EBO
-    2 // GLsizei primcount
-  );
-}
 
 
 void draw_triangles(render_program *prog)
@@ -815,7 +805,7 @@ void draw_triangles(render_program *prog)
   // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
-
+*/
 
 void frame_render(render_state *state)
 {
@@ -823,11 +813,9 @@ void frame_render(render_state *state)
 }
 
 
-void program_close(render_program *prog)
+void shader_close(u32 shader_program)
 {
-  glDeleteVertexArrays(1, &prog->vao);
-  // glDeleteBuffers(1, &prog->vbo);
-  glDeleteProgram(prog->shader_program);
+  glDeleteProgram(shader_program);
 }
 
 

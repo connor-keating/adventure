@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 
   // Application clock
   f64 fps_target = 60;                // The amount of frames presented in a second.
-  clock app_clock = clock_init(fps_target);
+  clock app_clock = platform_clock_init(fps_target);
 
   // Initialize input map
   i32           input_map[ACTION_COUNT];
@@ -78,14 +78,27 @@ int main(int argc, char **argv)
   render_state renderer = render_init(&window);
 
   // Set up point program
-  render_program prog_points = point_setup(&memory);
-  render_program prog = cube_setup(&memory);
-  render_program prog2 = instance_setup(&memory);
-  arena_free_all(&memory);
+  // render_program prog_points = point_setup(&memory);
+  // render_program prog = cube_setup(&memory);
+  render_buffer instance_buffer = instance_setup(&memory);
+  u32 instance_program = render_program_init( &memory, "shaders\\instance.vert", "shaders\\instance.frag");
+  // arena_free_all(&memory);
 
   // Initialize UI buffer
-  render_program prog_ui = ui_init(&renderer, &memory);
+  f32 verts[] = {
+    // Position          UV coords
+    -1.0f, -1.0f, 0.0f, //  0.0f, 0.0f, // Lower left
+     1.0f, -1.0f, 0.0f, //  1.0f, 0.0f, // Lower right
+    -1.0f,  1.0f, 0.0f, //  0.0f, 1.0f, // Upper left
+     1.0f,  1.0f, 0.0f, //  1.0f, 1.0f, // Upper right
+  };
+  render_buffer ui_buffer = render_buffer_init((void*)verts, sizeof(verts));
+  ui_init(&renderer, &memory, ui_buffer);
+  u32 ui_program = render_program_init(&memory, "shaders\\text.vert", "shaders\\text.frag");
   arena_free_all(&memory);
+
+  // Read in model data
+  read_obj("assets\\teapot.obj", &memory);
 
   // Set up the angular speed variable for the rotation
   f32 angle_velocity = PI/4.0f;
@@ -104,7 +117,7 @@ int main(int argc, char **argv)
   while (is_running)
   {
     // Frame start
-    clock_update(&app_clock);
+    platform_clock_update(&app_clock);
     message_process(window.handle, input_map, input_state);
 
     // Check window dimensions
@@ -116,14 +129,14 @@ int main(int argc, char **argv)
     frame_init(&renderer);
 
     // Draw the UI
-    f32 ui_scale_x = 0.25 * renderer.width;
-    f32 ui_scale_y = 0.25 * renderer.height;
+    f32 ui_scale_x = 0.10 * renderer.width;
+    f32 ui_scale_y = 0.10 * renderer.height;
     glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(renderer.width * 0.5, renderer.height * 0.5, 0.0f));
     model = glm::scale(model, glm::vec3(ui_scale_x, ui_scale_y, 1.0f));
     glm::mat4 ortho = glm::ortho(0.0f, renderer.width, 0.0f, renderer.height, -1.0f, 1.0f);
     glm::mat4 proj = ortho * model;
-    uniform_set_mat4(prog_ui, "proj", &proj[0][0]);
-    draw_ui(&prog_ui);
+    uniform_set_mat4(ui_program, "proj", &proj[0][0]);
+    draw_ui(ui_buffer, ui_program);
 
     // Draw the editor
     // draw_points(&prog_points);
@@ -133,7 +146,7 @@ int main(int argc, char **argv)
     if (angle > 2.0*PI) angle -= 2.0*PI;
     f32 fov_deg = 45.0f;            // pick your FOV
     f32 aspect  = window.width / (window.height + 0.000001); // keep updated on resize
-    uniform_set(&prog, angle, fov_deg, aspect);
+    // uniform_set(&prog, angle, fov_deg, aspect);
 
     // Set color
     if (input_state[ACTION1] == CONTROL_DOWN)
@@ -153,16 +166,17 @@ int main(int argc, char **argv)
       color[1] = 0.0f;
       color[2] = 0.0f;
     }
-    // glUseProgram(prog2.shader_program);
-    // GLint loc = glGetUniformLocation( prog2.shader_program, "mycolor");
-    // glUniform3fv( loc, 1, color);
+    glUseProgram(instance_program);
+    GLint loc = glGetUniformLocation( instance_program, "mycolor");
+    glUniform3fv( loc, 1, color);
 
     // Draw spinning cube
     // draw_lines(&prog);
 
     // Draw instance cube
-    // uniform_set(&prog2, angle, fov_deg, aspect);
-    // draw_lines_instanced(&prog2);
+    uniform_set(instance_program, angle, fov_deg, aspect);
+    draw_lines_instanced(instance_buffer, instance_program);
+
     // Finalize and draw frame
     frame_render(&renderer);
     // Reset input after processing everything
