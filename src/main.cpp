@@ -24,10 +24,6 @@ struct mesh
 // Globals
 global bool is_running;
 
-void handle_input()
-{
-  printf("Handling Input");
-}
 
 // Merge source code into single translation unit
 #ifdef PLATFORM_WINDOWS
@@ -40,6 +36,8 @@ void handle_input()
 #include "render_opengl.cpp"
 #endif
 
+// Application layers
+#include "text.cpp"
 
 // TODO: Why does app crash when I share it with discord?
 
@@ -65,10 +63,6 @@ void input_reset(control_state *input_state)
 
 int main(int argc, char **argv)
 {
-  // Arrays indexed directly by control_bindings values
-
-  platform_window window = {};
-
   // Allocate all program memory upfront.
   void *memory_base = 0;
   size_t memory_size = (size_t) Gigabytes(1);
@@ -76,6 +70,8 @@ int main(int argc, char **argv)
   arena memory;
   arena_init(&memory, raw_memory, memory_size);
 
+  // Create a window for the application
+  platform_window window = {};
   window_init(&window);
 
   // Application clock
