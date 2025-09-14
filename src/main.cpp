@@ -71,7 +71,11 @@ int main(int argc, char **argv)
   arena_init(&memory, raw_memory, memory_size);
 
   // Load application assets
-  text_atlas_init();
+  size_t asset_memory_size = (size_t) Megabytes(5);
+  void *asset_memory_raw = arena_alloc(&memory, asset_memory_size);
+  arena asset_memory;
+  arena_init(&asset_memory, asset_memory_raw, asset_memory_size);
+  text_atlas_init(&asset_memory);
 
 
   // Create a window for the application
