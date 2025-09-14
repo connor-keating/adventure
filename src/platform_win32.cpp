@@ -246,6 +246,10 @@ void message_process(HWND handle, i32 *input_map, control_state *input_state)
         down_state = was_down ? CONTROL_HELD : CONTROL_DOWN;
         state = is_down ?  down_state : CONTROL_RELEASED;
         platform_input_state_set(input_map, input_state, vkcode, state);
+        if (vkcode == VK_ESCAPE)
+        {
+          SendMessageA(handle, WM_CLOSE, 0, 0);
+        }
         break;
       }
     }
