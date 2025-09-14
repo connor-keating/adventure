@@ -70,6 +70,10 @@ int main(int argc, char **argv)
   arena memory;
   arena_init(&memory, raw_memory, memory_size);
 
+  // Load application assets
+  text_atlas_init();
+
+
   // Create a window for the application
   platform_window window = {};
   window_init(&window);
