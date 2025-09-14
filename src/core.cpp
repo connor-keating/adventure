@@ -98,22 +98,22 @@ uintptr_t pointer_align_forward(uintptr_t pointer, size_t alignment)
 
 void *arena_alloc_align(arena *arena, size_t size, size_t align)
 {
-    // Align 'offset_new' forward to the specified alignment
+  // Align 'offset_new' forward to the specified alignment
 	uintptr_t curr_ptr = (uintptr_t)arena->buffer + (uintptr_t)arena->offset_new;
 	uintptr_t offset = pointer_align_forward(curr_ptr, align);
 	offset -= (uintptr_t)arena->buffer; // Change to relative offset
 	// Check to see if the backing memory has space left
 	if (offset+size > arena->length) 
-    {
-        // Return NULL if the arena is out of memory (or handle differently)
-        return 0;
+  {
+    // Return NULL if the arena is out of memory (or handle differently)
+    ASSERT(0, "Arena is out of memory\n");
 	}
-    void *ptr = (u8 *)arena->buffer + offset;
-    arena->offset_old = offset;
-    arena->offset_new = offset+size;
-    // Zero new memory by default
-    memset((u8*)ptr, 0, size);
-    return ptr;
+  void *ptr = (u8 *)arena->buffer + offset;
+  arena->offset_old = offset;
+  arena->offset_new = offset+size;
+  // Zero new memory by default
+  memset((u8*)ptr, 0, size);
+  return ptr;
 }
 
 
