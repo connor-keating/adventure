@@ -70,14 +70,6 @@ int main(int argc, char **argv)
   arena memory;
   arena_init(&memory, raw_memory, memory_size);
 
-  // Load application assets
-  size_t asset_memory_size = (size_t) Megabytes(5);
-  void *asset_memory_raw = arena_alloc(&memory, asset_memory_size);
-  arena asset_memory;
-  arena_init(&asset_memory, asset_memory_raw, asset_memory_size);
-  text_atlas_init(&asset_memory);
-
-
   // Create a window for the application
   platform_window window = {};
   window_init(&window);
@@ -96,6 +88,24 @@ int main(int argc, char **argv)
   // Initialize renderer
   render_state renderer = render_init(&window);
 
+  // Load application assets
+  size_t asset_memory_size = (size_t) Megabytes(5);
+  void *asset_memory_raw = arena_alloc(&memory, asset_memory_size);
+  arena asset_memory;
+  arena_init(&asset_memory, asset_memory_raw, asset_memory_size);
+  const char *font_file = "C:\\WINDOWS\\Fonts\\arial.ttf";
+  // Create the char atlas bitmap image
+  u32 text_texture_id = text_init( &memory, font_file );
+  // text char buffer
+  // 6000 verts = 1000 quads
+  u32 text_vert_count = 6000;
+  // std::vector<Vertex> vertices;
+  char_vertex *text_buffer = arena_alloc_array( &memory, text_vert_count, char_vertex );
+  render_buffer text_gpu_buffer = text_buffer_init(&memory, text_vert_count);
+  u32 text_shader = render_program_init( &memory, "shaders\\text.vert", "shaders\\text.frag");
+  // You'll have to bind the texture each time you want to use this.
+ const char *text_uniform = "texture_image";
+
   // Set up point program
   // render_program prog_points = point_setup(&memory);
   // render_program prog = cube_setup(&memory);
@@ -103,6 +113,7 @@ int main(int argc, char **argv)
   u32 instance_program = render_program_init( &memory, "shaders\\instance.vert", "shaders\\instance.frag");
   // arena_free_all(&memory);
 
+  /*
   // Initialize UI buffer
   f32 verts[] = {
     // Position          UV coords
@@ -115,6 +126,7 @@ int main(int argc, char **argv)
   ui_init(&renderer, &memory, ui_buffer);
   u32 ui_program = render_program_init(&memory, "shaders\\text.vert", "shaders\\text.frag");
   arena_free_all(&memory);
+  */
 
   // Read in model data
   mesh teapot_model = read_obj("assets\\teapot.obj", &memory);
@@ -158,6 +170,25 @@ int main(int argc, char **argv)
     frame_init(&renderer);
 
     // Draw the UI
+    // Bind the character atlas
+    i32 text_slot = 0;
+    texture_bind(text_slot, text_texture_id);
+    // Set the uniform variables
+    uniform_set_i32(text_shader, text_uniform, text_slot);
+    // glm::mat4 ortho = glm::ortho(0.0f, renderer.width, 0.0f, renderer.height, -1.0f, 1.0f);
+    f32 aspect_ratio = renderer.width / renderer.height;
+    glm::mat4 ortho = glm::ortho(-aspect_ratio, aspect_ratio, -1.0f, 1.0f);
+    // glm::mat4 ortho = glm::mat4(1.0f);
+    uniform_set_mat4(text_shader, "projection", &ortho[0][0]);
+    // Add text
+    // glm::vec3 tpos = glm::vec3(renderer.width * 0.5, renderer.height * 0.5, 0.0f);
+    glm::vec3 tpos = glm::vec3(0.0f, 0.0f, 0.0f);
+    u32 text_index = text_add(text_buffer, "Hello!", 6, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f});
+    draw_text(text_gpu_buffer, text_shader, (void*)text_buffer, sizeof(text_buffer[0])*text_index, text_index);
+    // What text to add
+    // text_add();
+    // Draw text
+    /*
     f32 ui_scale_x = 0.10 * renderer.width;
     f32 ui_scale_y = 0.10 * renderer.height;
     glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(renderer.width * 0.5, renderer.height * 0.5, 0.0f));
@@ -165,7 +196,8 @@ int main(int argc, char **argv)
     glm::mat4 ortho = glm::ortho(0.0f, renderer.width, 0.0f, renderer.height, -1.0f, 1.0f);
     glm::mat4 proj = ortho * model;
     uniform_set_mat4(ui_program, "proj", &proj[0][0]);
-    // draw_ui(ui_buffer, ui_program);
+    draw_ui(ui_buffer, ui_program);
+    */
 
     glm::mat4 identity = glm::mat4(1.0f);
     // Create view and projection matrix

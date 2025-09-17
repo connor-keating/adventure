@@ -76,6 +76,7 @@ typedef ptrdiff_t   GLintptr;
 #define GL_DEBUG_SOURCE_APPLICATION       0x824A
 #define GL_DEBUG_TYPE_ERROR               0x824C
 #define GL_PROGRAM_POINT_SIZE             0x8642
+#define GL_R8                             0x8229
 #pragma endregion
 
 
@@ -293,6 +294,8 @@ render_state render_init(platform_window *window)
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_PROGRAM_POINT_SIZE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glDisable(GL_CULL_FACE);
 
   /*
@@ -323,6 +326,19 @@ render_buffer render_buffer_init(void *data, size_t length)
   glGenBuffers(1, &buffer.vbo);
   glBindBuffer(GL_ARRAY_BUFFER, buffer.vbo);
   glBufferData(GL_ARRAY_BUFFER, length, data, GL_STATIC_DRAW);
+  // Set up vertex attribute
+  glGenVertexArrays(1, &buffer.vao);
+  return buffer;
+}
+
+
+render_buffer render_buffer_dynamic_init(void *data, size_t length)
+{
+  render_buffer buffer = {};
+  // Set up Vertex Buffer Object
+  glGenBuffers(1, &buffer.vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, buffer.vbo);
+  glBufferData(GL_ARRAY_BUFFER, length, data, GL_DYNAMIC_DRAW);
   // Set up vertex attribute
   glGenVertexArrays(1, &buffer.vao);
   return buffer;
@@ -419,6 +435,58 @@ void ui_init(render_state *state, arena *scratch, render_buffer buffer)
   glEnableVertexAttribArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
+
+
+void render_text_init(render_buffer buffer)
+{
+  // enable position
+  // render_buffer_attribute(0, 3, 9 * sizeof(f32), 0);
+}
+
+
+u32 texture2d_1channel_init(void *image, u32 width, u32 height)
+{
+  u32 texture_id;
+  glGenTextures(1, &texture_id);
+  glBindTexture(GL_TEXTURE_2D, texture_id);
+  // Create texture image on GPU
+  glTexImage2D(
+    GL_TEXTURE_2D,
+    0,
+    GL_R8,
+    width,
+    height,
+    0,
+    GL_RED,
+    GL_UNSIGNED_BYTE,
+    image
+  );
+  // Use linear filter when sampling
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  // What happens if texture coords go outside [0, 1] (GL_REPEAT = Tile texture)
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  // Unbind texture
+  glBindTexture(GL_TEXTURE_2D, 0);
+  return texture_id;
+}
+
+
+void texture_bind(i32 slot, u32 texture_id)
+{
+  glActiveTexture(GL_TEXTURE0 + slot);
+  glBindTexture(GL_TEXTURE_2D, texture_id);
+}
+
+
+void uniform_set_i32(u32 shader_program, const char *name, i32 data)
+{
+  glUseProgram(shader_program);
+  i32 location = glGetUniformLocation(shader_program, name);
+  glUniform1i(location, data);
+}
+
 
 /*
 void point_setup(arena *scratch)
@@ -758,6 +826,16 @@ void uniform_set(u32 shader_program, f32 angle, f32 fov_deg, f32 aspect)
   glm::mat4 mvp = proj * view * model;
   GLint loc = glGetUniformLocation( shader_program, "uMVP");
   glUniformMatrix4fv( loc, 1, GL_FALSE, &mvp[0][0]);
+}
+
+
+void draw_text(render_buffer buffer, u32 shader_program, void *data, u32 length, u32 count)
+{
+  // Input the vertex data
+  glBindVertexArray(buffer.vao);
+  glBindBuffer(GL_ARRAY_BUFFER, buffer.vbo);
+  glBufferSubData(GL_ARRAY_BUFFER, 0, length, data);
+  glDrawArrays(GL_TRIANGLES, 0, count);
 }
 
 

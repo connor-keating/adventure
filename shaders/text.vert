@@ -1,10 +1,18 @@
 #version 430 core
 
-layout (location = 0) in vec3 aPos;
+layout (location = 0) in vec3 aPosition;
+layout (location = 1) in vec4 aColor;
+layout (location = 2) in vec2 aTexCoord;
 
-uniform mat4 proj;
+out vec4 color;
+out vec2 texCoord;
+
+uniform mat4 projection;
 
 void main()
 {
-  gl_Position = proj * vec4(aPos.x, aPos.y, aPos.z, 1.0);
+  gl_Position = projection * vec4(aPosition, 1.0);
+
+  color = aColor;
+  texCoord = aTexCoord;
 }
