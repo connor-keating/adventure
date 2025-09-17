@@ -4,6 +4,7 @@ stash/
 assets/
 backup/
 glm/
+.ignore/
 
 # Files
 scratch.h
