@@ -794,7 +794,6 @@ void frame_init(render_state *state)
   glViewport(0, 0, state->width, state->height);
   // Clear screen
   glClearColor(0.01, 0.06, 0.06, 1.0f);
-
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -831,11 +830,17 @@ void uniform_set(u32 shader_program, f32 angle, f32 fov_deg, f32 aspect)
 
 void draw_text(render_buffer buffer, u32 shader_program, void *data, u32 length, u32 count)
 {
+  // Disable depth writing for transparent text
+  glDepthMask(GL_FALSE);
+
   // Input the vertex data
   glBindVertexArray(buffer.vao);
   glBindBuffer(GL_ARRAY_BUFFER, buffer.vbo);
   glBufferSubData(GL_ARRAY_BUFFER, 0, length, data);
   glDrawArrays(GL_TRIANGLES, 0, count);
+
+  // Re-enable depth writing
+  glDepthMask(GL_TRUE);
 }
 
 
