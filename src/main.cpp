@@ -105,6 +105,9 @@ int main(int argc, char **argv)
   u32 text_shader = render_program_init( &memory, "shaders\\text.vert", "shaders\\text.frag");
   // You'll have to bind the texture each time you want to use this.
  const char *text_uniform = "texture_image";
+ // Are the coordinates in screen space of NDC
+  // f32 pixel_scale = 2.0f / window_height; // NDC
+  f32 pixel_scale = 1.0f; // screen space
 
   // Set up point program
   // render_program prog_points = point_setup(&memory);
@@ -175,19 +178,13 @@ int main(int argc, char **argv)
     texture_bind(text_slot, text_texture_id);
     // Set the uniform variables
     uniform_set_i32(text_shader, text_uniform, text_slot);
-    // glm::mat4 ortho = glm::ortho(0.0f, renderer.width, 0.0f, renderer.height, -1.0f, 1.0f);
-    f32 aspect_ratio = renderer.width / renderer.height;
-    glm::mat4 ortho = glm::ortho(-aspect_ratio, aspect_ratio, -1.0f, 1.0f);
-    // glm::mat4 ortho = glm::mat4(1.0f);
+    glm::mat4 ortho = glm::ortho(0.0f, renderer.width, 0.0f, renderer.height, -1.0f, 1.0f);
     uniform_set_mat4(text_shader, "projection", &ortho[0][0]);
     // Add text
-    // glm::vec3 tpos = glm::vec3(renderer.width * 0.5, renderer.height * 0.5, 0.0f);
-    glm::vec3 tpos = glm::vec3(0.0f, 0.0f, 0.0f);
-    u32 text_index = text_add(text_buffer, "Hello!", 6, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f});
-    draw_text(text_gpu_buffer, text_shader, (void*)text_buffer, sizeof(text_buffer[0])*text_index, text_index);
-    // What text to add
-    // text_add();
+    glm::vec3 tpos = glm::vec3(renderer.width * 0.5f, renderer.height * 0.5f, 0.0f);
+    u32 text_index = text_add(text_buffer, "Hello!", 6, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, pixel_scale);
     // Draw text
+    draw_text(text_gpu_buffer, text_shader, (void*)text_buffer, sizeof(text_buffer[0])*text_index, text_index);
     /*
     f32 ui_scale_x = 0.10 * renderer.width;
     f32 ui_scale_y = 0.10 * renderer.height;

@@ -138,10 +138,9 @@ glm::mat4 text_projection(f32 aspect_ratio)
 }
 
 
-u32 text_add(char_vertex *buffer, const char *text, u32 length, i32 window_height, glm::vec3 position, f32 size, glm::vec4 color)
+u32 text_add(char_vertex *buffer, const char *text, u32 length, i32 window_height, glm::vec3 position, f32 size, glm::vec4 color, f32 pixel_scale)
 {
   i32 order[6] = {0, 1, 2, 0, 2, 3};
-  f32 pixel_scale = 2.0f / window_height;
   glm::vec3 pos_local = position;
   // TODO: Buffer index needs to be handled differently.
   u32 buffer_index = 0;
