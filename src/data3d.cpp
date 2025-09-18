@@ -15,7 +15,7 @@ struct mesh
 };
 
 
-mesh read_obj(const char *file, arena *memory)
+mesh model_load_obj(const char *file, arena *memory)
 {
   // Initialize output
   mesh model = {};

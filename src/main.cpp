@@ -119,7 +119,7 @@ int main(int argc, char **argv)
   */
 
   // Read in model data
-  mesh teapot_model = read_obj("assets\\teapot.obj", &memory);
+  mesh teapot_model = model_load_obj("assets\\teapot.obj", &memory);
   size_t teapot_buffer_size = sizeof(teapot_model.vertices[0]) * teapot_model.vert_count;
   render_buffer teapot_buffer = render_buffer_init((void*)teapot_model.vertices, teapot_buffer_size);
   render_buffer_attribute(
