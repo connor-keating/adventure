@@ -127,6 +127,15 @@ void * arena_alloc(arena *arena, size_t size)
 }
 
 
+arena subarena_init(arena *parent, size_t byte_count)
+{
+  arena subarena;
+  void *raw = arena_alloc(&parent, byte_count);
+  arena_init(&subarena, raw, byte_count);
+  return subarena;
+}
+
+
 const char * arena_alloc_string(arena *arena, const char *input)
 {
   u32 length = string_length(input);
@@ -144,6 +153,7 @@ void arena_free_last(arena *a)
   memset((void*)ptr, 0, diff);
   a->offset_new = a->offset_old;
 }
+
 
 void arena_free_all(arena *a)
 {

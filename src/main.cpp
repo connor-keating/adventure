@@ -77,9 +77,7 @@ int main(int argc, char **argv)
 
   // Load application assets
   size_t asset_memory_size = (size_t) Megabytes(5);
-  void *asset_memory_raw = arena_alloc(&memory, asset_memory_size);
-  arena asset_memory;
-  arena_init(&asset_memory, asset_memory_raw, asset_memory_size);
+  arena asset_memory = subarena_init(&asset_memory, asset_memory_size);
   const char *font_file = "C:\\WINDOWS\\Fonts\\arial.ttf";
   // Create the char atlas bitmap image
   u32 text_texture_id = text_init( &memory, font_file );
