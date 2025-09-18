@@ -43,7 +43,7 @@ struct model_view_projection
 
 fvec3 fvec3_add(fvec3 a, fvec3 b);
 fvec3 fvec3_sub(fvec3 a, fvec3 b);
-void  fvec3_scale(fvec3 *vec, f32 scalar);
+fvec3 fvec3_scale(fvec3 vec, f32 scalar);
 void fmat4_identity(fmat4 mat);
 void fmat4_rotate(fmat4 out, f32 angle_rad, fvec3 axis);
 void fmat4_perspective(fmat4 out, f32 fov_rad, f32 aspect, f32 znear, f32 zfar);
@@ -61,6 +61,7 @@ fvec3 fvec3_add(fvec3 a, fvec3 b)
   return out;
 }
 
+
 fvec3 fvec3_sub(fvec3 a, fvec3 b)
 {
   fvec3 out;
@@ -70,11 +71,41 @@ fvec3 fvec3_sub(fvec3 a, fvec3 b)
   return out;
 }
 
-void fvec3_scale(fvec3 *vec, f32 scalar)
+
+fvec3 fvec3_div(fvec3 a, f32 scalar)
 {
-  vec->x *= scalar;
-  vec->y *= scalar;
-  vec->z *= scalar;
+  a.x /= scalar;
+  a.y /= scalar;
+  a.z /= scalar;
+  return a;
+}
+
+
+fvec3 fvec3_max(fvec3 a, fvec3 b)
+{
+  fvec3 out;
+  out.x = (a.x >= b.x) ? a.x : b.x;
+  out.y = (a.y >= b.y) ? a.y : b.y;
+  out.z = (a.z >= b.z) ? a.z : b.z;
+  return out;
+}
+
+
+fvec3 fvec3_min(fvec3 a, fvec3 b)
+{
+  fvec3 out;
+  out.x = (a.x <= b.x) ? a.x : b.x;
+  out.y = (a.y <= b.y) ? a.y : b.y;
+  out.z = (a.z <= b.z) ? a.z : b.z;
+  return out;
+}
+
+fvec3 fvec3_scale(fvec3 vec, f32 scalar)
+{
+  vec.x *= scalar;
+  vec.y *= scalar;
+  vec.z *= scalar;
+  return vec;
 }
 
 
@@ -91,10 +122,11 @@ inline fvec3 normalize3(fvec3 vec)
   if (vec_length > 0.0f)
   {
     f32 inverse = 1.0f / vec_length;
-    fvec3_scale(&vec, inverse);
+    vec = fvec3_scale(vec, inverse);
   }
   return vec;
 }
+
 
 inline fvec3 cross3(fvec3 a, fvec3 b)
 {
@@ -154,7 +186,7 @@ void fmat4_rotate(fmat4 out, f32 angle_rad, fvec3 axis)
   f32 s = sinf(angle_rad);
   f32 one_c = 1.0f - c;
   fvec3 temp = axis;
-  fvec3_scale(&temp, one_c);
+  temp = fvec3_scale(temp, one_c);
 
   fmat4 rotate;
   rotate[0][0] = c + temp.x * axis.x;
@@ -209,4 +241,3 @@ void fmat4_lookat(fmat4 out, fvec3 eye, fvec3 center, fvec3 up)
   out[3][1] = -dot3(u, eye);
   out[3][2] =  dot3(f, eye);
 }
-

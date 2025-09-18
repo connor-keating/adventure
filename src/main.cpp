@@ -194,8 +194,8 @@ int main(int argc, char **argv)
     glm::vec3 rotation_axis_norm = glm::vec3(0,1,0);
     perspective_model = glm::rotate(perspective_model, angle, rotation_axis_norm);
     // look at
-    glm::vec3 camera_pos    = glm::vec3(0, 5.0f, 10.0f);
-    glm::vec3 camera_target = glm::vec3(0,0,0);
+    glm::vec3 camera_pos    = glm::vec3(0, teapot_centroid.y, 10.0f);
+    glm::vec3 camera_target = glm::vec3(teapot_centroid.x,teapot_centroid.y,teapot_centroid.z);
     glm::vec3 camera_up     = glm::vec3(0,1,0);
     glm::mat4 view = glm::lookAt(camera_pos, camera_target, camera_up);
     // perspective
