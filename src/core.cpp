@@ -130,7 +130,7 @@ void * arena_alloc(arena *arena, size_t size)
 arena subarena_init(arena *parent, size_t byte_count)
 {
   arena subarena;
-  void *raw = arena_alloc(&parent, byte_count);
+  void *raw = arena_alloc(parent, byte_count);
   arena_init(&subarena, raw, byte_count);
   return subarena;
 }
