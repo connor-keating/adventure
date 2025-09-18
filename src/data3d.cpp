@@ -83,6 +83,30 @@ mesh model_load_obj(const char *file, arena *memory)
 }
 
 
+fvec3 model_max(mesh model)
+{
+  fvec3 max = {};
+  u32 count = model.vert_count;
+  for (i32 i = 0; i < count; i++)
+  {
+    max = fvec3_max( max, model.vertices[i].pos );
+  }
+  return max;
+}
+
+
+fvec3 model_min(mesh model)
+{
+  fvec3 min = {};
+  u32 count = model.vert_count;
+  for (i32 i = 0; i < count; i++)
+  {
+    min = fvec3_min( min, model.vertices[i].pos );
+  }
+  return min;
+}
+
+
 fvec3 model_centroid(mesh model)
 {
   // Calculate AABB centroid.

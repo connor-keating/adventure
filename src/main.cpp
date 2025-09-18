@@ -169,7 +169,8 @@ int main(int argc, char **argv)
     glm::mat4 ortho = glm::ortho(0.0f, renderer.width, 0.0f, renderer.height, -1.0f, 1.0f);
     uniform_set_mat4(text_shader, "projection", &ortho[0][0]);
     // Add text
-    glm::vec3 tpos = glm::vec3(renderer.width * 0.5f, renderer.height * 0.5f, 0.0f);
+    // glm::vec3 tpos = glm::vec3(renderer.width * 0.5f, renderer.height * 0.5f, 0.0f);
+    glm::vec3 tpos = glm::vec3(0.0f, 0.0f, 0.0f);
     u32 text_index = text_add(text_buffer, "Hello!", 6, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, pixel_scale);
     // Draw text
     draw_text(text_gpu_buffer, text_shader, (void*)text_buffer, sizeof(text_buffer[0])*text_index, text_index);
