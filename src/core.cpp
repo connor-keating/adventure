@@ -54,12 +54,14 @@ string string_init(const char *array)
 
 #pragma region Memory handlers
 
-void arena_init(arena *self, void *buffer, size_t size)
+arena arena_init(void *buffer, size_t size)
 {
-  self->buffer = buffer;
-  self->length = size;
-  self->offset_old = 0;
-  self->offset_new = 0;
+  arena out = {};
+  out.buffer = buffer;
+  out.length = size;
+  out.offset_old = 0;
+  out.offset_new = 0;
+  return out;
 }
 
 
@@ -129,9 +131,8 @@ void * arena_alloc(arena *arena, size_t size)
 
 arena subarena_init(arena *parent, size_t byte_count)
 {
-  arena subarena;
   void *raw = arena_alloc(parent, byte_count);
-  arena_init(&subarena, raw, byte_count);
+  arena subarena = arena_init(raw, byte_count);
   return subarena;
 }
 

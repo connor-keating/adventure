@@ -58,8 +58,7 @@ int main(int argc, char **argv)
 #endif
   size_t memory_size = (size_t) Gigabytes(1);
   void *raw_memory = platform_memory_alloc(memory_base, memory_size);
-  arena memory;
-  arena_init(&memory, raw_memory, memory_size);
+  arena memory = arena_init(raw_memory, memory_size);
 
   // Create a window for the application
   platform_window window = {};
