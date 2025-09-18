@@ -81,3 +81,9 @@ mesh model_load_obj(const char *file, arena *memory)
   }
   return model;
 }
+
+fvec3 model_centroid(mesh model)
+{
+  fvec3 center = {};
+  return center;
+}

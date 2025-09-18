@@ -120,6 +120,7 @@ int main(int argc, char **argv)
 
   // Read in model data
   mesh teapot_model = model_load_obj("assets\\teapot.obj", &memory);
+  fvec3 teapot_centroid = model_centroid(teapot_model);
   size_t teapot_buffer_size = sizeof(teapot_model.vertices[0]) * teapot_model.vert_count;
   render_buffer teapot_buffer = render_buffer_init((void*)teapot_model.vertices, teapot_buffer_size);
   render_buffer_attribute(
