@@ -6,20 +6,6 @@
 #include "core.cpp"
 #include "linalg.cpp"
 
-// Application data types
-struct vertex
-{
-  fvec3 pos;
-};
-
-
-struct mesh
-{
-  vertex *vertices;
-  u32 *indices;
-  u32 vert_count;
-  u32 index_count;
-};
 
 // Globals
 global bool is_running;
@@ -38,6 +24,7 @@ global bool is_running;
 
 // Application layers
 #include "text.cpp"
+#include "data3d.cpp"
 
 // TODO: Why does app crash when I share it with discord?
 
