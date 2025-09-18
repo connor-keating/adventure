@@ -50,8 +50,12 @@ void input_reset(control_state *input_state)
 
 int main(int argc, char **argv)
 {
-  // Allocate all program memory upfront.
+  // Allocate all program memory upfront.&
+#if _DEBUG
+  void *memory_base = (void*)Terabytes(2);
+#else
   void *memory_base = 0;
+#endif
   size_t memory_size = (size_t) Gigabytes(1);
   void *raw_memory = platform_memory_alloc(memory_base, memory_size);
   arena memory;
@@ -77,7 +81,7 @@ int main(int argc, char **argv)
 
   // Load application assets
   size_t asset_memory_size = (size_t) Megabytes(5);
-  arena asset_memory = subarena_init(&asset_memory, asset_memory_size);
+  arena asset_memory = subarena_init(&memory, asset_memory_size);
   const char *font_file = "C:\\WINDOWS\\Fonts\\arial.ttf";
   // Create the char atlas bitmap image
   u32 text_texture_id = text_init( &memory, font_file );
