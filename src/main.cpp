@@ -104,21 +104,6 @@ int main(int argc, char **argv)
   u32 instance_program = render_program_init( &memory, "shaders\\instance.vert", "shaders\\instance.frag");
   // arena_free_all(&memory);
 
-  /*
-  // Initialize UI buffer
-  f32 verts[] = {
-    // Position          UV coords
-    -1.0f, -1.0f, 0.0f, //  0.0f, 0.0f, // Lower left
-     1.0f, -1.0f, 0.0f, //  1.0f, 0.0f, // Lower right
-    -1.0f,  1.0f, 0.0f, //  0.0f, 1.0f, // Upper left
-     1.0f,  1.0f, 0.0f, //  1.0f, 1.0f, // Upper right
-  };
-  render_buffer ui_buffer = render_buffer_init((void*)verts, sizeof(verts));
-  ui_init(&renderer, &memory, ui_buffer);
-  u32 ui_program = render_program_init(&memory, "shaders\\text.vert", "shaders\\text.frag");
-  arena_free_all(&memory);
-  */
-
   // Read in model data
   mesh teapot_model = model_load_obj("assets\\teapot.obj", &memory);
   fvec3 teapot_centroid = model_centroid(teapot_model);
@@ -175,16 +160,6 @@ int main(int argc, char **argv)
     u32 text_index = text_add(text_buffer, "Hello!", 6, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, pixel_scale);
     // Draw text
     draw_text(text_gpu_buffer, text_shader, (void*)text_buffer, sizeof(text_buffer[0])*text_index, text_index);
-    /*
-    f32 ui_scale_x = 0.10 * renderer.width;
-    f32 ui_scale_y = 0.10 * renderer.height;
-    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(renderer.width * 0.5, renderer.height * 0.5, 0.0f));
-    model = glm::scale(model, glm::vec3(ui_scale_x, ui_scale_y, 1.0f));
-    glm::mat4 ortho = glm::ortho(0.0f, renderer.width, 0.0f, renderer.height, -1.0f, 1.0f);
-    glm::mat4 proj = ortho * model;
-    uniform_set_mat4(ui_program, "proj", &proj[0][0]);
-    draw_ui(ui_buffer, ui_program);
-    */
 
     glm::mat4 identity = glm::mat4(1.0f);
     // Create view and projection matrix
