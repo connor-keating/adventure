@@ -85,7 +85,7 @@ int main(int argc, char **argv)
   render_buffer text_gpu_buffer = text_gpu_init(text_vert_count);
 
   // Init CPU buffers
-  arena text_buffer = subarena_for(memory, text_vert_count, char_vertex);
+  arena text_buffer = text_buffer_init(&memory, text_vert_count);
 
   // Load application assets
   const char *font_file = "C:\\WINDOWS\\Fonts\\arial.ttf";

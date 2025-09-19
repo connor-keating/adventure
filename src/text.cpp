@@ -102,6 +102,13 @@ u32 text_init(arena *memory, const char * font_file)
 }
 
 
+arena text_buffer_init(arena *parent, u32 vertex_count)
+{
+  arena a = subarena_for(parent, vertex_count, char_vertex);
+  return a;
+}
+
+
 render_buffer text_gpu_init(u32 vert_count)
 {
   // Render stuff
