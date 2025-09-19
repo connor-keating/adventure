@@ -51,7 +51,7 @@ char_atlas text_atlas_init(arena *memory, const char * font_file)
   ASSERT(success != 0, "Font init failed!");
   // Load the font atlas texture
   size_t atlas_size = (size_t) (atlas.width * atlas.height);
-  atlas.image = arena_alloc_array(memory, atlas_size, u8);
+  atlas.image = arena_push_array(memory, atlas_size, u8);
   stbtt_pack_context ctx = {};
   stbtt_PackBegin(
     &ctx,           // Initialize the context

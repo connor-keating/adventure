@@ -49,8 +49,8 @@ mesh model_load_obj(const char *file, arena *memory)
   u32 element = 0;
   model.vert_count = attrib.num_faces;
   model.index_count = attrib.num_faces;
-  model.vertices = arena_alloc_array(memory, model.vert_count, vertex);
-  model.indices = arena_alloc_array(memory, model.index_count, u32);
+  model.vertices = arena_push_array(memory, model.vert_count, vertex);
+  model.indices = arena_push_array(memory, model.index_count, u32);
 
   // Metadata for loop
   u32 face_count = attrib.num_face_num_verts;

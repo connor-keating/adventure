@@ -585,7 +585,7 @@ render_buffer instance_setup(arena *scratch)
 
   // Create instance transforms
   u32 cube_count = 2;
-  glm::mat4 *modelmats = arena_alloc_array(scratch, cube_count, glm::mat4); 
+  glm::mat4 *modelmats = arena_push_array(scratch, cube_count, glm::mat4); 
   for (int i = 0; i < cube_count; i++)
   {
     // Transformations are applied in reverse multiplication order.
