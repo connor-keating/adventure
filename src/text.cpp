@@ -181,9 +181,11 @@ u32 text_add(arena a, const char *text, u32 length, i32 window_height, glm::vec3
     // one by glyph_vertices[0], glyph_vertices[1], glyph_vertices[2] and one by glyph_vertices[0], glyph_vertices[2], glyph_vertices[3]
     for(int i = 0; i < 6; i++)
     {
-      buffer[buffer_index + i].position = glm::vec3(glyph_vertices[order[i]], position.z);
-      buffer[buffer_index + i].color = color;
-      buffer[buffer_index + i].texCoord = glyph_texture[order[i]];
+      char_vertex temp = {};
+      temp.position = glm::vec3(glyph_vertices[order[i]], position.z);
+      temp.color = color;
+      temp.texCoord = glyph_texture[order[i]];
+      buffer[buffer_index + i] = temp;
     }
     buffer_index += 6;
     // Update the position to render the next glyph specified by packedChar.xadvance.
