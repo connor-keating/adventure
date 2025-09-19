@@ -146,6 +146,9 @@ int main(int argc, char **argv)
     platform_clock_update(&app_clock);
     message_process(window.handle, input_map, input_state);
 
+    // Free resources
+    arena_free_all( &text_buffer );
+
     // Check window dimensions
     window_size_get(&window);
     // Set render window dimensions (for now the whole canvas)
@@ -166,10 +169,11 @@ int main(int argc, char **argv)
     // glm::vec3 tpos = glm::vec3(renderer.width * 0.5f, renderer.height * 0.5f, 0.0f);
     glm::vec3 tpos = glm::vec3(0.0f, 0.0f, 0.0f);
     // Add text data to gpu buffer
-    u32 text_index = text_add(text_buffer, "Hello!", 6, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, pixel_scale);
-    render_buffer_push(text_gpu_buffer, text_buffer.buffer, 0, sizeof(char_vertex)*text_index);
+    text_add(&text_buffer, "Hello!", 6, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, pixel_scale);
+    render_buffer_push(text_gpu_buffer, text_buffer.buffer, 0, text_buffer.offset_new);
     // Draw text
-    draw_text(text_gpu_buffer, text_shader, text_index);
+    u32 text_vert_count = text_count_get(&text_buffer);
+    draw_text(text_gpu_buffer, text_shader, text_vert_count);
 
     glm::mat4 identity = glm::mat4(1.0f);
     // Create view and projection matrix
