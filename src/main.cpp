@@ -60,7 +60,11 @@ int main(int argc, char **argv)
   void *raw_memory = platform_memory_alloc(memory_base, memory_size);
   arena memory = arena_init(raw_memory, memory_size);
   // Scratch arena that can be freed frequently.
-  arena scratch = subarena_init(&memory, Megabytes(20));
+  u32 scratch_max = Megabytes(20);
+  arena scratch = subarena_init(&memory, scratch_max);
+  // Render buffer that contains line data
+  u32 lines_max = 1000;
+  arena lines_buffer = subarena_init(&memory, lines_max*sizeof(vertex));
 
   // Create a window for the application
   platform_window window = {};
@@ -80,10 +84,14 @@ int main(int argc, char **argv)
   // Initialize renderer
   render_state renderer = render_init(&window);
   // Initialize render buffers
+  render_buffer lines_gpu = render_buffer_init(nullptr, lines_max);
+  render_buffer_attribute(lines_gpu, 0, 3, sizeof(fvec3), 0);
+  u32 lines_program = render_program_init( &scratch, "shaders\\lines.vert", "shaders\\lines.frag");
   // 6000 text verts = 1000 quads
   u32 text_vert_count = 6000;
   render_buffer text_gpu_buffer = text_gpu_init(text_vert_count);
 
+  // TODO: Move this up to arena allocation section
   // Init CPU buffers
   arena text_buffer = text_buffer_init(&memory, text_vert_count);
 
@@ -103,7 +111,6 @@ int main(int argc, char **argv)
   // render_program prog = cube_setup(&memory);
   render_buffer instance_buffer = instance_setup(&memory);
   u32 instance_program = render_program_init( &scratch, "shaders\\instance.vert", "shaders\\instance.frag");
-  arena_free_all(&scratch);
 
   // Read in model data
   mesh teapot_model = model_load_obj("assets\\teapot.obj", &memory);
@@ -123,6 +130,10 @@ int main(int argc, char **argv)
   1. I need a generic buffer meant for lines.
   2. I need to add the bbox in render order
   */
+  vertex *bbox = arena_push_array(&lines_buffer, 2, vertex);
+  bbox[0].pos = model_min(teapot_model);
+  bbox[1].pos = model_max(teapot_model);
+  render_buffer_push(lines_gpu, (void*)bbox, lines_buffer.offset_old, lines_buffer.offset_new);
 
 
   // Set up the angular speed variable for the rotation
@@ -199,6 +210,10 @@ int main(int argc, char **argv)
     uniform_set_mat4(teapot_program, "proj", &mvp[0][0]);
     draw_points(teapot_buffer, teapot_program, teapot_model.vert_count);
 
+    // Draw the model's bounding box
+    u32 lines_count = lines_buffer.offset_new / sizeof(vertex);
+    uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
+    draw_lines(lines_gpu, lines_program, lines_count);
     // Draw the editor
     // draw_points(&prog_points);
 
