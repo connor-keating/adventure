@@ -355,13 +355,13 @@ u32 render_buffer_elements_init(const void *indices, size_t byte_size)
 }
 
 
-void render_buffer_attribute(render_buffer buffer, u32 index, u32 size, size_t stride, void *offset)
+void render_buffer_attribute(render_buffer buffer, u32 index, u32 element_count, size_t stride, void *offset)
 {
   // Bind the VAO and VBO
   glBindVertexArray(buffer.vao);
   glBindBuffer(GL_ARRAY_BUFFER, buffer.vbo);
   // Describe it
-  glVertexAttribPointer(index, size, GL_FLOAT, GL_FALSE, stride, offset);
+  glVertexAttribPointer(index, element_count, GL_FLOAT, GL_FALSE, stride, offset);
   // Turn it on
   glEnableVertexAttribArray(index);
   /*
@@ -715,6 +715,14 @@ void draw_points(render_buffer buffer, u32 shader_program, u32 amount)
   glBindVertexArray(buffer.vao);
   // Draw the point
   glDrawArrays(GL_POINTS, index_start, amount);
+}
+
+
+void draw_lines(render_buffer buffer, u32 shader, u32 amount)
+{
+  glUseProgram(shader);
+  glBindVertexArray(buffer.vao);
+  glDrawArrays(GL_LINES, 0, amount);
 }
 
 
