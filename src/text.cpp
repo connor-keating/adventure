@@ -102,7 +102,7 @@ u32 text_init(arena *memory, const char * font_file)
 }
 
 
-render_buffer text_buffer_init(u32 vert_count)
+render_buffer text_gpu_init(u32 vert_count)
 {
   // Render stuff
   size_t text_vert_max = vert_count * sizeof(char_vertex); 

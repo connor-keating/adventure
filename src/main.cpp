@@ -82,7 +82,7 @@ int main(int argc, char **argv)
   // Initialize render buffers
   // 6000 text verts = 1000 quads
   u32 text_vert_count = 6000;
-  render_buffer text_gpu_buffer = text_buffer_init(text_vert_count);
+  render_buffer text_gpu_buffer = text_gpu_init(text_vert_count);
 
   // Init CPU buffers
   arena text_buffer = subarena_for(memory, text_vert_count, char_vertex);
