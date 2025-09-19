@@ -98,6 +98,7 @@ uintptr_t pointer_align_forward(uintptr_t pointer, size_t alignment)
 }
 
 
+#define arena_push_struct(arena, type) (type*) arena_alloc_align(arena, sizeof(type), _Alignof(type))
 void *arena_alloc_align(arena *arena, size_t size, size_t align)
 {
   // Align 'offset_new' forward to the specified alignment
