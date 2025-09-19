@@ -376,6 +376,14 @@ void render_buffer_attribute(render_buffer buffer, u32 index, u32 size, size_t s
 }
 
 
+void render_buffer_push(render_buffer buffer, void* data, i32 start_offset, size_t byte_count)
+{
+  glBindBuffer(GL_ARRAY_BUFFER, buffer.vbo);
+  glBufferSubData(GL_ARRAY_BUFFER, start_offset, byte_count, data);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+
 u32 shader_compile(const char *filepath, i32 type, arena *scratch)
 {
   size_t byte_count;
@@ -662,15 +670,13 @@ void uniform_set(u32 shader_program, f32 angle, f32 fov_deg, f32 aspect)
 }
 
 
-void draw_text(render_buffer buffer, u32 shader_program, void *data, u32 length, u32 count)
+void draw_text(render_buffer buffer, u32 shader_program, u32 count)
 {
   // Disable depth writing for transparent text
   glDepthMask(GL_FALSE);
 
   // Input the vertex data
   glBindVertexArray(buffer.vao);
-  glBindBuffer(GL_ARRAY_BUFFER, buffer.vbo);
-  glBufferSubData(GL_ARRAY_BUFFER, 0, length, data);
   glDrawArrays(GL_TRIANGLES, 0, count);
 
   // Re-enable depth writing
