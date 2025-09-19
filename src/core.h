@@ -162,7 +162,6 @@ void              arena_init(arena *self, void *buffer, size_t size);
 arena_savepoint   arena_save(arena *original);
 uintptr_t         pointer_align_forward(uintptr_t pointer, size_t alignment);
 void *            arena_alloc_align(arena *arena, size_t size, size_t align);
-#define           arena_alloc_array(arena, count, type) (type *) arena_alloc_align(arena, count*sizeof(type), _Alignof(type))
 void *            arena_alloc(arena *arena, size_t size);
 const char *      arena_alloc_string(arena *arena, const char *input);
 void              arena_pop(arena_savepoint point);

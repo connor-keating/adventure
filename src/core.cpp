@@ -121,8 +121,6 @@ void *arena_alloc_align(arena *arena, size_t size, size_t align)
 }
 
 
-
-
 void * arena_alloc(arena *arena, size_t size)
 {
   void *allocation = arena_alloc_align(arena, size, DEFAULT_ALIGNMENT);
