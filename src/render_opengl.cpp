@@ -345,6 +345,16 @@ render_buffer render_buffer_dynamic_init(void *data, size_t length)
 }
 
 
+u32 render_buffer_elements_init(const void *indices, size_t byte_size)
+{
+  u32 ebo;
+  glGenBuffers(1, &ebo);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, byte_size, indices, GL_STATIC_DRAW);
+  return ebo;
+}
+
+
 void render_buffer_attribute(render_buffer buffer, u32 index, u32 size, size_t stride, void *offset)
 {
   // Bind the VAO and VBO
@@ -488,77 +498,8 @@ void uniform_set_i32(u32 shader_program, const char *name, i32 data)
 }
 
 
-/*
-void point_setup(arena *scratch)
+void buffer_tri_add()
 {
-  render_program prog = {};
-
-  GLuint point_vbo = 0;
-  
-  size_t byte_count;
-  // Vertex shader source
-  ASSERT(file_exists("shaders\\points.vert") == true, "ERROR Shader not found.");
-  const char* vertex_shader_source = read_textfile("shaders\\points.vert", scratch, &byte_count);
-
-  // Fragment shader source  
-  const char* fragment_shader_source = read_textfile("shaders\\points.frag", scratch, &byte_count);
-
-  // Create vertex shader
-  GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
-  glCompileShader(vertex_shader);
-
-  // Create fragment shader
-  GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
-  glCompileShader(fragment_shader);
-
-  // Create shader program
-  prog.shader_program = glCreateProgram();
-  glAttachShader(prog.shader_program, vertex_shader);
-  glAttachShader(prog.shader_program, fragment_shader);
-  glLinkProgram(prog.shader_program);
-
-  // Clean up shaders
-  glDeleteShader(vertex_shader);
-  glDeleteShader(fragment_shader);
-
-  // Point at center (0,0,0) in normalized device coordinates
-  float point_vertex[] = {
-    0.0f, 0.0f, 0.0f
-  };
-
-  // Generate VAO and VBO
-  glGenVertexArrays(1, &prog.vao);
-  glGenBuffers(1, &point_vbo);
-
-  glBindVertexArray(prog.vao);
-  glBindBuffer(GL_ARRAY_BUFFER, point_vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(point_vertex), point_vertex, GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-  glEnableVertexAttribArray(0);
-
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindVertexArray(0);
-
-  // Enable point size control from vertex shader
-  glEnable(GL_PROGRAM_POINT_SIZE);
-
-  return prog;
-}
-
-
-void tri_setup(arena *scratch, render_program *prog)
-{
-  // Triangle
-  // f32 verts[] = {
-    // -0.5f, -0.5f, 0.0f, // left
-     // 0.5f, -0.5f, 0.0f, // right
-     // 0.0f,  0.5f, 0.0f, // top
-  };
-
-  // Rectangle
   f32 verts[] = {
     // positions      
      0.5f,  0.5f, 0.0f,
@@ -570,52 +511,11 @@ void tri_setup(arena *scratch, render_program *prog)
     0, 1, 3, // first triangle
     1, 2, 3  // second triangle
   };
-  // Set up vertex attribute
-  glGenVertexArrays(1, &prog->vao);
-  // Bind VAO
-  glBindVertexArray(prog->vao);
-  // Set up vertex buffer object
-  u32 vbo;
-  glGenBuffers(1, &vbo);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(verts[0]), (void*)0);
-  glEnableVertexAttribArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  // Set up EBO
-  GLuint ebo;
-  glGenBuffers(1, &ebo);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-  // Shader program
-  size_t byte_count;
-  // Vertx shader source
-  const char* vertex_shader_source = read_textfile("shaders\\tri.vert", scratch, &byte_count);
-  // Fragment shader source  
-  const char* fragment_shader_source = read_textfile("shaders\\tri.frag", scratch, &byte_count);
-  // Create vertex shader
-  GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
-  glCompileShader(vertex_shader);
-  // Create fragment shader
-  GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
-  glCompileShader(fragment_shader);
-  // Create shader program
-  prog->shader_program = glCreateProgram();
-  glAttachShader(prog->shader_program, vertex_shader);
-  glAttachShader(prog->shader_program, fragment_shader);
-  glLinkProgram(prog->shader_program);
-  // Clean up shaders
-  glDeleteShader(vertex_shader);
-  glDeleteShader(fragment_shader);
-
 }
 
 
-render_program cube_setup(arena *scratch)
+void buffer_cube_add()
 {
-
   // position (x, y, z) + color (r, g, b)
   f32 verts[] = {
     // positions        // colors
@@ -628,78 +528,12 @@ render_program cube_setup(arena *scratch)
      1.0f, 1.0f, 1.0f,  0.6f, 0.0f, 0.6f, // 6 violet
     -1.0f, 1.0f, 1.0f,  1.0f, 1.0f, 1.0f  // 7 magenta
   };
-
-  // unsigned int indices[] = {
-    // 0,1,2,  2,3,0, // front
-    // 4,6,5,  6,4,7, // back
-    // 0,3,7,  7,4,0, // left
-    // 1,5,6,  6,2,1, // right
-    // 3,2,6,  6,7,3, // top
-    // 0,4,5,  5,1,0  // bottom
-  // };
-
-  uint32_t indices[] = {
+  u32 indices[] = {
     0,1, 1,2, 2,3, 3,0,        // bottom
     4,5, 5,6, 6,7, 7,4,        // top
     0,4, 1,5, 2,6, 3,7         // verticals
   };
-  // Set up vertex attribute
-  glGenVertexArrays(1, &prog.vao);
-  // Bind VAO
-  glBindVertexArray(prog.vao);
-  // Set up vertex buffer object
-  u32 vbo;
-  glGenBuffers(1, &vbo);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
-
-  // Just position
-  // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(verts[0]), (void*)0);
-
-  // position attribute (location = 0)
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(f32), (void*)0);
-  glEnableVertexAttribArray(0);
-
-  // color attribute (location = 1)
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(f32), (void*)(3 * sizeof(f32)));
-  glEnableVertexAttribArray(1);
-
-
-  glEnableVertexAttribArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  // Set up EBO
-  GLuint ebo;
-  glGenBuffers(1, &ebo);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-  // Shader program
-  size_t byte_count;
-  // Vertx shader source
-  const char* vertex_shader_source = read_textfile("shaders\\cube.vert", scratch, &byte_count);
-  // Fragment shader source  
-  const char* fragment_shader_source = read_textfile("shaders\\cube.frag", scratch, &byte_count);
-  // Create vertex shader
-  GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
-  glCompileShader(vertex_shader);
-  // Create fragment shader
-  GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
-  glCompileShader(fragment_shader);
-  // Create shader program
-  prog.shader_program = glCreateProgram();
-  ASSERT(prog.shader_program != 0, "ERROR: Failed to compile shaders.");
-  glAttachShader(prog.shader_program, vertex_shader);
-  glAttachShader(prog.shader_program, fragment_shader);
-  glLinkProgram(prog.shader_program);
-  ASSERT(prog.shader_program != 0, "ERROR: Failed to link shaders.");
-  // Clean up shaders
-  glDeleteShader(vertex_shader);
-  glDeleteShader(fragment_shader);
-
-  return prog;
 }
-*/
 
 
 render_buffer instance_setup(arena *scratch)
