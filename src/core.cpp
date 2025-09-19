@@ -137,6 +137,17 @@ arena subarena_init(arena *parent, size_t byte_count)
 }
 
 
+arena subarena_aligned_init(arena *parent, size_t byte_count, size_t alignment)
+{
+  void *raw = arena_alloc_align(parent, byte_count, alignment);
+  arena subarena = arena_init(raw, byte_count);
+  return subarena;
+}
+
+// Use this to create subarenas dedicated to a specific data type so its densely packed in memory.
+#define subarena_for(parent, count, type) subarena_aligned_init((&parent), (count*sizeof(type)), _Alignof(type))
+
+
 const char * arena_alloc_string(arena *arena, const char *input)
 {
   u32 length = string_length(input);
