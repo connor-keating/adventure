@@ -59,6 +59,8 @@ int main(int argc, char **argv)
   size_t memory_size = (size_t) Gigabytes(1);
   void *raw_memory = platform_memory_alloc(memory_base, memory_size);
   arena memory = arena_init(raw_memory, memory_size);
+  // Scratch arena that can be freed frequently.
+  arena scratch = subarena_init(&memory, Megabytes(20));
 
   // Create a window for the application
   platform_window window = {};
@@ -77,19 +79,19 @@ int main(int argc, char **argv)
 
   // Initialize renderer
   render_state renderer = render_init(&window);
+  // Initialize render buffers
+  // 6000 text verts = 1000 quads
+  u32 text_vert_count = 6000;
+  render_buffer text_gpu_buffer = text_buffer_init(text_vert_count);
+
+  // Init CPU buffers
+  arena text_buffer = subarena_for(memory, text_vert_count, char_vertex);
 
   // Load application assets
-  size_t asset_memory_size = (size_t) Megabytes(5);
-  arena asset_memory = subarena_init(&memory, asset_memory_size);
   const char *font_file = "C:\\WINDOWS\\Fonts\\arial.ttf";
   // Create the char atlas bitmap image
-  u32 text_texture_id = text_init( &memory, font_file );
-  // text char buffer
-  // 6000 verts = 1000 quads
-  u32 text_vert_count = 6000;
-  // std::vector<Vertex> vertices;
-  char_vertex *text_buffer = arena_alloc_array( &memory, text_vert_count, char_vertex );
-  render_buffer text_gpu_buffer = text_buffer_init(text_vert_count);
+  u32 text_texture_id = text_init( &scratch, font_file );
+  arena_free_all(&scratch);
   u32 text_shader = render_program_init( &memory, "shaders\\text.vert", "shaders\\text.frag");
   // You'll have to bind the texture each time you want to use this.
  const char *text_uniform = "texture_image";
@@ -165,7 +167,7 @@ int main(int argc, char **argv)
     glm::vec3 tpos = glm::vec3(0.0f, 0.0f, 0.0f);
     // Add text data to gpu buffer
     u32 text_index = text_add(text_buffer, "Hello!", 6, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, pixel_scale);
-    render_buffer_push(text_gpu_buffer, (void*)text_buffer, 0, sizeof(text_buffer[0])*text_index);
+    render_buffer_push(text_gpu_buffer, text_buffer.buffer, 0, sizeof(char_vertex)*text_index);
     // Draw text
     draw_text(text_gpu_buffer, text_shader, text_index);
 
