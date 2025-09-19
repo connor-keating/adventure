@@ -50,7 +50,7 @@ void input_reset(control_state *input_state)
 
 int main(int argc, char **argv)
 {
-  // Allocate all program memory upfront.&
+  // Allocate all program memory upfront.
 #if _DEBUG
   void *memory_base = (void*)Terabytes(2);
 #else
@@ -59,12 +59,18 @@ int main(int argc, char **argv)
   size_t memory_size = (size_t) Gigabytes(1);
   void *raw_memory = platform_memory_alloc(memory_base, memory_size);
   arena memory = arena_init(raw_memory, memory_size);
+
+  // Init CPU buffers
   // Scratch arena that can be freed frequently.
   u32 scratch_max = Megabytes(20);
   arena scratch = subarena_init(&memory, scratch_max);
   // Render buffer that contains line data
   u32 lines_max = 1000;
   arena lines_buffer = subarena_init(&memory, lines_max*sizeof(vertex));
+  // Text (chars) buffer
+  u32 text_vert_count = 6000;
+  // 6000 text verts = 1000 quads
+  arena text_buffer = text_buffer_init(&memory, text_vert_count);
 
   // Create a window for the application
   platform_window window = {};
@@ -87,13 +93,8 @@ int main(int argc, char **argv)
   render_buffer lines_gpu = render_buffer_init(nullptr, lines_max);
   render_buffer_attribute(lines_gpu, 0, 3, sizeof(fvec3), 0);
   u32 lines_program = render_program_init( &scratch, "shaders\\lines.vert", "shaders\\lines.frag");
-  // 6000 text verts = 1000 quads
-  u32 text_vert_count = 6000;
   render_buffer text_gpu_buffer = text_gpu_init(text_vert_count);
 
-  // TODO: Move this up to arena allocation section
-  // Init CPU buffers
-  arena text_buffer = text_buffer_init(&memory, text_vert_count);
 
   // Load application assets
   const char *font_file = "C:\\WINDOWS\\Fonts\\arial.ttf";
