@@ -98,7 +98,6 @@ u32 text_init(arena *memory, const char * font_file)
   char_atlas atlas = text_atlas_init(memory, font_file);
   // Upload it to GPU texture
   u32 font_texture_id = texture2d_1channel_init(atlas.image, atlas.width, atlas.height);
-  // TODO: Is it okay to free the atlas now?
   return font_texture_id;
 }
 
@@ -138,8 +137,9 @@ glm::mat4 text_projection(f32 aspect_ratio)
 }
 
 
-u32 text_add(char_vertex *buffer, const char *text, u32 length, i32 window_height, glm::vec3 position, f32 size, glm::vec4 color, f32 pixel_scale)
+u32 text_add(arena a, const char *text, u32 length, i32 window_height, glm::vec3 position, f32 size, glm::vec4 color, f32 pixel_scale)
 {
+  char_vertex *buffer = (char_vertex*) a.buffer;
   i32 order[6] = {0, 1, 2, 0, 2, 3};
   glm::vec3 pos_local = position;
   // TODO: Buffer index needs to be handled differently.
