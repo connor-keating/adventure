@@ -712,41 +712,15 @@ void draw_points(render_buffer buffer, u32 shader_program, u32 amount)
 }
 
 
-/*
-void draw_lines(render_program *prog)
+void draw_lines(render_buffer buffer, u32 shader_program, u32 amount, void *starting_offset)
 {
   // Bind our program
-  glUseProgram(prog->shader_program);
-  glBindVertexArray(prog->vao);
+  glUseProgram(shader_program);
+  glBindVertexArray(buffer.vao);
   // Draw the point
-  glDrawElements(GL_LINES, 24, GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_LINES, amount, GL_UNSIGNED_INT, starting_offset);
 }
 
-
-
-
-void draw_triangles(render_program *prog)
-{
-  // Bind our program
-  glUseProgram(prog->shader_program);
-  f32 angle = 0.0f; // tweak speed here (radians per frame)
-  float dist = 5.0f;                 // camera distance
-  float fovY_deg = 45.0f;            // pick your FOV
-  float width = 976.0f, height = 579.0f;
-  float aspect   = width / height; // keep updated on resize
-  glm::mat4 model = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0,1,0));
-  glm::mat4 view = glm::lookAt(glm::vec3(0,2.0f,dist), glm::vec3(0,0.0f,0), glm::vec3(0,1,0));
-  glm::mat4 proj = glm::perspective(glm::radians(fovY_deg), aspect, 0.1f, 100.0f);
-  glm::mat4 mvp = proj * view * model;
-  GLint loc = glGetUniformLocation( prog->shader_program, "uMVP");
-  glUniformMatrix4fv( loc, 1, GL_FALSE, &mvp[0][0]);
-  glBindVertexArray(prog->vao);
-  // Draw the point
-  // glDrawArrays(GL_TRIANGLES, 0, 3);
-  // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-}
-*/
 
 void frame_render(render_state *state)
 {
