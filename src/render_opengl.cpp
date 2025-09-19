@@ -712,7 +712,7 @@ void draw_points(render_buffer buffer, u32 shader_program, u32 amount)
 }
 
 
-void draw_lines(render_buffer buffer, u32 shader_program, u32 amount, void *starting_offset)
+void draw_lines_elements(render_buffer buffer, u32 shader_program, u32 amount, void *starting_offset)
 {
   // Bind our program
   glUseProgram(shader_program);
