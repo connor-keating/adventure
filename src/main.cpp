@@ -91,8 +91,7 @@ int main(int argc, char **argv)
   const char *font_file = "C:\\WINDOWS\\Fonts\\arial.ttf";
   // Create the char atlas bitmap image
   u32 text_texture_id = text_init( &scratch, font_file );
-  arena_free_all(&scratch);
-  u32 text_shader = render_program_init( &memory, "shaders\\text.vert", "shaders\\text.frag");
+  u32 text_shader = render_program_init( &scratch, "shaders\\text.vert", "shaders\\text.frag");
   // You'll have to bind the texture each time you want to use this.
  const char *text_uniform = "texture_image";
  // Are the coordinates in screen space of NDC
@@ -103,8 +102,8 @@ int main(int argc, char **argv)
   // render_program prog_points = point_setup(&memory);
   // render_program prog = cube_setup(&memory);
   render_buffer instance_buffer = instance_setup(&memory);
-  u32 instance_program = render_program_init( &memory, "shaders\\instance.vert", "shaders\\instance.frag");
-  // arena_free_all(&memory);
+  u32 instance_program = render_program_init( &scratch, "shaders\\instance.vert", "shaders\\instance.frag");
+  arena_free_all(&scratch);
 
   // Read in model data
   mesh teapot_model = model_load_obj("assets\\teapot.obj", &memory);
@@ -118,7 +117,7 @@ int main(int argc, char **argv)
     ARRAY_COUNT(teapot_model.vertices[0].pos.array) * sizeof(teapot_model.vertices[0].pos.array[0]),
     (void *)0
   );
-  u32 teapot_program = render_program_init(&memory, "shaders\\points.vert", "shaders\\points.frag");
+  u32 teapot_program = render_program_init(&scratch, "shaders\\points.vert", "shaders\\points.frag");
   // Get bounding box
   /*
   1. I need a generic buffer meant for lines.
@@ -147,6 +146,7 @@ int main(int argc, char **argv)
     message_process(window.handle, input_map, input_state);
 
     // Free resources
+    arena_free_all(&scratch);
     arena_free_all( &text_buffer );
 
     // Check window dimensions
