@@ -89,7 +89,7 @@ int main(int argc, char **argv)
   u32 text_vert_count = 6000;
   // std::vector<Vertex> vertices;
   char_vertex *text_buffer = arena_alloc_array( &memory, text_vert_count, char_vertex );
-  render_buffer text_gpu_buffer = text_buffer_init(&memory, text_vert_count);
+  render_buffer text_gpu_buffer = text_buffer_init(text_vert_count);
   u32 text_shader = render_program_init( &memory, "shaders\\text.vert", "shaders\\text.frag");
   // You'll have to bind the texture each time you want to use this.
  const char *text_uniform = "texture_image";
@@ -117,6 +117,12 @@ int main(int argc, char **argv)
     (void *)0
   );
   u32 teapot_program = render_program_init(&memory, "shaders\\points.vert", "shaders\\points.frag");
+  // Get bounding box
+  /*
+  1. I need a generic buffer meant for lines.
+  2. I need to add the bbox in render order
+  */
+
 
   // Set up the angular speed variable for the rotation
   f32 angle_velocity = PI/4.0f;
@@ -157,9 +163,11 @@ int main(int argc, char **argv)
     // Add text
     // glm::vec3 tpos = glm::vec3(renderer.width * 0.5f, renderer.height * 0.5f, 0.0f);
     glm::vec3 tpos = glm::vec3(0.0f, 0.0f, 0.0f);
+    // Add text data to gpu buffer
     u32 text_index = text_add(text_buffer, "Hello!", 6, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, pixel_scale);
+    render_buffer_push(text_gpu_buffer, (void*)text_buffer, 0, sizeof(text_buffer[0])*text_index);
     // Draw text
-    draw_text(text_gpu_buffer, text_shader, (void*)text_buffer, sizeof(text_buffer[0])*text_index, text_index);
+    draw_text(text_gpu_buffer, text_shader, text_index);
 
     glm::mat4 identity = glm::mat4(1.0f);
     // Create view and projection matrix
