@@ -137,13 +137,10 @@ glm::mat4 text_projection(f32 aspect_ratio)
 }
 
 
-u32 text_add(arena a, const char *text, u32 length, i32 window_height, glm::vec3 position, f32 size, glm::vec4 color, f32 pixel_scale)
+void text_add(arena *a, const char *text, u32 length, i32 window_height, glm::vec3 position, f32 size, glm::vec4 color, f32 pixel_scale)
 {
-  char_vertex *buffer = (char_vertex*) a.buffer;
   i32 order[6] = {0, 1, 2, 0, 2, 3};
   glm::vec3 pos_local = position;
-  // TODO: Buffer index needs to be handled differently.
-  u32 buffer_index = 0;
   for (i32 i = 0; i < length; ++i)
   {
     // TODO: if check: Is the char inside our 32-127?
@@ -181,16 +178,20 @@ u32 text_add(arena a, const char *text, u32 length, i32 window_height, glm::vec3
     // one by glyph_vertices[0], glyph_vertices[1], glyph_vertices[2] and one by glyph_vertices[0], glyph_vertices[2], glyph_vertices[3]
     for(int i = 0; i < 6; i++)
     {
-      char_vertex temp = {};
-      temp.position = glm::vec3(glyph_vertices[order[i]], position.z);
-      temp.color = color;
-      temp.texCoord = glyph_texture[order[i]];
-      buffer[buffer_index + i] = temp;
+      char_vertex *element = arena_push_struct(a, char_vertex);
+      element->position = glm::vec3(glyph_vertices[order[i]], position.z);
+      element->color = color;
+      element->texCoord = glyph_texture[order[i]];
     }
-    buffer_index += 6;
     // Update the position to render the next glyph specified by packedChar.xadvance.
     pos_local.x += char_pack.xadvance * pixel_scale * size;
     // TODO: else if char is newline advance it differently
   }
-  return buffer_index;
+}
+
+
+u32 text_count_get(arena *a)
+{
+  u32 vertex_count = (u32) a->offset_new / sizeof(char_vertex);
+  return vertex_count;
 }
