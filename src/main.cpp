@@ -126,17 +126,7 @@ int main(int argc, char **argv)
   fvec3 teapot_centroid = model_centroid(teapot_model);
   size_t teapot_buffer_size = sizeof(teapot_model.vertices[0]) * teapot_model.vert_count;
   render_buffer_push(lines_gpu, (void*)teapot_model.vertices, 0, teapot_buffer_size);
-  /*
-  render_buffer teapot_buffer = render_buffer_init((void*)teapot_model.vertices, teapot_buffer_size);
-  render_buffer_attribute(
-    teapot_buffer,
-    0, 
-    ARRAY_COUNT(teapot_model.vertices[0].pos.array),
-    ARRAY_COUNT(teapot_model.vertices[0].pos.array) * sizeof(teapot_model.vertices[0].pos.array[0]),
-    (void *)0
-  );
-  */
-  u32 teapot_program = render_program_init(&scratch, "shaders\\points.vert", "shaders\\points.frag");
+  // u32 teapot_program = render_program_init(&scratch, "shaders\\points.vert", "shaders\\points.frag");
   // Get bounding box
   mesh bbox = model_bbox_add(&vert_buffer_lines, &elem_buffer_lines, teapot_model);
   size_t bbox_vbo_size = sizeof(bbox.vertices[0]) * bbox.vert_count;
@@ -228,11 +218,12 @@ int main(int argc, char **argv)
     glm::mat4 mvp = perspective_proj * view * perspective_model;
     // Draw the model (teapot indices start at offset 0)
     uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
-    draw_lines_elements(lines_gpu, lines_program, teapot_model.index_count, (void*)0);
+    i64 teapot_offset = model_starting_offset(&elem_buffer_lines, teapot_model);
+    draw_lines_elements(lines_gpu, lines_program, teapot_model.index_count, (void*)teapot_offset);
 
     // Draw the model's bounding box (bbox indices start after teapot indices)
     uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
-    size_t bbox_index_offset = teapot_model.index_count * sizeof(u32);
+    i64 bbox_index_offset  = model_starting_offset(&elem_buffer_lines, bbox);
     draw_lines_elements(lines_gpu, lines_program, bbox.index_count, (void*)bbox_index_offset);
 
     // Set color
