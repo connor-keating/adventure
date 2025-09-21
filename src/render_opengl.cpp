@@ -385,10 +385,11 @@ void render_buffer_push(render_buffer buffer, void* data, i32 start_offset, size
 }
 
 
-void render_buffer_elements_push(render_buffer buffer, void* data, i32 start_offset, size_t byte_count)
+void render_buffer_elements_push(render_buffer buffer, void* data, i64 starting_byte_offset, size_t byte_count)
 {
+  // start_offset == starting address in GPU buffer.
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer.ebo);
-  glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, start_offset, byte_count, data);
+  glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, starting_byte_offset, byte_count, data);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
