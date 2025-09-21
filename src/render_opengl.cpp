@@ -351,6 +351,7 @@ u32 render_buffer_elements_init(const void *indices, size_t byte_size)
   glGenBuffers(1, &ebo);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, byte_size, indices, GL_STATIC_DRAW);
+  glBindVertexArray(0);
   return ebo;
 }
 
