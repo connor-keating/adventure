@@ -66,7 +66,8 @@ int main(int argc, char **argv)
   arena scratch = subarena_init(&memory, scratch_max);
   // Render buffer that contains line data
   u32 lines_max = 1000;
-  arena lines_buffer = subarena_init(&memory, lines_max*sizeof(vertex));
+  arena vert_buffer_lines = subarena_init(&memory, lines_max*sizeof(vertex));
+  arena elem_buffer_lines = subarena_init(&memory, 2*lines_max*sizeof(u32));
   // Text (chars) buffer
   u32 text_vert_count = 6000;
   // 6000 text verts = 1000 quads
@@ -127,7 +128,7 @@ int main(int argc, char **argv)
   );
   u32 teapot_program = render_program_init(&scratch, "shaders\\points.vert", "shaders\\points.frag");
   // Get bounding box
-  mesh bbox = model_bbox_add(&lines_buffer, teapot_model);
+  mesh bbox = model_bbox_add(&vert_buffer_lines, &elem_buffer_lines, teapot_model);
   size_t bbox_ebo_size = sizeof(bbox.indices[0]) * bbox.index_count;
   render_buffer_push(lines_gpu, (void*)bbox.vertices, 0, 8 * sizeof(vertex));
   render_buffer_elements_init(&lines_gpu, bbox.indices, bbox_ebo_size);
@@ -209,9 +210,9 @@ int main(int argc, char **argv)
     draw_points(teapot_buffer, teapot_program, teapot_model.vert_count);
 
     // Draw the model's bounding box
-    u32 lines_count = lines_buffer.offset_new / sizeof(vertex);
     uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
-    draw_lines_elements(lines_gpu, lines_program, 24, 0);
+    i64 offset = (address)bbox.indices - (address) elem_buffer_lines.buffer;
+    draw_lines_elements(lines_gpu, lines_program, bbox.index_count, (void*)offset);
     // Draw the editor
     // draw_points(&prog_points);
 
