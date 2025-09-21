@@ -132,12 +132,12 @@ int main(int argc, char **argv)
   size_t bbox_ebo_size = sizeof(bbox.indices[0]) * bbox.index_count;
   render_buffer_push(lines_gpu, (void*)bbox.vertices, 0, 8 * sizeof(vertex));
   render_buffer_elements_init(&lines_gpu, bbox.indices, bbox_ebo_size);
-  // Bind the EBO to the lines_gpu VAO
-  // u32 teapot_ebo = render_buffer_elements_init(teapot_model.indices, sizeof(teapot_model.indices[0]) * teapot_model.index_count);
 
   // Set up the angular speed variable for the rotation
   f32 angle_velocity = PI/4.0f;
   f32 angle = 0.0f;
+  // How far is the camera from the model?
+  f32 cam_distance =  2.5 * fvec3_max_elem(model_max(teapot_model));
 
   // Instance shader toggle
   bool toggle = 1;
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
     glm::vec3 rotation_axis_norm = glm::vec3(0,1,0);
     perspective_model = glm::rotate(perspective_model, angle, rotation_axis_norm);
     // look at
-    glm::vec3 camera_pos    = glm::vec3(0, teapot_centroid.y, 10.0f);
+    glm::vec3 camera_pos    = glm::vec3(0, teapot_centroid.y, cam_distance);
     glm::vec3 camera_target = glm::vec3(teapot_centroid.x,teapot_centroid.y,teapot_centroid.z);
     glm::vec3 camera_up     = glm::vec3(0,1,0);
     glm::mat4 view = glm::lookAt(camera_pos, camera_target, camera_up);
