@@ -152,3 +152,11 @@ mesh model_bbox_add(arena *vert_buffer, arena *elem_buffer, mesh model)
   std::memcpy(bbox.indices, indices, sizeof(indices)); 
   return bbox;
 }
+
+
+i64 model_starting_offset(arena *a, mesh model)
+{
+  // Note: this is the CPU memory, not the GPU memory. The two buffers could be in synch, but that's not guarenteed.
+  i64 offset = (address)model.indices - (address) a->buffer;
+  return offset;
+}
