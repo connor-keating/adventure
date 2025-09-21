@@ -188,6 +188,7 @@ int main(int argc, char **argv)
     glm::mat4 identity = glm::mat4(1.0f);
     // Create view and projection matrix
     angle += angle_velocity * app_clock.delta; // rad += (rad/s)*s
+    // wrap angle so it doesn't explode
     if (angle > 2.0*PI) angle -= 2.0*PI;
     f32 fov_deg = 45.0f;            // pick your FOV
     f32 aspect  = window.width / (window.height + 0.000001); // keep updated on resize
@@ -213,10 +214,6 @@ int main(int argc, char **argv)
     uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
     i64 offset = (address)bbox.indices - (address) elem_buffer_lines.buffer;
     draw_lines_elements(lines_gpu, lines_program, bbox.index_count, (void*)offset);
-    // Draw the editor
-    // draw_points(&prog_points);
-
-    // wrap angle so it doesn't explode
 
     // Set color
     if (input_state[ACTION1] == CONTROL_DOWN)
@@ -239,9 +236,6 @@ int main(int argc, char **argv)
     glUseProgram(instance_program);
     GLint loc = glGetUniformLocation( instance_program, "mycolor");
     glUniform3fv( loc, 1, color);
-
-    // Draw spinning cube
-    // draw_lines(&prog);
 
     // Draw instance cube
     uniform_set(instance_program, angle, fov_deg, aspect);
