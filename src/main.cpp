@@ -65,9 +65,9 @@ int main(int argc, char **argv)
   u32 scratch_max = Megabytes(20);
   arena scratch = subarena_init(&memory, scratch_max);
   // Render buffer that contains line data
-  u32 lines_max = 1000;
+  u32 lines_max = 100000;
   arena vert_buffer_lines = subarena_init(&memory, lines_max*sizeof(vertex));
-  arena elem_buffer_lines = subarena_init(&memory, 2*lines_max*sizeof(u32));
+  arena elem_buffer_lines = subarena_init(&memory, lines_max*sizeof(u32));
   // Text (chars) buffer
   u32 text_vert_count = 6000;
   // 6000 text verts = 1000 quads
@@ -121,7 +121,7 @@ int main(int argc, char **argv)
   u32 instance_program = render_program_init( &scratch, "shaders\\instance.vert", "shaders\\instance.frag");
 
   // Read in model data
-  mesh teapot_model = model_load_obj("assets\\teapot.obj", &memory);
+  mesh teapot_model = model_load_obj("assets\\teapot.obj", &vert_buffer_lines, &elem_buffer_lines);
   fvec3 teapot_centroid = model_centroid(teapot_model);
   size_t teapot_buffer_size = sizeof(teapot_model.vertices[0]) * teapot_model.vert_count;
   render_buffer teapot_buffer = render_buffer_init((void*)teapot_model.vertices, teapot_buffer_size);
