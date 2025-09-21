@@ -217,15 +217,22 @@ int main(int argc, char **argv)
     f32 zfar = 100.0f;
     glm::mat4 perspective_proj = glm::perspective(fov_rad, aspect, znear, zfar);
     glm::mat4 mvp = perspective_proj * view * perspective_model;
-    // Draw the model (teapot indices start at offset 0)
+    // Draw the model
     uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
     i64 teapot_offset = model_starting_offset(&elem_buffer_lines, teapot_model);
     draw_lines_elements(lines_gpu, lines_program, teapot_model.index_count, (void*)teapot_offset);
 
-    // Draw the model's bounding box (bbox indices start after teapot indices)
+    // Draw the model's bounding box 
     uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
     i64 bbox_index_offset  = model_starting_offset(&elem_buffer_lines, bbox);
     draw_lines_elements(lines_gpu, lines_program, bbox.index_count, (void*)bbox_index_offset);
+
+    // You could draw the whole buffer at once if you wanted to...
+    /*
+    // Draw the line buffer
+    i64 elem_count = elem_buffer_lines.offset_new / sizeof(u32);
+    draw_lines_elements(lines_gpu, lines_program, elem_count, 0);
+    */
 
     // Set color
     if (input_state[ACTION1] == CONTROL_DOWN)
