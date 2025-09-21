@@ -385,6 +385,14 @@ void render_buffer_push(render_buffer buffer, void* data, i32 start_offset, size
 }
 
 
+void render_buffer_elements_push(render_buffer buffer, void* data, i32 start_offset, size_t byte_count)
+{
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer.ebo);
+  glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, start_offset, byte_count, data);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+
 u32 shader_compile(const char *filepath, i32 type, arena *scratch)
 {
   size_t byte_count;
