@@ -128,8 +128,9 @@ int main(int argc, char **argv)
   u32 teapot_program = render_program_init(&scratch, "shaders\\points.vert", "shaders\\points.frag");
   // Get bounding box
   mesh bbox = model_bbox_add(&lines_buffer, teapot_model);
+  size_t bbox_ebo_size = sizeof(bbox.indices[0]) * bbox.index_count;
   render_buffer_push(lines_gpu, (void*)bbox.vertices, 0, 8 * sizeof(vertex));
-  render_buffer_elements_init(&lines_gpu, bbox.indices, sizeof(u32) * 24);
+  render_buffer_elements_init(&lines_gpu, bbox.indices, bbox_ebo_size);
   // Bind the EBO to the lines_gpu VAO
   // u32 teapot_ebo = render_buffer_elements_init(teapot_model.indices, sizeof(teapot_model.indices[0]) * teapot_model.index_count);
 
