@@ -122,3 +122,33 @@ fvec3 model_centroid(mesh model)
   center = fvec3_scale(fvec3_add(max, min), 0.5);
   return center;
 }
+
+
+mesh model_bbox_add(arena *buffer, mesh model)
+{
+  mesh bbox = {};
+  bbox.vert_count = 8;
+  bbox.index_count = 24;
+  bbox.vertices = arena_push_array(buffer, bbox.vert_count, vertex);
+  bbox.indices = arena_push_array(buffer, bbox.index_count, u32);
+  fvec3 min = model_min(model);
+  fvec3 max = model_max(model);
+  // Bottom
+  bbox.vertices[0].pos = min;
+  bbox.vertices[1].pos = fvec3{ {max.x, min.y, min.z} };
+  bbox.vertices[2].pos = fvec3{ {max.x, min.y, max.z} };
+  bbox.vertices[3].pos = fvec3{ {min.x, min.y, max.z} };
+  // Top
+  bbox.vertices[4].pos = fvec3{ {min.x, max.y, min.z} };
+  bbox.vertices[5].pos = fvec3{ {max.x, max.y, min.z} };
+  bbox.vertices[6].pos = fvec3{ {max.x, max.y, max.z} };
+  bbox.vertices[7].pos = fvec3{ {min.x, max.y, max.z} };
+  // Indices
+  const u32 indices[24] = {
+    0,1, 1,2, 2,3, 3,0,
+    4,5, 5,6, 6,7, 7,4,
+    0,4, 1,5, 2,6, 3,7
+  };
+  std::memcpy(bbox.indices, indices, sizeof(indices)); 
+  return bbox;
+}
