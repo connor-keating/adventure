@@ -132,15 +132,17 @@ int main(int argc, char **argv)
   size_t bbox_vbo_size = sizeof(bbox.vertices[0]) * bbox.vert_count;
   render_buffer_push(lines_gpu, (void*)bbox.vertices, teapot_buffer_size, bbox_vbo_size);
   render_buffer_elements_init(&lines_gpu, nullptr, lines_max*sizeof(u32));
-  size_t total_bytes = elem_buffer_lines.offset_new;
-  size_t teapot_end = teapot_model.index_count * sizeof(u32);
-  size_t bbox_end   = bbox.index_count * sizeof(u32);
+  i64 teapot_starting_byte = model_starting_offset(&elem_buffer_lines, teapot_model);
+  i64 bbox_starting_byte = model_starting_offset(&elem_buffer_lines, bbox);
+  i64 bbox_starting_index = bbox_starting_byte / sizeof(bbox.indices[0]);
+  i64 teapot_bytes = teapot_model.index_count * sizeof(u32);
+  i64 bbox_bytes   = bbox.index_count * sizeof(u32);
   for (int i = 0; i < bbox.index_count; ++i)
   {
-    bbox.indices[i] += teapot_model.vert_count;
+    bbox.indices[i] += bbox_starting_index;
   }
-  render_buffer_elements_push(lines_gpu, teapot_model.indices, 0, teapot_end);
-  render_buffer_elements_push(lines_gpu, bbox.indices, teapot_end, bbox_end);
+  render_buffer_elements_push(lines_gpu, teapot_model.indices, teapot_starting_byte, teapot_bytes);
+  render_buffer_elements_push(lines_gpu, bbox.indices, bbox_starting_byte, bbox_bytes);
 
   // Set up the angular speed variable for the rotation
   f32 angle_velocity = PI/4.0f;
