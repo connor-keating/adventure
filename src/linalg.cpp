@@ -90,6 +90,14 @@ fvec3 fvec3_max(fvec3 a, fvec3 b)
   return out;
 }
 
+f32 fvec3_max_elem(fvec3 a)
+{
+  f32 max = 0;
+  max = (a.x > a.y) ? a.x : a.y;
+  max = (max > a.z) ? max : a.z;
+  return max;
+}
+
 
 fvec3 fvec3_min(fvec3 a, fvec3 b)
 {
