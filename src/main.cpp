@@ -127,17 +127,10 @@ int main(int argc, char **argv)
   );
   u32 teapot_program = render_program_init(&scratch, "shaders\\points.vert", "shaders\\points.frag");
   // Get bounding box
-  /*
-  1. I need a generic buffer meant for lines.
-  2. I need to add the bbox in render order
-  */
   mesh bbox = model_bbox_add(&lines_buffer, teapot_model);
   render_buffer_push(lines_gpu, (void*)bbox.vertices, 0, 8 * sizeof(vertex));
-  u32 bbox_ebo = render_buffer_elements_init(bbox.indices, sizeof(u32) * 24);
+  render_buffer_elements_init(&lines_gpu, bbox.indices, sizeof(u32) * 24);
   // Bind the EBO to the lines_gpu VAO
-  glBindVertexArray(lines_gpu.vao);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bbox_ebo);
-  glBindVertexArray(0);
   // u32 teapot_ebo = render_buffer_elements_init(teapot_model.indices, sizeof(teapot_model.indices[0]) * teapot_model.index_count);
 
   // Set up the angular speed variable for the rotation

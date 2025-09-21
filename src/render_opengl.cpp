@@ -17,6 +17,7 @@ struct render_buffer
 {
   u32 vbo;
   u32 vao;
+  u32 ebo;
 };
 
 typedef char        GLchar;
@@ -345,14 +346,13 @@ render_buffer render_buffer_dynamic_init(void *data, size_t length)
 }
 
 
-u32 render_buffer_elements_init(const void *indices, size_t byte_size)
+void render_buffer_elements_init(render_buffer *buffer, const void *indices, size_t byte_size)
 {
-  u32 ebo;
-  glGenBuffers(1, &ebo);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+  glBindVertexArray(buffer->vao);
+  glGenBuffers(1, &buffer->ebo);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer->ebo);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, byte_size, indices, GL_STATIC_DRAW);
   glBindVertexArray(0);
-  return ebo;
 }
 
 
