@@ -59,6 +59,7 @@ struct string
 // #define false 0
 #define global   static
 #define internal static
+#define address  const unsigned char*
 #define ARRAY_COUNT(array) (sizeof(array) / sizeof((array)[0]))
 #define DEFAULT_ALIGNMENT (2*sizeof(void *))
 // long long (LL) == int64_t are 64 bits 
