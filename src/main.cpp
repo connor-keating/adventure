@@ -131,11 +131,14 @@ int main(int argc, char **argv)
   1. I need a generic buffer meant for lines.
   2. I need to add the bbox in render order
   */
-  vertex *bbox = arena_push_array(&lines_buffer, 2, vertex);
-  bbox[0].pos = model_min(teapot_model);
-  bbox[1].pos = model_max(teapot_model);
-  render_buffer_push(lines_gpu, (void*)bbox, lines_buffer.offset_old, lines_buffer.offset_new);
-
+  mesh bbox = model_bbox_add(&lines_buffer, teapot_model);
+  render_buffer_push(lines_gpu, (void*)bbox.vertices, 0, 8 * sizeof(vertex));
+  u32 bbox_ebo = render_buffer_elements_init(bbox.indices, sizeof(u32) * 24);
+  // Bind the EBO to the lines_gpu VAO
+  glBindVertexArray(lines_gpu.vao);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bbox_ebo);
+  glBindVertexArray(0);
+  // u32 teapot_ebo = render_buffer_elements_init(teapot_model.indices, sizeof(teapot_model.indices[0]) * teapot_model.index_count);
 
   // Set up the angular speed variable for the rotation
   f32 angle_velocity = PI/4.0f;
@@ -214,7 +217,7 @@ int main(int argc, char **argv)
     // Draw the model's bounding box
     u32 lines_count = lines_buffer.offset_new / sizeof(vertex);
     uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
-    draw_lines(lines_gpu, lines_program, lines_count);
+    draw_lines_elements(lines_gpu, lines_program, 24, 0);
     // Draw the editor
     // draw_points(&prog_points);
 
