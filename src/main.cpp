@@ -91,7 +91,8 @@ int main(int argc, char **argv)
   // Initialize renderer
   render_state renderer = render_init(&window);
   // Initialize render buffers
-  render_buffer lines_gpu = render_buffer_init(nullptr, lines_max);
+  size_t lines_vbo_size = lines_max * sizeof(vertex);
+  render_buffer lines_gpu = render_buffer_init(nullptr, lines_vbo_size);
   render_buffer_attribute(lines_gpu, 0, 3, sizeof(fvec3), 0);
   u32 lines_program = render_program_init( &scratch, "shaders\\lines.vert", "shaders\\lines.frag");
   render_buffer text_gpu_buffer = text_gpu_init(text_vert_count);
@@ -124,6 +125,8 @@ int main(int argc, char **argv)
   mesh teapot_model = model_load_obj("assets\\teapot.obj", &vert_buffer_lines, &elem_buffer_lines);
   fvec3 teapot_centroid = model_centroid(teapot_model);
   size_t teapot_buffer_size = sizeof(teapot_model.vertices[0]) * teapot_model.vert_count;
+  render_buffer_push(lines_gpu, (void*)teapot_model.vertices, 0, teapot_buffer_size);
+  /*
   render_buffer teapot_buffer = render_buffer_init((void*)teapot_model.vertices, teapot_buffer_size);
   render_buffer_attribute(
     teapot_buffer,
@@ -132,12 +135,23 @@ int main(int argc, char **argv)
     ARRAY_COUNT(teapot_model.vertices[0].pos.array) * sizeof(teapot_model.vertices[0].pos.array[0]),
     (void *)0
   );
+  */
   u32 teapot_program = render_program_init(&scratch, "shaders\\points.vert", "shaders\\points.frag");
   // Get bounding box
   mesh bbox = model_bbox_add(&vert_buffer_lines, &elem_buffer_lines, teapot_model);
-  size_t bbox_ebo_size = sizeof(bbox.indices[0]) * bbox.index_count;
-  render_buffer_push(lines_gpu, (void*)bbox.vertices, 0, 8 * sizeof(vertex));
-  render_buffer_elements_init(&lines_gpu, bbox.indices, bbox_ebo_size);
+  size_t bbox_vbo_size = sizeof(bbox.vertices[0]) * bbox.vert_count;
+  render_buffer_push(lines_gpu, (void*)bbox.vertices, teapot_buffer_size, bbox_vbo_size);
+  // Create combined index buffer for both teapot and bbox
+  u32 total_indices = teapot_model.index_count + bbox.index_count;
+  u32 *combined_indices = arena_push_array(&scratch, total_indices, u32);
+  // Copy teapot indices
+  memcpy(combined_indices, teapot_model.indices, teapot_model.index_count * sizeof(u32));
+  // Copy bbox indices with vertex offset
+  for (u32 i = 0; i < bbox.index_count; i++) {
+    combined_indices[teapot_model.index_count + i] = bbox.indices[i] + teapot_model.vert_count;
+  }
+  size_t combined_ebo_size = sizeof(u32) * total_indices;
+  render_buffer_elements_init(&lines_gpu, combined_indices, combined_ebo_size);
 
   // Set up the angular speed variable for the rotation
   f32 angle_velocity = PI/4.0f;
@@ -212,14 +226,14 @@ int main(int argc, char **argv)
     f32 zfar = 100.0f;
     glm::mat4 perspective_proj = glm::perspective(fov_rad, aspect, znear, zfar);
     glm::mat4 mvp = perspective_proj * view * perspective_model;
-    // Draw the model
-    uniform_set_mat4(teapot_program, "proj", &mvp[0][0]);
-    draw_points(teapot_buffer, teapot_program, teapot_model.vert_count);
-
-    // Draw the model's bounding box
+    // Draw the model (teapot indices start at offset 0)
     uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
-    i64 offset = (address)bbox.indices - (address) elem_buffer_lines.buffer;
-    draw_lines_elements(lines_gpu, lines_program, bbox.index_count, (void*)offset);
+    draw_lines_elements(lines_gpu, lines_program, teapot_model.index_count, (void*)0);
+
+    // Draw the model's bounding box (bbox indices start after teapot indices)
+    uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
+    size_t bbox_index_offset = teapot_model.index_count * sizeof(u32);
+    draw_lines_elements(lines_gpu, lines_program, bbox.index_count, (void*)bbox_index_offset);
 
     // Set color
     if (input_state[ACTION1] == CONTROL_DOWN)
