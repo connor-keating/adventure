@@ -124,13 +124,13 @@ fvec3 model_centroid(mesh model)
 }
 
 
-mesh model_bbox_add(arena *buffer, mesh model)
+mesh model_bbox_add(arena *vert_buffer, arena *elem_buffer, mesh model)
 {
   mesh bbox = {};
   bbox.vert_count = 8;
   bbox.index_count = 24;
-  bbox.vertices = arena_push_array(buffer, bbox.vert_count, vertex);
-  bbox.indices = arena_push_array(buffer, bbox.index_count, u32);
+  bbox.vertices = arena_push_array(vert_buffer, bbox.vert_count, vertex);
+  bbox.indices = arena_push_array(elem_buffer, bbox.index_count, u32);
   fvec3 min = model_min(model);
   fvec3 max = model_max(model);
   // Bottom
