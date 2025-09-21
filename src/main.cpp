@@ -103,14 +103,20 @@ int main(int argc, char **argv)
   u32 text_texture_id = text_init( &scratch, font_file );
   u32 text_shader = render_program_init( &scratch, "shaders\\text.vert", "shaders\\text.frag");
   // You'll have to bind the texture each time you want to use this.
- const char *text_uniform = "texture_image";
- // Are the coordinates in screen space of NDC
-  // f32 pixel_scale = 2.0f / window_height; // NDC
-  f32 pixel_scale = 1.0f; // screen space
+  const char *text_uniform = "texture_image";
+  bool use_ndc = false;
+  f32 text_scale = 0.0f;
+  // Are the coordinates in screen space of NDC
+  if (use_ndc)
+  {
+    text_scale = 2.0f / window.height; // NDC
+  }
+  else
+  {
+    text_scale = 1.0f; // screen space
+  }
 
-  // Set up point program
-  // render_program prog_points = point_setup(&memory);
-  // render_program prog = cube_setup(&memory);
+  // Set up instanced cube rendering for grid.
   render_buffer instance_buffer = instance_setup(&memory);
   u32 instance_program = render_program_init( &scratch, "shaders\\instance.vert", "shaders\\instance.frag");
 
@@ -179,7 +185,7 @@ int main(int argc, char **argv)
     // glm::vec3 tpos = glm::vec3(renderer.width * 0.5f, renderer.height * 0.5f, 0.0f);
     glm::vec3 tpos = glm::vec3(0.0f, 0.0f, 0.0f);
     // Add text data to gpu buffer
-    text_add(&text_buffer, "Hello!", 6, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, pixel_scale);
+    text_add(&text_buffer, "Hello!", 6, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
     render_buffer_push(text_gpu_buffer, text_buffer.buffer, 0, text_buffer.offset_new);
     // Draw text
     u32 text_vert_count = text_count_get(&text_buffer);
