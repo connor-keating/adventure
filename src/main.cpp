@@ -131,17 +131,16 @@ int main(int argc, char **argv)
   mesh bbox = model_bbox_add(&vert_buffer_lines, &elem_buffer_lines, teapot_model);
   size_t bbox_vbo_size = sizeof(bbox.vertices[0]) * bbox.vert_count;
   render_buffer_push(lines_gpu, (void*)bbox.vertices, teapot_buffer_size, bbox_vbo_size);
-  // Create combined index buffer for both teapot and bbox
-  u32 total_indices = teapot_model.index_count + bbox.index_count;
-  u32 *combined_indices = arena_push_array(&scratch, total_indices, u32);
-  // Copy teapot indices
-  memcpy(combined_indices, teapot_model.indices, teapot_model.index_count * sizeof(u32));
-  // Copy bbox indices with vertex offset
-  for (u32 i = 0; i < bbox.index_count; i++) {
-    combined_indices[teapot_model.index_count + i] = bbox.indices[i] + teapot_model.vert_count;
+  render_buffer_elements_init(&lines_gpu, nullptr, lines_max*sizeof(u32));
+  size_t total_bytes = elem_buffer_lines.offset_new;
+  size_t teapot_end = teapot_model.index_count * sizeof(u32);
+  size_t bbox_end   = bbox.index_count * sizeof(u32);
+  for (int i = 0; i < bbox.index_count; ++i)
+  {
+    bbox.indices[i] += teapot_model.vert_count;
   }
-  size_t combined_ebo_size = sizeof(u32) * total_indices;
-  render_buffer_elements_init(&lines_gpu, combined_indices, combined_ebo_size);
+  render_buffer_elements_push(lines_gpu, teapot_model.indices, 0, teapot_end);
+  render_buffer_elements_push(lines_gpu, bbox.indices, teapot_end, bbox_end);
 
   // Set up the angular speed variable for the rotation
   f32 angle_velocity = PI/4.0f;
