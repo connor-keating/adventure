@@ -15,6 +15,35 @@ struct mesh
 };
 
 
+mesh primitive_cube(arena *a)
+{
+  mesh output = {};
+  f32 verts[] = {
+    // positions      
+    -1.0f,-1.0f,-1.0f,
+     1.0f,-1.0f,-1.0f,
+     1.0f, 1.0f,-1.0f,
+    -1.0f, 1.0f,-1.0f,
+    -1.0f,-1.0f, 1.0f,
+     1.0f,-1.0f, 1.0f,
+     1.0f, 1.0f, 1.0f,
+    -1.0f, 1.0f, 1.0f,
+  };
+  u32 indices[] = {
+    0,1, 1,2, 2,3, 3,0,        // bottom
+    4,5, 5,6, 6,7, 7,4,        // top
+    0,4, 1,5, 2,6, 3,7         // verticals
+  };
+  output.vert_count = ARRAY_COUNT(verts);
+  output.index_count = ARRAY_COUNT(indices);
+  output.vertices = arena_push_array(a, output.vert_count, vertex);
+  output.indices = arena_push_array(a, output.index_count, u32);
+  std::memcpy(output.vertices, verts, sizeof(verts)); 
+  std::memcpy(output.indices, indices, sizeof(indices)); 
+  return output;
+}
+
+
 mesh model_load_obj(const char *file, arena *vert_buffer, arena *elem_buffer)
 {
   // Initialize output
