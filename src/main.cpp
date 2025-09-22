@@ -251,13 +251,12 @@ int main(int argc, char **argv)
       color[1] = 0.0f;
       color[2] = 0.0f;
     }
-    glUseProgram(instance_program);
-    GLint loc = glGetUniformLocation( instance_program, "mycolor");
-    glUniform3fv( loc, 1, color);
+    uniform_set_vec3(instance_program, "mycolor", color);
 
     // Draw instance cube
-    uniform_set(instance_program, angle, fov_deg, aspect);
-    // draw_lines_instanced(instance_buffer, instance_program);
+    // uniform_set(instance_program, angle, fov_deg, aspect);
+    uniform_set_mat4(instance_program, "uMVP", &mvp[0][0]);
+    draw_lines_instanced(instance_buffer, instance_program);
 
     // Finalize and draw frame
     frame_render(&renderer);

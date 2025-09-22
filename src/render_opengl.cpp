@@ -658,6 +658,14 @@ void uniform_set_mat4(u32 shader_program, const char *name, const f32 *data)
 }
 
 
+void uniform_set_vec3(u32 shader_program, const char *name, f32 *data)
+{
+  glUseProgram(shader_program);
+  GLint loc = glGetUniformLocation( shader_program, name);
+  glUniform3fv( loc, 1, data);
+}
+
+
 void uniform_set(u32 shader_program, f32 angle, f32 fov_deg, f32 aspect)
 {
   glUseProgram(shader_program);
