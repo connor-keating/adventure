@@ -575,7 +575,6 @@ render_buffer instance_setup(arena *scratch)
 
   render_buffer buffer = render_buffer_init((void*)verts, sizeof(verts));
   // Initialize data
-  u32 ebo;
   // Bind VAO and VBO
   glBindVertexArray(buffer.vao);
   // Set up vertex buffer object
@@ -589,9 +588,7 @@ render_buffer instance_setup(arena *scratch)
   glEnableVertexAttribArray(0);
 
   // Set up EBO
-  glGenBuffers(1, &ebo);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+  render_buffer_elements_init(&buffer, indices, sizeof(indices));
 
   // Create instance transforms
   u32 cube_count = 2;
