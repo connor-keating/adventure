@@ -118,7 +118,26 @@ int main(int argc, char **argv)
   }
 
   // Set up instanced cube rendering for grid.
-  render_buffer instance_buffer = instance_setup(&memory);
+  f32 verts[] = {
+    // positions      
+    -1.0f,-1.0f,-1.0f,
+     1.0f,-1.0f,-1.0f,
+     1.0f, 1.0f,-1.0f,
+    -1.0f, 1.0f,-1.0f,
+    -1.0f,-1.0f, 1.0f,
+     1.0f,-1.0f, 1.0f,
+     1.0f, 1.0f, 1.0f,
+    -1.0f, 1.0f, 1.0f,
+  };
+  u32 indices[] = {
+    0,1, 1,2, 2,3, 3,0,        // bottom
+    4,5, 5,6, 6,7, 7,4,        // top
+    0,4, 1,5, 2,6, 3,7         // verticals
+  };
+  render_buffer instance_buffer = render_buffer_init((void*)verts, sizeof(verts));
+  render_buffer_attribute(instance_buffer, 0, 3, 3*sizeof(f32), (void*)0);
+  render_buffer_elements_init(&instance_buffer, indices, sizeof(indices));
+  instance_setup(&memory);
   u32 instance_program = render_program_init( &scratch, "shaders\\instance.vert", "shaders\\instance.frag");
 
   // Read in model data
@@ -224,7 +243,7 @@ int main(int argc, char **argv)
     // Draw the model's bounding box 
     uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
     i64 bbox_index_offset  = model_starting_offset(&elem_buffer_lines, bbox);
-    draw_lines_elements(lines_gpu, lines_program, bbox.index_count, (void*)bbox_index_offset);
+     //draw_lines_elements(lines_gpu, lines_program, bbox.index_count, (void*)bbox_index_offset);
 
     // You could draw the whole buffer at once if you wanted to...
     /*

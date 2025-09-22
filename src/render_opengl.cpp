@@ -569,30 +569,8 @@ void buffer_cube_add()
 }
 
 
-render_buffer instance_setup(arena *scratch)
+void instance_setup(arena *scratch)
 {
-  f32 verts[] = {
-    // positions      
-    -1.0f,-1.0f,-1.0f,
-     1.0f,-1.0f,-1.0f,
-     1.0f, 1.0f,-1.0f,
-    -1.0f, 1.0f,-1.0f,
-    -1.0f,-1.0f, 1.0f,
-     1.0f,-1.0f, 1.0f,
-     1.0f, 1.0f, 1.0f,
-    -1.0f, 1.0f, 1.0f,
-  };
-  u32 indices[] = {
-    0,1, 1,2, 2,3, 3,0,        // bottom
-    4,5, 5,6, 6,7, 7,4,        // top
-    0,4, 1,5, 2,6, 3,7         // verticals
-  };
-
-  render_buffer buffer = render_buffer_init((void*)verts, sizeof(verts));
-  render_buffer_attribute(buffer, 0, 3, 3*sizeof(f32), (void*)0);
-  // Set up EBO
-  render_buffer_elements_init(&buffer, indices, sizeof(indices));
-
   // Create instance transforms
   u32 cube_count = 2;
   glm::mat4 *modelmats = arena_push_array(scratch, cube_count, glm::mat4); 
@@ -609,8 +587,6 @@ render_buffer instance_setup(arena *scratch)
   // Keep transforms in storage buffer
   size_t transform_buffer_size = cube_count * sizeof(glm::mat4);
   shader_storage_init(0, (void*)&modelmats[0], transform_buffer_size);
-
-  return buffer;
 }
 
 
