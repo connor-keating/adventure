@@ -118,26 +118,25 @@ int main(int argc, char **argv)
   }
 
   // Set up instanced cube rendering for grid.
-  f32 verts[] = {
-    // positions      
-    -1.0f,-1.0f,-1.0f,
-     1.0f,-1.0f,-1.0f,
-     1.0f, 1.0f,-1.0f,
-    -1.0f, 1.0f,-1.0f,
-    -1.0f,-1.0f, 1.0f,
-     1.0f,-1.0f, 1.0f,
-     1.0f, 1.0f, 1.0f,
-    -1.0f, 1.0f, 1.0f,
-  };
-  u32 indices[] = {
-    0,1, 1,2, 2,3, 3,0,        // bottom
-    4,5, 5,6, 6,7, 7,4,        // top
-    0,4, 1,5, 2,6, 3,7         // verticals
-  };
-  render_buffer instance_buffer = render_buffer_init((void*)verts, sizeof(verts));
+  mesh cube = primitive_cube(&scratch);
+  render_buffer instance_buffer = render_buffer_init((void*)cube.vertices, cube.vert_count*sizeof(vertex));
   render_buffer_attribute(instance_buffer, 0, 3, 3*sizeof(f32), (void*)0);
-  render_buffer_elements_init(&instance_buffer, indices, sizeof(indices));
-  instance_setup(&memory);
+  render_buffer_elements_init(&instance_buffer, cube.indices, cube.index_count*sizeof(u32));
+  // Create instance transforms
+  u32 cube_count = 2;
+  glm::mat4 *modelmats = arena_push_array(&scratch, cube_count, glm::mat4); 
+  for (int i = 0; i < cube_count; i++)
+  {
+    // Transformations are applied in reverse multiplication order.
+    glm::mat4 transform = glm::mat4(1.0f);
+    f32 x_offset = ( i==0 ) ? -0.5 : 0.5f;
+    transform = glm::translate(transform, glm::vec3(x_offset, 0.0f, 0.0f));
+    transform = glm::scale(transform, glm::vec3(0.5f, 1.0f, 1.0f));
+    modelmats[i] = transform;
+  }
+  // Keep transforms in storage buffer
+  size_t transform_buffer_size = 2 * sizeof(glm::mat4);
+  shader_storage_init(0, (void*)&modelmats[0], transform_buffer_size);
   u32 instance_program = render_program_init( &scratch, "shaders\\instance.vert", "shaders\\instance.frag");
 
   // Read in model data

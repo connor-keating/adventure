@@ -569,27 +569,6 @@ void buffer_cube_add()
 }
 
 
-void instance_setup(arena *scratch)
-{
-  // Create instance transforms
-  u32 cube_count = 2;
-  glm::mat4 *modelmats = arena_push_array(scratch, cube_count, glm::mat4); 
-  for (int i = 0; i < cube_count; i++)
-  {
-    // Transformations are applied in reverse multiplication order.
-    glm::mat4 transform = glm::mat4(1.0f);
-    f32 x_offset = ( i==0 ) ? -0.5 : 0.5f;
-    transform = glm::translate(transform, glm::vec3(x_offset, 0.0f, 0.0f));
-    transform = glm::scale(transform, glm::vec3(0.5f, 1.0f, 1.0f));
-    modelmats[i] = transform;
-  }
-
-  // Keep transforms in storage buffer
-  size_t transform_buffer_size = cube_count * sizeof(glm::mat4);
-  shader_storage_init(0, (void*)&modelmats[0], transform_buffer_size);
-}
-
-
 void frame_init(render_state *state)
 {
   glViewport(0, 0, state->width, state->height);
