@@ -194,15 +194,18 @@ i64 model_starting_offset(arena *a, mesh model)
 void voxel_grid_init(arena *a, fvec3 counts)
 {
   u32 cube_count = (u32) (counts.x * counts.y * counts.z);
+  // The initial cube is [-1, 1]
+  f32 x_scale = 1 / counts.x;
+  f32 cube_min = -1.0f;
   glm::mat4 *modelmats = arena_push_array(a, cube_count, glm::mat4); 
   // Create instance transforms
-  for (int i = 0; i < cube_count; i++)
+  for (int i = 0; i < counts.x; i++)
   {
     // Transformations are applied in reverse multiplication order.
     glm::mat4 transform = glm::mat4(1.0f);
-    f32 x_offset = ( i==0 ) ? -0.5 : 0.5f;
-    transform = glm::translate(transform, glm::vec3(x_offset, 0.0f, 0.0f));
-    transform = glm::scale(transform, glm::vec3(0.5f, 1.0f, 1.0f));
+    f32 pos_x = cube_min + (2*i + 1) * x_scale;  // center x_i
+    transform = glm::translate(transform, glm::vec3(pos_x, 0.0f, 0.0f));
+    transform = glm::scale(transform, glm::vec3(x_scale, 1.0f, 1.0f));
     modelmats[i] = transform;
   }
   // Keep transforms in storage buffer
