@@ -574,19 +574,7 @@ render_buffer instance_setup(arena *scratch)
   };
 
   render_buffer buffer = render_buffer_init((void*)verts, sizeof(verts));
-  // Initialize data
-  // Bind VAO and VBO
-  glBindVertexArray(buffer.vao);
-  // Set up vertex buffer object
-  glBindBuffer(GL_ARRAY_BUFFER, buffer.vbo);
-
-  // Tell OpenGL how to interpret the data
-  // position attribute (location = 0)
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(f32), (void*)0);
-
-  // Enable the vertex attributes (0 because its only position)
-  glEnableVertexAttribArray(0);
-
+  render_buffer_attribute(buffer, 0, 3, 3*sizeof(f32), (void*)0);
   // Set up EBO
   render_buffer_elements_init(&buffer, indices, sizeof(indices));
 
@@ -600,7 +588,6 @@ render_buffer instance_setup(arena *scratch)
     f32 x_offset = ( i==0 ) ? -0.5 : 0.5f;
     transform = glm::translate(transform, glm::vec3(x_offset, 0.0f, 0.0f));
     transform = glm::scale(transform, glm::vec3(0.5f, 1.0f, 1.0f));
-    // transform = glm::scale(transform, glm::vec3(0.95f, 0.95f, 0.95f));
     modelmats[i] = transform;
   }
   // configure instanced array
