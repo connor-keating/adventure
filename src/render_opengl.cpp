@@ -638,7 +638,7 @@ void draw_ui(render_buffer buffer, u32 shader_program)
 }
 
 
-void draw_lines_instanced(render_buffer buffer, u32 shader_program)
+void draw_lines_instanced(render_buffer buffer, u32 shader_program, u32 count)
 {
   // Bind our program
   glUseProgram(shader_program);
@@ -648,7 +648,7 @@ void draw_lines_instanced(render_buffer buffer, u32 shader_program)
     24, // GLsizei count,
     GL_UNSIGNED_INT, // GLenum type,
     0, // const void * indices, // Bound in EBO
-    2 // GLsizei primcount
+    count // GLsizei primcount
   );
 }
 
