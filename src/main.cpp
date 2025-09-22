@@ -206,7 +206,7 @@ int main(int argc, char **argv)
     glm::vec3 rotation_axis_norm = glm::vec3(0,1,0);
     perspective_model = glm::rotate(perspective_model, angle, rotation_axis_norm);
     // look at
-    glm::vec3 camera_pos    = glm::vec3(0, teapot_centroid.y, cam_distance);
+    glm::vec3 camera_pos    = glm::vec3(teapot_centroid.x, teapot_centroid.y, cam_distance);
     glm::vec3 camera_target = glm::vec3(teapot_centroid.x,teapot_centroid.y,teapot_centroid.z);
     glm::vec3 camera_up     = glm::vec3(0,1,0);
     glm::mat4 view = glm::lookAt(camera_pos, camera_target, camera_up);
@@ -254,8 +254,18 @@ int main(int argc, char **argv)
     uniform_set_vec3(instance_program, "mycolor", color);
 
     // Draw instance cube
-    // uniform_set(instance_program, angle, fov_deg, aspect);
-    uniform_set_mat4(instance_program, "uMVP", &mvp[0][0]);
+    glm::mat4 grid_model = glm::mat4(1.0f);
+    glm::vec3 grid_center = glm::vec3(teapot_centroid.x, teapot_centroid.y, teapot_centroid.z);
+    fvec3 bbox_min = model_min(bbox);
+    fvec3 bbox_max = model_max(bbox);
+    fvec3 temp = fvec3_scale(fvec3_sub(bbox_max, bbox_min), 0.5f);
+    glm::vec3 grid_shape = glm::vec3(temp.x, temp.y, temp.z);
+    // Normally it goes t * r * s, but here rotation should be last so it is rotated about the model center.
+    grid_model = glm::rotate(grid_model, angle, rotation_axis_norm);
+    grid_model = glm::translate(grid_model, grid_center);
+    grid_model = glm::scale(grid_model, grid_shape);
+    glm::mat4 grid_mvp = perspective_proj * view * grid_model;
+    uniform_set_mat4(instance_program, "uMVP", &grid_mvp[0][0]);
     draw_lines_instanced(instance_buffer, instance_program);
 
     // Finalize and draw frame
