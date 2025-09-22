@@ -126,7 +126,6 @@ int main(int argc, char **argv)
   fvec3 teapot_centroid = model_centroid(teapot_model);
   size_t teapot_buffer_size = sizeof(teapot_model.vertices[0]) * teapot_model.vert_count;
   render_buffer_push(lines_gpu, (void*)teapot_model.vertices, 0, teapot_buffer_size);
-  // u32 teapot_program = render_program_init(&scratch, "shaders\\points.vert", "shaders\\points.frag");
   // Get bounding box
   mesh bbox = model_bbox_add(&vert_buffer_lines, &elem_buffer_lines, teapot_model);
   size_t bbox_vbo_size = sizeof(bbox.vertices[0]) * bbox.vert_count;
