@@ -407,15 +407,14 @@ u32 shader_compile(const char *filepath, i32 type, arena *scratch)
 }
 
 
-void shader_storage_init(void *data, size_t byte_count)
+void shader_storage_init(u32 binding_index, void *data, size_t byte_count)
 {
   GLuint ssbo = 0;
   glGenBuffers(1, &ssbo);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
   glBufferData(GL_SHADER_STORAGE_BUFFER, byte_count, data, GL_DYNAMIC_DRAW);
   // Bind whole buffer to binding point 1 (matches shader)
-  GLuint bindingPoint = 1;
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPoint, ssbo);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding_index, ssbo);
   // unbind
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
@@ -609,7 +608,7 @@ render_buffer instance_setup(arena *scratch)
 
   // Keep transforms in storage buffer
   size_t transform_buffer_size = cube_count * sizeof(glm::mat4);
-  shader_storage_init((void*)&modelmats[0], transform_buffer_size);
+  shader_storage_init(0, (void*)&modelmats[0], transform_buffer_size);
 
   return buffer;
 }
