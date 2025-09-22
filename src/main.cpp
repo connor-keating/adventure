@@ -123,7 +123,8 @@ int main(int argc, char **argv)
   render_buffer_attribute(instance_buffer, 0, 3, 3*sizeof(f32), (void*)0);
   render_buffer_elements_init(&instance_buffer, cube.indices, cube.index_count*sizeof(u32));
   u32 instance_program = render_program_init( &scratch, "shaders\\instance.vert", "shaders\\instance.frag");
-  voxel_grid_init(&scratch, fvec3{ {2.0f, 1.0f, 1.0f} });
+  fvec3 voxel_count = {{5.0f, 1.0f, 1.0f}};
+  voxel_grid_init(&scratch, voxel_count);
 
   // Read in model data
   mesh teapot_model = model_load_obj("assets\\teapot.obj", &vert_buffer_lines, &elem_buffer_lines);
@@ -228,7 +229,10 @@ int main(int argc, char **argv)
     // Draw the model's bounding box 
     uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
     i64 bbox_index_offset  = model_starting_offset(&elem_buffer_lines, bbox);
-     //draw_lines_elements(lines_gpu, lines_program, bbox.index_count, (void*)bbox_index_offset);
+    if (!toggle)
+    { 
+      draw_lines_elements(lines_gpu, lines_program, bbox.index_count, (void*)bbox_index_offset);
+    }
 
     // You could draw the whole buffer at once if you wanted to...
     /*
@@ -270,7 +274,7 @@ int main(int argc, char **argv)
     grid_model = glm::scale(grid_model, grid_shape);
     glm::mat4 grid_mvp = perspective_proj * view * grid_model;
     uniform_set_mat4(instance_program, "uMVP", &grid_mvp[0][0]);
-    draw_lines_instanced(instance_buffer, instance_program);
+    draw_lines_instanced(instance_buffer, instance_program, (voxel_count.x * voxel_count.y * voxel_count.z));
 
     // Finalize and draw frame
     frame_render(&renderer);
