@@ -238,18 +238,18 @@ int main(int argc, char **argv)
     {
       toggle = !toggle;
     }
-    f32 color[3];
+    fvec3 color = {};
     if (toggle)
     {
-      color[0] = 0.0f;
-      color[1] = 1.0f;
-      color[2] = 0.0f;
+      color.array[0] = 0.0f;
+      color.array[1] = 1.0f;
+      color.array[2] = 0.0f;
     }
     else 
     {
-      color[0] = 1.0f;
-      color[1] = 0.0f;
-      color[2] = 0.0f;
+      color.array[0] = 1.0f;
+      color.array[1] = 0.0f;
+      color.array[2] = 0.0f;
     }
     uniform_set_vec3(instance_program, "mycolor", color);
 
