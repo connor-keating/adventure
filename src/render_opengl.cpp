@@ -78,6 +78,7 @@ typedef ptrdiff_t   GLintptr;
 #define GL_DEBUG_TYPE_ERROR               0x824C
 #define GL_PROGRAM_POINT_SIZE             0x8642
 #define GL_R8                             0x8229
+#define GL_SHADER_STORAGE_BUFFER          0x90D2
 #pragma endregion
 
 
@@ -129,6 +130,7 @@ typedef void (APIENTRY  *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum
     GL_FUNC_SIGNATURE(void, glDebugMessageInsert, GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const char *message)              \
     GL_FUNC_SIGNATURE(void, glVertexAttribDivisor, GLuint index, GLuint divisor)                                                                            \
     GL_FUNC_SIGNATURE(void, glDrawElementsInstanced, GLenum mode, GLsizei count, GLenum type, const void * indices, GLsizei primcount)                      \
+    GL_FUNC_SIGNATURE(void, glBindBufferBase,	GLenum target, GLuint index, GLuint buffer)                      \
 
 
 
@@ -590,36 +592,17 @@ render_buffer instance_setup(arena *scratch)
     transform = glm::scale(transform, glm::vec3(0.5f, 1.0f, 1.0f));
     modelmats[i] = transform;
   }
-  // configure instanced array
-  u32 transform_buffer;
+
+  GLuint ssbo = 0;
+  glGenBuffers(1, &ssbo);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
   size_t transform_buffer_size = cube_count * sizeof(glm::mat4);
-  glGenBuffers(1, &transform_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, transform_buffer);
-  glBufferData(
-    GL_ARRAY_BUFFER,
-    transform_buffer_size,
-    &modelmats[0],
-    GL_STATIC_DRAW
-  );
-
-  glBindVertexArray(buffer.vao);
-  // set attribute pointers for matrix (4 times vec4)
-  glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
-  glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
-  glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
-  glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
-  // Enable those attribute positions
-  glEnableVertexAttribArray(3);
-  glEnableVertexAttribArray(4);
-  glEnableVertexAttribArray(5);
-  glEnableVertexAttribArray(6);
-
-  glVertexAttribDivisor(3, 1);
-  glVertexAttribDivisor(4, 1);
-  glVertexAttribDivisor(5, 1);
-  glVertexAttribDivisor(6, 1);
-
-  glBindVertexArray(0);
+  glBufferData(GL_SHADER_STORAGE_BUFFER, transform_buffer_size, &modelmats[0], GL_DYNAMIC_DRAW);
+  // Bind whole buffer to binding point 1 (matches shader)
+  GLuint bindingPoint = 1;
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPoint, ssbo);
+  // unbind
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
   return buffer;
 }
