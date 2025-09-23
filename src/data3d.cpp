@@ -197,20 +197,28 @@ void voxel_grid_init(arena *a, fvec3 counts)
   // The initial cube is [-1, 1]
   f32 x_scale = 1 / counts.x;
   f32 y_scale = 1 / counts.y;
+  f32 z_scale = 1 / counts.z;
+  u32 row_elem_count = counts.x;
+  u32 slice_elem_count = counts.x * counts.y;
   f32 cube_min = -1.0f;
   glm::mat4 *modelmats = arena_push_array(a, cube_count, glm::mat4); 
   // Create instance transforms
-  for (int j = 0; j < counts.y; j++)
+  for (int k = 0; k < counts.z; k++)
   {
-    for (int i = 0; i < counts.x; i++)
+    for (int j = 0; j < counts.y; j++)
     {
-      // Transformations are applied in reverse multiplication order.
-      glm::mat4 transform = glm::mat4(1.0f);
-      f32 pos_x = cube_min + (2*i + 1) * x_scale;  // center x_i
-      f32 pos_y = cube_min + (2*j + 1) * y_scale;  // center y_i
-      transform = glm::translate(transform, glm::vec3(pos_x, pos_y, 0.0f));
-      transform = glm::scale(transform, glm::vec3(x_scale, y_scale, 1.0f));
-      modelmats[j * (u32)counts.x + i] = transform;
+      for (int i = 0; i < counts.x; i++)
+      {
+        // Transformations are applied in reverse multiplication order.
+        glm::mat4 transform = glm::mat4(1.0f);
+        f32 pos_x = cube_min + (2*i + 1) * x_scale;  // voxel center x
+        f32 pos_y = cube_min + (2*j + 1) * y_scale;  // voxel center y
+        f32 pos_z = cube_min + (2*k + 1) * z_scale;  // voxel center z
+        transform = glm::translate(transform, glm::vec3(pos_x, pos_y, pos_z));
+        transform = glm::scale(transform, glm::vec3(x_scale, y_scale, z_scale));
+        u32 element = i + (j * row_elem_count) + (k * slice_elem_count); 
+        modelmats[element] = transform;
+      }
     }
   }
   // Keep transforms in storage buffer
