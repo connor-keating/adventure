@@ -682,6 +682,18 @@ void draw_lines_elements(render_buffer buffer, u32 shader_program, u32 amount, v
 }
 
 
+void draw_wireframe_elements(render_buffer buffer, u32 shader_program, u32 amount, void *starting_offset)
+{
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  // Bind our program
+  glUseProgram(shader_program);
+  glBindVertexArray(buffer.vao);
+  // Draw the point
+  glDrawElements(GL_TRIANGLES, amount, GL_UNSIGNED_INT, starting_offset);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
+
 void frame_render(render_state *state)
 {
   SwapBuffers(state->context);
