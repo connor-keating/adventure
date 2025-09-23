@@ -265,6 +265,7 @@ int main(int argc, char **argv)
     uniform_set_vec3(instance_program, "mycolor", color);
 
     // Draw instance cube
+    /*
     glm::mat4 grid_model = glm::mat4(1.0f);
     glm::vec3 grid_center = glm::vec3(teapot_centroid.x, teapot_centroid.y, teapot_centroid.z);
     fvec3 bbox_min = model_min(bbox);
@@ -278,6 +279,7 @@ int main(int argc, char **argv)
     glm::mat4 grid_mvp = perspective_proj * view * grid_model;
     uniform_set_mat4(instance_program, "uMVP", &grid_mvp[0][0]);
     draw_lines_instanced(instance_buffer, instance_program, (voxel_count.x * voxel_count.y * voxel_count.z));
+    */
 
     // Finalize and draw frame
     frame_render(&renderer);
