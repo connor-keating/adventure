@@ -15,6 +15,34 @@ struct mesh
 };
 
 
+internal mesh bbox_create(fvec3 min, fvec3 max, arena *vert_buffer, arena *elem_buffer)
+{
+  mesh bbox = {};
+  bbox.vert_count = 8;
+  bbox.index_count = 24;
+  bbox.vertices = arena_push_array(vert_buffer, bbox.vert_count, vertex);
+  bbox.indices = arena_push_array(elem_buffer, bbox.index_count, u32);
+  // Bottom
+  bbox.vertices[0].pos = min;
+  bbox.vertices[1].pos = fvec3{ {max.x, min.y, min.z} };
+  bbox.vertices[2].pos = fvec3{ {max.x, min.y, max.z} };
+  bbox.vertices[3].pos = fvec3{ {min.x, min.y, max.z} };
+  // Top
+  bbox.vertices[4].pos = fvec3{ {min.x, max.y, min.z} };
+  bbox.vertices[5].pos = fvec3{ {max.x, max.y, min.z} };
+  bbox.vertices[6].pos = fvec3{ {max.x, max.y, max.z} };
+  bbox.vertices[7].pos = fvec3{ {min.x, max.y, max.z} };
+  // Indices
+  const u32 indices[24] = {
+    0,1, 1,2, 2,3, 3,0,
+    4,5, 5,6, 6,7, 7,4,
+    0,4, 1,5, 2,6, 3,7
+  };
+  std::memcpy(bbox.indices, indices, sizeof(indices)); 
+  return bbox;
+}
+
+
 mesh primitive_cube(arena *a)
 {
   mesh output = {};
@@ -155,30 +183,9 @@ fvec3 model_centroid(mesh model)
 
 mesh model_bbox_add(arena *vert_buffer, arena *elem_buffer, mesh model)
 {
-  mesh bbox = {};
-  bbox.vert_count = 8;
-  bbox.index_count = 24;
-  bbox.vertices = arena_push_array(vert_buffer, bbox.vert_count, vertex);
-  bbox.indices = arena_push_array(elem_buffer, bbox.index_count, u32);
   fvec3 min = model_min(model);
   fvec3 max = model_max(model);
-  // Bottom
-  bbox.vertices[0].pos = min;
-  bbox.vertices[1].pos = fvec3{ {max.x, min.y, min.z} };
-  bbox.vertices[2].pos = fvec3{ {max.x, min.y, max.z} };
-  bbox.vertices[3].pos = fvec3{ {min.x, min.y, max.z} };
-  // Top
-  bbox.vertices[4].pos = fvec3{ {min.x, max.y, min.z} };
-  bbox.vertices[5].pos = fvec3{ {max.x, max.y, min.z} };
-  bbox.vertices[6].pos = fvec3{ {max.x, max.y, max.z} };
-  bbox.vertices[7].pos = fvec3{ {min.x, max.y, max.z} };
-  // Indices
-  const u32 indices[24] = {
-    0,1, 1,2, 2,3, 3,0,
-    4,5, 5,6, 6,7, 7,4,
-    0,4, 1,5, 2,6, 3,7
-  };
-  std::memcpy(bbox.indices, indices, sizeof(indices)); 
+  mesh bbox = bbox_create(min, max, vert_buffer, elem_buffer);
   return bbox;
 }
 
@@ -267,27 +274,6 @@ mesh model_voxelize(mesh model, arena *vert_buffer, arena *elem_buffer)
   bbox_max = fvec3_add(bbox_max, epsilon);
 
   // Create mesh
-  mesh bbox = {};
-  bbox.vert_count = 8;
-  bbox.index_count = 24;
-  bbox.vertices = arena_push_array(vert_buffer, bbox.vert_count, vertex);
-  bbox.indices = arena_push_array(elem_buffer, bbox.index_count, u32);
-  // Bottom
-  bbox.vertices[0].pos = bbox_min;
-  bbox.vertices[1].pos = fvec3{ {bbox_max.x, bbox_min.y, bbox_min.z} };
-  bbox.vertices[2].pos = fvec3{ {bbox_max.x, bbox_min.y, bbox_max.z} };
-  bbox.vertices[3].pos = fvec3{ {bbox_min.x, bbox_min.y, bbox_max.z} };
-  // Top
-  bbox.vertices[4].pos = fvec3{ {bbox_min.x, bbox_max.y, bbox_min.z} };
-  bbox.vertices[5].pos = fvec3{ {bbox_max.x, bbox_max.y, bbox_min.z} };
-  bbox.vertices[6].pos = fvec3{ {bbox_max.x, bbox_max.y, bbox_max.z} };
-  bbox.vertices[7].pos = fvec3{ {bbox_min.x, bbox_max.y, bbox_max.z} };
-  // Indices
-  const u32 indices[24] = {
-    0,1, 1,2, 2,3, 3,0,
-    4,5, 5,6, 6,7, 7,4,
-    0,4, 1,5, 2,6, 3,7
-  };
-  std::memcpy(bbox.indices, indices, sizeof(indices)); 
+  mesh bbox = bbox_create(bbox_min, bbox_max, vert_buffer, elem_buffer);
   return bbox;
 }
