@@ -117,15 +117,6 @@ int main(int argc, char **argv)
     text_scale = 1.0f; // screen space
   }
 
-  // Set up instanced cube rendering for grid.
-  mesh cube = primitive_cube(&scratch);
-  render_buffer instance_buffer = render_buffer_init((void*)cube.vertices, cube.vert_count*sizeof(vertex));
-  render_buffer_attribute(instance_buffer, 0, 3, 3*sizeof(f32), (void*)0);
-  render_buffer_elements_init(&instance_buffer, cube.indices, cube.index_count*sizeof(u32));
-  u32 instance_program = render_program_init( &scratch, "shaders\\instance.vert", "shaders\\instance.frag");
-  fvec3 voxel_count = {{5.0f, 5.0f, 5.0f}};
-  voxel_grid_init(&scratch, voxel_count);
-
   // Read in model data
   mesh teapot_model = model_load_obj("assets\\teapot.obj", &vert_buffer_lines, &elem_buffer_lines);
   fvec3 teapot_centroid = model_centroid(teapot_model);
@@ -147,6 +138,15 @@ int main(int argc, char **argv)
   }
   render_buffer_elements_push(lines_gpu, teapot_model.indices, teapot_starting_byte, teapot_bytes);
   render_buffer_elements_push(lines_gpu, bbox.indices, bbox_starting_byte, bbox_bytes);
+
+  // Set up instanced cube rendering for grid.
+  mesh cube = primitive_cube(&scratch);
+  render_buffer instance_buffer = render_buffer_init((void*)cube.vertices, cube.vert_count*sizeof(vertex));
+  render_buffer_attribute(instance_buffer, 0, 3, 3*sizeof(f32), (void*)0);
+  render_buffer_elements_init(&instance_buffer, cube.indices, cube.index_count*sizeof(u32));
+  u32 instance_program = render_program_init( &scratch, "shaders\\instance.vert", "shaders\\instance.frag");
+  fvec3 voxel_count = {{5.0f, 5.0f, 5.0f}};
+  voxel_grid_init(&scratch, voxel_count);
 
   // Set up the angular speed variable for the rotation
   f32 angle_velocity = PI/4.0f;
