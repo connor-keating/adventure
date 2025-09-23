@@ -139,6 +139,9 @@ int main(int argc, char **argv)
   render_buffer_elements_push(lines_gpu, teapot_model.indices, teapot_starting_byte, teapot_bytes);
   render_buffer_elements_push(lines_gpu, bbox.indices, bbox_starting_byte, bbox_bytes);
 
+  // Voxelize the model
+  model_voxelize(teapot_model, &scratch);
+
   // Set up instanced cube rendering for grid.
   mesh cube = primitive_cube(&scratch);
   render_buffer instance_buffer = render_buffer_init((void*)cube.vertices, cube.vert_count*sizeof(vertex));
