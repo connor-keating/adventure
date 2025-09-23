@@ -155,6 +155,7 @@ int main(int argc, char **argv)
   */
 
   // Set up the angular speed variable for the rotation
+  bool rotation_on = false;
   f32 angle_velocity = PI/4.0f;
   f32 angle = 0.0f;
   // How far is the camera from the model?
@@ -200,7 +201,7 @@ int main(int argc, char **argv)
     // glm::vec3 tpos = glm::vec3(renderer.width * 0.5f, renderer.height * 0.5f, 0.0f);
     glm::vec3 tpos = glm::vec3(0.0f, 0.0f, 0.0f);
     // Add text data to gpu buffer
-    text_add(&text_buffer, "Hello!", 6, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
+    text_add(&text_buffer, "TEAPOT!", 6, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
     render_buffer_push(text_gpu_buffer, text_buffer.buffer, 0, text_buffer.offset_new);
     // Draw text
     u32 text_vert_count = text_count_get(&text_buffer);
@@ -215,7 +216,10 @@ int main(int argc, char **argv)
     f32 aspect  = window.width / (window.height + 0.000001); // keep updated on resize
     glm::mat4 perspective_model = glm::mat4(1.0f);
     glm::vec3 rotation_axis_norm = glm::vec3(0,1,0);
-    perspective_model = glm::rotate(perspective_model, angle, rotation_axis_norm);
+    if (rotation_on)
+    {
+      perspective_model = glm::rotate(perspective_model, angle, rotation_axis_norm);
+    }
     // look at
     glm::vec3 camera_pos    = glm::vec3(teapot_centroid.x, teapot_centroid.y, cam_distance);
     glm::vec3 camera_target = glm::vec3(teapot_centroid.x,teapot_centroid.y,teapot_centroid.z);
