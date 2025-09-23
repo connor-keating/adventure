@@ -227,7 +227,7 @@ void voxel_grid_init(arena *a, fvec3 counts)
 }
 
 
-void model_voxelize(mesh model, arena *a)
+mesh model_voxelize(mesh model, arena *vert_buffer, arena *elem_buffer)
 {
   // First create a bbox that is a cube of the maximum distance of the raw bbox.
   fvec3 min = model_min(model);
@@ -266,6 +266,28 @@ void model_voxelize(mesh model, arena *a)
   bbox_min = fvec3_sub(bbox_min, epsilon);
   bbox_max = fvec3_add(bbox_max, epsilon);
 
-  printf("Voxelization done\n");
-
+  // Create mesh
+  mesh bbox = {};
+  bbox.vert_count = 8;
+  bbox.index_count = 24;
+  bbox.vertices = arena_push_array(vert_buffer, bbox.vert_count, vertex);
+  bbox.indices = arena_push_array(elem_buffer, bbox.index_count, u32);
+  // Bottom
+  bbox.vertices[0].pos = bbox_min;
+  bbox.vertices[1].pos = fvec3{ {bbox_max.x, bbox_min.y, bbox_min.z} };
+  bbox.vertices[2].pos = fvec3{ {bbox_max.x, bbox_min.y, bbox_max.z} };
+  bbox.vertices[3].pos = fvec3{ {bbox_min.x, bbox_min.y, bbox_max.z} };
+  // Top
+  bbox.vertices[4].pos = fvec3{ {bbox_min.x, bbox_max.y, bbox_min.z} };
+  bbox.vertices[5].pos = fvec3{ {bbox_max.x, bbox_max.y, bbox_min.z} };
+  bbox.vertices[6].pos = fvec3{ {bbox_max.x, bbox_max.y, bbox_max.z} };
+  bbox.vertices[7].pos = fvec3{ {bbox_min.x, bbox_max.y, bbox_max.z} };
+  // Indices
+  const u32 indices[24] = {
+    0,1, 1,2, 2,3, 3,0,
+    4,5, 5,6, 6,7, 7,4,
+    0,4, 1,5, 2,6, 3,7
+  };
+  std::memcpy(bbox.indices, indices, sizeof(indices)); 
+  return bbox;
 }
