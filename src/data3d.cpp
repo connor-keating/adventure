@@ -225,3 +225,47 @@ void voxel_grid_init(arena *a, fvec3 counts)
   size_t transform_buffer_size = cube_count * sizeof(glm::mat4);
   shader_storage_init(0, (void*)&modelmats[0], transform_buffer_size);
 }
+
+
+void model_voxelize(mesh model, arena *a)
+{
+  // First create a bbox that is a cube of the maximum distance of the raw bbox.
+  fvec3 min = model_min(model);
+  fvec3 max = model_max(model);
+  // Output initialization
+  fvec3 bbox_min = min;
+  fvec3 bbox_max = max;
+  fvec3 lengths = fvec3_sub(max, min);
+  f32 max_length = fvec3_max_elem(lengths);
+  if (max_length != lengths.x)
+  {
+    f32 delta = max_length - lengths.x; // compute differences between largest length and current length.
+    f32 padding = delta / 2.0f; // Half of the total padding.
+    bbox_min.x = min.x - padding; // Apply padding before model min.
+    bbox_max.x = max.x + padding; // Apply padding after model max.
+  }
+  if (max_length != lengths.y)
+  {
+    f32 delta = max_length - lengths.y; // compute differences between largest length and current length.
+    f32 padding = delta / 2.0f; // Half of the total padding.
+    bbox_min.y = min.y - padding; // Apply padding before model min.
+    bbox_max.y = max.y + padding; // Apply padding after model max.
+  }
+  if (max_length != lengths.z)
+  {
+    f32 delta = max_length - lengths.z; // compute differences between largest length and current length.
+    f32 padding = delta / 2.0f; // Half of the total padding.
+    bbox_min.z = min.z - padding; // Apply padding before model min.
+    bbox_max.z = max.z + padding; // Apply padding after model max.
+  }
+
+  // TODO: Is this the best fix?
+  // In case a triangle is axis-aligned and lies on a voxel edge, it may or may not be counted.
+  f32 offset = (1 / 10001.0f);
+  fvec3 epsilon = fvec3_scale(fvec3_sub(bbox_max, bbox_min), offset);
+  bbox_min = fvec3_sub(bbox_min, epsilon);
+  bbox_max = fvec3_add(bbox_max, epsilon);
+
+  printf("Voxelization done\n");
+
+}
