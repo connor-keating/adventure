@@ -230,12 +230,14 @@ int main(int argc, char **argv)
     draw_wireframe_elements(lines_gpu, lines_program, teapot_model.index_count, (void*)teapot_offset);
 
     // Draw the model's bounding box 
+    /*
     uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
     i64 bbox_index_offset  = model_starting_offset(&elem_buffer_lines, bbox);
     if (!toggle)
     { 
       draw_lines_elements(lines_gpu, lines_program, bbox.index_count, (void*)bbox_index_offset);
     }
+    */
 
     // You could draw the whole buffer at once if you wanted to...
     /*
