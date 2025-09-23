@@ -148,7 +148,7 @@ int main(int argc, char **argv)
   render_buffer_attribute(instance_buffer, 0, 3, 3*sizeof(f32), (void*)0);
   render_buffer_elements_init(&instance_buffer, cube.indices, cube.index_count*sizeof(u32));
   u32 instance_program = render_program_init( &scratch, "shaders\\instance.vert", "shaders\\instance.frag");
-  fvec3 voxel_count = fvec3_uniform(5.0f);
+  fvec3 voxel_count = fvec3_uniform(1.0f);
   voxel_grid_init(&scratch, voxel_count);
 
   // Set up the angular speed variable for the rotation
