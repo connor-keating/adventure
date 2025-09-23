@@ -128,8 +128,10 @@ int main(int argc, char **argv)
   render_buffer_elements_push(lines_gpu, teapot_model.indices, teapot_starting_byte, teapot_bytes);
 
   // Get bounding box
-  /*
-  mesh bbox = model_bbox_add(&vert_buffer_lines, &elem_buffer_lines, teapot_model);
+  // mesh bbox = model_bbox_add(&vert_buffer_lines, &elem_buffer_lines, teapot_model);
+
+  // Voxelize the model
+  mesh bbox = model_voxelize(teapot_model, &vert_buffer_lines, &elem_buffer_lines);
   size_t bbox_vbo_size = sizeof(bbox.vertices[0]) * bbox.vert_count;
   render_buffer_push(lines_gpu, (void*)bbox.vertices, teapot_buffer_size, bbox_vbo_size);
   i64 bbox_starting_byte = model_starting_offset(&elem_buffer_lines, bbox);
@@ -140,10 +142,6 @@ int main(int argc, char **argv)
     bbox.indices[i] += bbox_starting_index;
   }
   render_buffer_elements_push(lines_gpu, bbox.indices, bbox_starting_byte, bbox_bytes);
-  */
-
-  // Voxelize the model
-  model_voxelize(teapot_model, &scratch);
 
   // Set up instanced cube rendering for grid.
   /*
@@ -160,7 +158,7 @@ int main(int argc, char **argv)
   f32 angle_velocity = PI/4.0f;
   f32 angle = 0.0f;
   // How far is the camera from the model?
-  f32 cam_distance =  2.5 * fvec3_max_elem(model_max(teapot_model));
+  f32 cam_distance =  2.5 * fvec3_max_elem(model_max(bbox));
 
   // Instance shader toggle
   bool toggle = 1;
@@ -235,14 +233,9 @@ int main(int argc, char **argv)
     draw_wireframe_elements(lines_gpu, lines_program, teapot_model.index_count, (void*)teapot_offset);
 
     // Draw the model's bounding box 
-    /*
     uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
     i64 bbox_index_offset  = model_starting_offset(&elem_buffer_lines, bbox);
-    if (!toggle)
-    { 
-      draw_lines_elements(lines_gpu, lines_program, bbox.index_count, (void*)bbox_index_offset);
-    }
-    */
+    draw_lines_elements(lines_gpu, lines_program, bbox.index_count, (void*)bbox_index_offset);
 
     // You could draw the whole buffer at once if you wanted to...
     /*
