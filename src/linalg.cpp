@@ -51,6 +51,11 @@ void fmat4_lookat(fmat4 out, fvec3 eye, fvec3 center, fvec3 up);
 // void fmat4_lookat_cmaj(fmat4 m, fvec3 eye, fvec3 center, fvec3 up);
 
 
+fvec3 fvec3_uniform(f32 value)
+{
+  return fvec3{ {value, value, value} };
+}
+
 
 fvec3 fvec3_add(fvec3 a, fvec3 b)
 {
@@ -90,6 +95,7 @@ fvec3 fvec3_max(fvec3 a, fvec3 b)
   return out;
 }
 
+
 f32 fvec3_max_elem(fvec3 a)
 {
   f32 max = 0;
@@ -107,6 +113,7 @@ fvec3 fvec3_min(fvec3 a, fvec3 b)
   out.z = (a.z <= b.z) ? a.z : b.z;
   return out;
 }
+
 
 fvec3 fvec3_scale(fvec3 vec, f32 scalar)
 {
