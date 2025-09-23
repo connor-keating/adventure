@@ -224,7 +224,7 @@ int main(int argc, char **argv)
     // Draw the model
     uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
     i64 teapot_offset = model_starting_offset(&elem_buffer_lines, teapot_model);
-    draw_lines_elements(lines_gpu, lines_program, teapot_model.index_count, (void*)teapot_offset);
+    draw_wireframe_elements(lines_gpu, lines_program, teapot_model.index_count, (void*)teapot_offset);
 
     // Draw the model's bounding box 
     uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
