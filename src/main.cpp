@@ -94,6 +94,7 @@ int main(int argc, char **argv)
   size_t lines_vbo_size = lines_max * sizeof(vertex);
   render_buffer lines_gpu = render_buffer_init(nullptr, lines_vbo_size);
   render_buffer_attribute(lines_gpu, 0, 3, sizeof(fvec3), 0);
+  render_buffer_elements_init(&lines_gpu, nullptr, lines_max*sizeof(u32));
   u32 lines_program = render_program_init( &scratch, "shaders\\lines.vert", "shaders\\lines.frag");
   render_buffer text_gpu_buffer = text_gpu_init(text_vert_count);
 
@@ -122,27 +123,30 @@ int main(int argc, char **argv)
   fvec3 teapot_centroid = model_centroid(teapot_model);
   size_t teapot_buffer_size = sizeof(teapot_model.vertices[0]) * teapot_model.vert_count;
   render_buffer_push(lines_gpu, (void*)teapot_model.vertices, 0, teapot_buffer_size);
+  i64 teapot_starting_byte = model_starting_offset(&elem_buffer_lines, teapot_model);
+  i64 teapot_bytes = teapot_model.index_count * sizeof(u32);
+  render_buffer_elements_push(lines_gpu, teapot_model.indices, teapot_starting_byte, teapot_bytes);
+
   // Get bounding box
+  /*
   mesh bbox = model_bbox_add(&vert_buffer_lines, &elem_buffer_lines, teapot_model);
   size_t bbox_vbo_size = sizeof(bbox.vertices[0]) * bbox.vert_count;
   render_buffer_push(lines_gpu, (void*)bbox.vertices, teapot_buffer_size, bbox_vbo_size);
-  render_buffer_elements_init(&lines_gpu, nullptr, lines_max*sizeof(u32));
-  i64 teapot_starting_byte = model_starting_offset(&elem_buffer_lines, teapot_model);
   i64 bbox_starting_byte = model_starting_offset(&elem_buffer_lines, bbox);
   i64 bbox_starting_index = bbox_starting_byte / sizeof(bbox.indices[0]);
-  i64 teapot_bytes = teapot_model.index_count * sizeof(u32);
   i64 bbox_bytes   = bbox.index_count * sizeof(u32);
   for (int i = 0; i < bbox.index_count; ++i)
   {
     bbox.indices[i] += bbox_starting_index;
   }
-  render_buffer_elements_push(lines_gpu, teapot_model.indices, teapot_starting_byte, teapot_bytes);
   render_buffer_elements_push(lines_gpu, bbox.indices, bbox_starting_byte, bbox_bytes);
+  */
 
   // Voxelize the model
   model_voxelize(teapot_model, &scratch);
 
   // Set up instanced cube rendering for grid.
+  /*
   mesh cube = primitive_cube(&scratch);
   render_buffer instance_buffer = render_buffer_init((void*)cube.vertices, cube.vert_count*sizeof(vertex));
   render_buffer_attribute(instance_buffer, 0, 3, 3*sizeof(f32), (void*)0);
@@ -150,6 +154,7 @@ int main(int argc, char **argv)
   u32 instance_program = render_program_init( &scratch, "shaders\\instance.vert", "shaders\\instance.frag");
   fvec3 voxel_count = fvec3_uniform(1.0f);
   voxel_grid_init(&scratch, voxel_count);
+  */
 
   // Set up the angular speed variable for the rotation
   f32 angle_velocity = PI/4.0f;
@@ -246,7 +251,8 @@ int main(int argc, char **argv)
     draw_lines_elements(lines_gpu, lines_program, elem_count, 0);
     */
 
-    // Set color
+    // Set color for instance grid
+    /*
     if (input_state[ACTION1] == CONTROL_DOWN)
     {
       toggle = !toggle;
@@ -267,7 +273,6 @@ int main(int argc, char **argv)
     uniform_set_vec3(instance_program, "mycolor", color);
 
     // Draw instance cube
-    /*
     glm::mat4 grid_model = glm::mat4(1.0f);
     glm::vec3 grid_center = glm::vec3(teapot_centroid.x, teapot_centroid.y, teapot_centroid.z);
     fvec3 bbox_min = model_min(bbox);
