@@ -234,7 +234,7 @@ void voxel_grid_init(arena *a, fvec3 counts)
 }
 
 
-mesh model_voxelize(mesh model, arena *vert_buffer, arena *elem_buffer)
+mesh model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_buffer, arena *scratch)
 {
   // First create a bbox that is a cube of the maximum distance of the raw bbox.
   fvec3 min = model_min(model);
@@ -275,5 +275,12 @@ mesh model_voxelize(mesh model, arena *vert_buffer, arena *elem_buffer)
 
   // Create mesh
   mesh bbox = bbox_create(bbox_min, bbox_max, vert_buffer, elem_buffer);
+  
+  // Calculate voxel units
+  fvec3 units = fvec3_scale(fvec3_sub(bbox_max, bbox_min), (1/resolution));
+
+  // Create an array that contains the enabled voxels
+  u32 count = resolution * resolution * resolution;
+  u8 *voxels = arena_push_array(scratch, count, u8);
   return bbox;
 }

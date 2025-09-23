@@ -131,7 +131,8 @@ int main(int argc, char **argv)
   // mesh bbox = model_bbox_add(&vert_buffer_lines, &elem_buffer_lines, teapot_model);
 
   // Voxelize the model
-  mesh bbox = model_voxelize(teapot_model, &vert_buffer_lines, &elem_buffer_lines);
+  mesh bbox = model_voxelize(teapot_model, 2, &vert_buffer_lines, &elem_buffer_lines, &scratch);
+  // Add bbox to renderer
   size_t bbox_vbo_size = sizeof(bbox.vertices[0]) * bbox.vert_count;
   render_buffer_push(lines_gpu, (void*)bbox.vertices, teapot_buffer_size, bbox_vbo_size);
   i64 bbox_starting_byte = model_starting_offset(&elem_buffer_lines, bbox);
