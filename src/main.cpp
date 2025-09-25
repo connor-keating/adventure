@@ -220,8 +220,10 @@ int main(int argc, char **argv)
       if (angle > 2.0*PI) angle -= 2.0*PI;
     }
     // look at
-    glm::vec3 camera_pos    = glm::vec3(0, 0, 15);
-    glm::vec3 camera_target = glm::vec3(0,0,0);
+    fvec3 bbox_max = model_max(bbox);
+    fvec3 target = model_centroid(bbox);
+    glm::vec3 camera_pos    = glm::vec3(target.x, target.y, 2.5*bbox_max.z);
+    glm::vec3 camera_target = glm::vec3(target.x,target.y,target.z);
     glm::vec3 camera_up     = glm::vec3(0,1,0);
     glm::mat4 view = glm::lookAt(camera_pos, camera_target, camera_up);
     // perspective
