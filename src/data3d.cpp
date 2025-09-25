@@ -289,7 +289,7 @@ mesh model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_
   // TODO: Should you update the model or make a copy?
   for (int i = 0; i < model.vert_count; ++i)
   {
-    verts_new[i].pos = fvec3_sub(model.vertices[i].pos, bbox_min);
+    model.vertices[i].pos = fvec3_sub(model.vertices[i].pos, bbox_min);
   }
   return bbox;
 }
