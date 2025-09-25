@@ -272,9 +272,6 @@ mesh model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_
   fvec3 epsilon = fvec3_scale(fvec3_sub(bbox_max, bbox_min), offset);
   bbox_min = fvec3_sub(bbox_min, epsilon);
   bbox_max = fvec3_add(bbox_max, epsilon);
-
-  // Create mesh
-  mesh bbox = bbox_create(bbox_min, bbox_max, vert_buffer, elem_buffer);
   
   // Calculate voxel units
   fvec3 units = fvec3_scale(fvec3_sub(bbox_max, bbox_min), (1/resolution));
@@ -291,5 +288,10 @@ mesh model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_
   {
     model.vertices[i].pos = fvec3_sub(model.vertices[i].pos, bbox_min);
   }
+
+  // Create mesh
+  bbox_max = fvec3_sub(bbox_max, bbox_min);
+  bbox_min = fvec3_sub(bbox_min, bbox_min);
+  mesh bbox = bbox_create(bbox_min, bbox_max, vert_buffer, elem_buffer);
   return bbox;
 }
