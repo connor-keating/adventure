@@ -173,7 +173,7 @@ int main(int argc, char **argv)
   f32 cam_distance =  2.5 * fvec3_max_elem(model_max(bbox));
 
   // Instance shader toggle
-  bool toggle = 1;
+  bool toggle = 0;
 
   // VSynch
   wglSwapIntervalEXT(0); // 1 is on 0 is off.
@@ -197,6 +197,13 @@ int main(int argc, char **argv)
     // Set render window dimensions (for now the whole canvas)
     renderer.width = window.width;
     renderer.height = window.height;
+
+    // Determine user input
+    if (input_state[ACTION1] == CONTROL_DOWN)
+    {
+      toggle = !toggle;
+    }
+
     // Initialize frame
     frame_init(&renderer);
 
@@ -223,17 +230,18 @@ int main(int argc, char **argv)
 
     glm::mat4 identity = glm::mat4(1.0f);
     // Create view and projection matrix
-    angle += angle_velocity * app_clock.delta; // rad += (rad/s)*s
-    // wrap angle so it doesn't explode
-    if (angle > 2.0*PI) angle -= 2.0*PI;
     f32 fov_deg = 45.0f;            // pick your FOV
     f32 aspect  = window.width / (window.height + 0.000001); // keep updated on resize
     glm::mat4 teapot_transform = glm::mat4(1.0f);
     glm::vec3 rotation_axis_norm = glm::vec3(0,1,0);
+    // I want to start and stop rotation based on user input.
     if (toggle)
     {
-      teapot_transform = glm::rotate(teapot_transform, angle, rotation_axis_norm);
+      angle += angle_velocity * app_clock.delta; // rad += (rad/s)*s
+      // wrap angle so it doesn't explode
+      if (angle > 2.0*PI) angle -= 2.0*PI;
     }
+    teapot_transform = glm::rotate(teapot_transform, angle, rotation_axis_norm);
     teapot_transform = glm::translate( teapot_transform, -glm::vec3(bbox_min.x, bbox_min.y, bbox_min.z));
     // look at
     glm::vec3 camera_pos    = glm::vec3(teapot_centroid.x, teapot_centroid.y, cam_distance);
@@ -253,10 +261,7 @@ int main(int argc, char **argv)
 
     // Draw the model's bounding box 
     glm::mat4 perspective_model = glm::mat4(1.0f);
-    if (toggle)
-    {
-      perspective_model = glm::rotate(perspective_model, angle, rotation_axis_norm);
-    }
+    perspective_model = glm::rotate(perspective_model, angle, rotation_axis_norm);
     glm::mat4 mvp = perspective_proj * view * perspective_model;
     uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
     i64 bbox_index_offset  = model_starting_offset(&elem_buffer_lines, bbox);
@@ -271,10 +276,6 @@ int main(int argc, char **argv)
 
     // Set color for instance grid
     /*
-    if (input_state[ACTION1] == CONTROL_DOWN)
-    {
-      toggle = !toggle;
-    }
     fvec3 color = {};
     if (toggle)
     {
