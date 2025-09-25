@@ -69,7 +69,7 @@ fvec3 fvec3_add(fvec3 a, fvec3 b)
 
 fvec3 fvec3_sub(fvec3 a, fvec3 b)
 {
-  fvec3 out;
+  fvec3 out = {};
   out.x = a.x - b.x;
   out.y = a.y - b.y;
   out.z = a.z - b.z;
