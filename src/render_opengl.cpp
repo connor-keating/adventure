@@ -396,6 +396,12 @@ void render_buffer_elements_push(render_buffer buffer, void* data, i64 starting_
 }
 
 
+void render_point_size_set(f32 size)
+{
+  glPointSize(size);
+}
+
+
 u32 shader_compile(const char *filepath, i32 type, arena *scratch)
 {
   size_t byte_count;
