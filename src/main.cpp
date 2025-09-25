@@ -100,7 +100,7 @@ int main(int argc, char **argv)
 
 
   // Initialize debugging stuff
-  render_point_size_set(5.0f);
+  render_point_size_set(10.0f);
   vertex origin_vert = {};
   origin_vert.pos = fvec3{ {0, 0, 0} };
   render_buffer origin_gpu = render_buffer_init(&origin_vert.pos, sizeof(origin_vert));
@@ -141,7 +141,8 @@ int main(int argc, char **argv)
 
   // Voxelize the model
   mesh bbox = model_voxelize(teapot_model, 2, &vert_buffer_lines, &elem_buffer_lines, &scratch);
-  fvec3 bbox_min = model_min(bbox);
+  // Update model
+  render_buffer_push(lines_gpu, (void*)teapot_model.vertices, 0, teapot_buffer_size);
   // Add bbox to renderer
   size_t bbox_vbo_size = sizeof(bbox.vertices[0]) * bbox.vert_count;
   render_buffer_push(lines_gpu, (void*)bbox.vertices, teapot_buffer_size, bbox_vbo_size);
@@ -207,7 +208,31 @@ int main(int argc, char **argv)
     // Initialize frame
     frame_init(&renderer);
 
+    // Calculate camera settings
+    // Create view and projection matrix
+    f32 fov_deg = 45.0f;            // pick your FOV
+    f32 aspect  = window.width / (window.height + 0.000001); // keep updated on resize
+    // I want to start and stop rotation based on user input.
+    if (toggle)
+    {
+      angle += angle_velocity * app_clock.delta; // rad += (rad/s)*s
+      // wrap angle so it doesn't explode
+      if (angle > 2.0*PI) angle -= 2.0*PI;
+    }
+    // look at
+    glm::vec3 camera_pos    = glm::vec3(0, 0, 15);
+    glm::vec3 camera_target = glm::vec3(0,0,0);
+    glm::vec3 camera_up     = glm::vec3(0,1,0);
+    glm::mat4 view = glm::lookAt(camera_pos, camera_target, camera_up);
+    // perspective
+    f32 fov_rad = glm::radians(fov_deg);
+    f32 znear = 0.1f;
+    f32 zfar = 100.0f;
+    glm::mat4 perspective_projection = glm::perspective(fov_rad, aspect, znear, zfar);
+    glm::mat4 view_projection = perspective_projection * view;
+
     // Draw origin
+    uniform_set_mat4(origin_program, "view_projection", &view_projection[0][0]);
     draw_points( origin_gpu,  origin_program, 1);
 
     // Draw the UI
@@ -228,32 +253,10 @@ int main(int argc, char **argv)
     u32 text_vert_count = text_count_get(&text_buffer);
     draw_text(text_gpu_buffer, text_shader, text_vert_count);
 
-    glm::mat4 identity = glm::mat4(1.0f);
-    // Create view and projection matrix
-    f32 fov_deg = 45.0f;            // pick your FOV
-    f32 aspect  = window.width / (window.height + 0.000001); // keep updated on resize
     glm::mat4 teapot_transform = glm::mat4(1.0f);
     glm::vec3 rotation_axis_norm = glm::vec3(0,1,0);
-    // I want to start and stop rotation based on user input.
-    if (toggle)
-    {
-      angle += angle_velocity * app_clock.delta; // rad += (rad/s)*s
-      // wrap angle so it doesn't explode
-      if (angle > 2.0*PI) angle -= 2.0*PI;
-    }
     teapot_transform = glm::rotate(teapot_transform, angle, rotation_axis_norm);
-    teapot_transform = glm::translate( teapot_transform, -glm::vec3(bbox_min.x, bbox_min.y, bbox_min.z));
-    // look at
-    glm::vec3 camera_pos    = glm::vec3(teapot_centroid.x, teapot_centroid.y, cam_distance);
-    glm::vec3 camera_target = glm::vec3(teapot_centroid.x,teapot_centroid.y,teapot_centroid.z);
-    glm::vec3 camera_up     = glm::vec3(0,1,0);
-    glm::mat4 view = glm::lookAt(camera_pos, camera_target, camera_up);
-    // perspective
-    f32 fov_rad = glm::radians(fov_deg);
-    f32 znear = 0.1f;
-    f32 zfar = 100.0f;
-    glm::mat4 perspective_proj = glm::perspective(fov_rad, aspect, znear, zfar);
-    glm::mat4 teapot_mvp = perspective_proj * view * teapot_transform;
+    glm::mat4 teapot_mvp = view_projection * teapot_transform;
     // Draw the model
     uniform_set_mat4(lines_program, "view_projection", &teapot_mvp[0][0]);
     i64 teapot_offset = model_starting_offset(&elem_buffer_lines, teapot_model);
@@ -262,7 +265,7 @@ int main(int argc, char **argv)
     // Draw the model's bounding box 
     glm::mat4 perspective_model = glm::mat4(1.0f);
     perspective_model = glm::rotate(perspective_model, angle, rotation_axis_norm);
-    glm::mat4 mvp = perspective_proj * view * perspective_model;
+    glm::mat4 mvp = view_projection * perspective_model;
     uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
     i64 bbox_index_offset  = model_starting_offset(&elem_buffer_lines, bbox);
     draw_lines_elements(lines_gpu, lines_program, bbox.index_count, (void*)bbox_index_offset);
