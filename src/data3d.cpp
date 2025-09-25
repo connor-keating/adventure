@@ -282,5 +282,14 @@ mesh model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_
   // Create an array that contains the enabled voxels
   u32 count = resolution * resolution * resolution;
   u8 *voxels = arena_push_array(scratch, count, u8);
+
+  // Set all verts of the model to its cube bbox min
+  vertex *verts_new = arena_push_array(scratch, model.vert_count, vertex);
+  // the cubed bbox_min
+  // TODO: Should you update the model or make a copy?
+  for (int i = 0; i < model.vert_count; ++i)
+  {
+    verts_new[i].pos = fvec3_sub(model.vertices[i].pos, bbox_min);
+  }
   return bbox;
 }
