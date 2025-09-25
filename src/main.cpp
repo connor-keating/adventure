@@ -99,6 +99,15 @@ int main(int argc, char **argv)
   render_buffer text_gpu_buffer = text_gpu_init(text_vert_count);
 
 
+  // Initialize debugging stuff
+  render_point_size_set(5.0f);
+  vertex origin_vert = {};
+  origin_vert.pos = fvec3{ {0, 0, 0} };
+  render_buffer origin_gpu = render_buffer_init(&origin_vert.pos, sizeof(origin_vert));
+  render_buffer_attribute(origin_gpu, 0, 3, sizeof(fvec3), 0);
+  u32 origin_program = render_program_init( &scratch, "shaders\\points.vert",  "shaders\\points.frag");
+
+
   // Load application assets
   const char *font_file = "C:\\WINDOWS\\Fonts\\arial.ttf";
   // Create the char atlas bitmap image
@@ -191,6 +200,9 @@ int main(int argc, char **argv)
     // Initialize frame
     frame_init(&renderer);
 
+    // Draw origin
+    draw_points( origin_gpu,  origin_program, 1);
+
     // Draw the UI
     // Bind the character atlas
     i32 text_slot = 0;
@@ -222,7 +234,7 @@ int main(int argc, char **argv)
     {
       teapot_transform = glm::rotate(teapot_transform, angle, rotation_axis_norm);
     }
-    teapot_transform = glm::translate( teapot_transform, glm::vec3(bbox_min.x, bbox_min.y, bbox_min.z));
+    teapot_transform = glm::translate( teapot_transform, -glm::vec3(bbox_min.x, bbox_min.y, bbox_min.z));
     // look at
     glm::vec3 camera_pos    = glm::vec3(teapot_centroid.x, teapot_centroid.y, cam_distance);
     glm::vec3 camera_target = glm::vec3(teapot_centroid.x,teapot_centroid.y,teapot_centroid.z);
