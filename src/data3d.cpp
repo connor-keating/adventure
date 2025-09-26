@@ -43,6 +43,67 @@ internal mesh bbox_create(fvec3 min, fvec3 max, arena *vert_buffer, arena *elem_
 }
 
 
+// Is the triangle winding order counter-clockwise order?
+internal bool triangle_is_ccw(fvec2 v0, fvec2 v1, fvec2 v2)
+{
+  fvec2 e0 = fvec2_sub(v1, v0);
+  fvec2 e1 = fvec2_sub(v2, v0);
+  f32 result = cross2(e0, e1);
+  // If result > 0 it is counter-clockwise
+  return (result > 0);
+}
+
+
+internal i32 voxel_x_get(fvec3 tri_normal, fvec3 v0, fvec2 point)
+{
+  return ( -(tri_normal.y * (point.x - v0.y) + tri_normal.z * (point.y - v0.z) ) / tri_normal.x + v0.x);
+}
+
+
+internal bool top_left_edge(fvec2 v0, fvec2 v1)
+{
+  return ( (v1.y < v0.y) || (v1.y == v0.y && v0.x > v1.x) );
+}
+
+
+// A point P lies inside a ccw triangle ABC iff P lies to the left of lines AB, BC, and CA.
+bool point_in_tri(fvec2 v0, fvec2 v1, fvec2 v2, fvec2 point)
+{
+  // TODO: Replace with method from the real-time collision detection book.
+  f32 float_error = 0.000001;
+  // Remember this is in YZ plane
+  fvec2 pa = fvec2_sub(point, v0);
+  fvec2 pb = fvec2_sub(point, v1);
+  fvec2 pc = fvec2_sub(point, v2);
+  // PA and PB
+  f32 t1 = fabs(cross2(pa, pb));
+  f32 papb_y = pa.x * pb.x;
+  f32 papb_z = pa.y * pb.y;
+  bool overlapping1 = (t1 < float_error) && (papb_y <= 0) && (papb_z <= 0);
+  if (overlapping1) return 1;
+  // PB and PC
+  f32 t2 = fabs(cross2(pb, pc));
+  f32 pbpc_y = pb.x * pc.x;
+  f32 pbpc_z = pb.y * pc.y;
+  bool overlapping2 = (t2 < float_error) && (pbpc_y <= 0) && (pbpc_z <= 0);
+  if (overlapping2) return 2;
+  // PC and PA
+  f32 t3 = fabs(cross2(pc, pa));
+  f32 pcpa_y = pc.x * pa.x;
+  f32 pcpa_z = pc.y * pa.y;
+  bool overlapping3 = (t3 < float_error) && (pcpa_y <= 0) && (pcpa_y <= 0);
+  if (overlapping3) return 3;
+  if ((t1 * t2 > 0) && (t1 * t3 > 0))
+  {
+    return 0;
+  }
+  else
+  {
+    return -1;
+  }
+}
+
+
 mesh primitive_cube(arena *a)
 {
   mesh output = {};
@@ -104,6 +165,8 @@ mesh model_load_obj(const char *file, arena *vert_buffer, arena *elem_buffer)
   // Allocate output memory
   // u64 unique_index = 0;
   u32 element = 0;
+  // TODO: This is not actually the number of unique verts. I'm just saving each vert as a new element, but there are repeats.
+  // TODO: I should only save the number of unique verts and determine how to get the index of the one I need. (hash map)?
   model.vert_count = attrib.num_faces;
   model.index_count = attrib.num_faces;
   model.vertices = arena_push_array(vert_buffer, model.vert_count, vertex);
@@ -265,7 +328,6 @@ mesh model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_
     bbox_min.z = min.z - padding; // Apply padding before model min.
     bbox_max.z = max.z + padding; // Apply padding after model max.
   }
-
   // TODO: Is this the best fix?
   // In case a triangle is axis-aligned and lies on a voxel edge, it may or may not be counted.
   f32 offset = (1 / 10001.0f);
@@ -274,12 +336,9 @@ mesh model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_
   bbox_max = fvec3_add(bbox_max, epsilon);
   
   // Calculate voxel units
-  fvec3 units = fvec3_scale(fvec3_sub(bbox_max, bbox_min), (1/resolution));
-
-  // Create an array that contains the enabled voxels
-  u32 count = resolution * resolution * resolution;
-  u8 *voxels = arena_push_array(scratch, count, u8);
-
+  fvec3 bbox_diff = fvec3_sub(bbox_max, bbox_min);
+  f32 bbox_divisor = (1.0f/resolution);
+  fvec3 units = fvec3_scale(bbox_diff, bbox_divisor);
   // Set all verts of the model to its cube bbox min
   vertex *verts_new = arena_push_array(scratch, model.vert_count, vertex);
   // the cubed bbox_min
@@ -288,10 +347,87 @@ mesh model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_
   {
     model.vertices[i].pos = fvec3_sub(model.vertices[i].pos, bbox_min);
   }
-
   // Create mesh
   bbox_max = fvec3_sub(bbox_max, bbox_min);
   bbox_min = fvec3_sub(bbox_min, bbox_min);
   mesh bbox = bbox_create(bbox_min, bbox_max, vert_buffer, elem_buffer);
+  // Start voxelization. 
+  // Create an array that contains the enabled voxels
+  u32 count = resolution * resolution * resolution;
+  u8 *voxels = arena_push_array(scratch, count, u8);
+  // Loop for each triangle
+  // u64 tri_count = ceil(model.index_count / 3);
+  for (i64 i = 0; i < model.index_count; i+=3)
+  {
+    // Triangle vertices
+    fvec3 v0 = model.vertices[model.indices[i+0]].pos;
+    fvec3 v1 = model.vertices[model.indices[i+1]].pos;
+    fvec3 v2 = model.vertices[model.indices[i+2]].pos;
+    // Triangle edges
+    fvec3 e0 = fvec3_sub(v1, v0);
+    fvec3 e1 = fvec3_sub(v2, v1);
+    fvec3 e2 = fvec3_sub(v0, v2);
+    // Normal vector for triangle
+    fvec3 norm = normalize3(cross3(e0, e1));
+    // Project points into yz plane
+    fvec2 v0_yz = fvec2{ {v0.y, v0.z} };
+    fvec2 v1_yz = fvec2{ {v1.y, v1.z} };
+    fvec2 v2_yz = fvec2{ {v2.y, v2.z} };
+    // Ensure the triangle is winding counterclockwise
+    bool is_ccw = 0;
+    is_ccw = triangle_is_ccw(v0_yz, v1_yz, v2_yz);
+    if (is_ccw == false)
+    {
+      // Its clockwise, fix it.
+      fvec2 v3 = v1_yz;
+      v1_yz = v2_yz;
+      v2_yz = v3;
+    }
+    // Compute triangle bbox in grid
+    fvec2 tri_bbox_min = fvec2_min(v0_yz, fvec2_min(v1_yz, v2_yz));
+    fvec2 tri_bbox_max = fvec2_max(v0_yz, fvec2_max(v1_yz, v2_yz));
+    // Convert world coordinates to grid coordinates
+    // Dividing by units to get grid position, subtracting 0.5 to center the point.
+    f32 min_y = ceil(tri_bbox_min.x / units.y - 0.5f);
+    f32 min_z = ceil(tri_bbox_min.y / units.z - 0.5f);
+    f32 max_y = floor(tri_bbox_max.x / units.y - 0.5f);
+    f32 max_z = floor(tri_bbox_max.y / units.z - 0.5f);
+    fvec2 grid_min = fvec2{ {min_y, min_z} };
+    fvec2 grid_max = fvec2{ {max_y, max_z} };
+    // Determine indexing strides
+    u32 row_stride = resolution;
+    u32 slice_stride = resolution * resolution;
+    // For each overlapping voxel examine YZ plane
+    for (u32 y = grid_min.x; y <= grid_max.x; ++y)
+    {
+      for (u32 z = grid_min.y; y <= grid_max.y; ++z)
+      {
+        // 1. Check the location of the point and the triangle
+        fvec2 point = fvec2{{ 
+          ((y + 0.5f) * units.y), 
+          ((z + 0.5f) * units.z)
+        }};
+        // Translate triangle so that point is origin
+        u32 is_colliding = point_in_tri(v0_yz, v1_yz, v2_yz, point);
+        // TODO: TopLeftEdge function
+        // 2. Check if point is inside, or touching an edge.
+        if (
+          ( (is_colliding == 1) && top_left_edge(v0_yz, v1_yz) ) ||
+          ( (is_colliding == 2) && top_left_edge(v1_yz, v2_yz) ) ||
+          ( (is_colliding == 3) && top_left_edge(v2_yz, v0_yz) ) ||
+            (is_colliding == 0)
+        )
+        {
+          // 3. Get X coordinate of the voxel
+          u32 xmax = u32( voxel_x_get(norm, v0, point) / units. x - 0.5f );
+          for (u32 x = 0; x <= xmax; ++x)
+          {
+            u32 location = x + (y * row_stride) + (z * slice_stride);
+            voxels[location] = 1;
+          }
+        }
+      }
+    }
+  }
   return bbox;
 }
