@@ -13,22 +13,43 @@
 typedef union fvec2 fvec2;
 union fvec2
 {
-    struct 
-    {
-        f32 x, y;
-    };
-    f32 array[2];
+  struct 
+  {
+    f32 x, y;
+  };
+  f32 array[2];
+};
+
+
+union ivec2
+{
+  struct
+  {
+    i32 x, y;
+  };
+  i32 array[2];
 };
 
 typedef union fvec3 fvec3;
 union fvec3
 {
-    struct 
-    {
-        f32 x, y, z;
-    };
-    f32 array[3];
+  struct 
+  {
+    f32 x, y, z;
+  };
+  f32 array[3];
 };
+
+
+union ivec3
+{
+  struct
+  {
+    i32 x, y, z;
+  };
+  i32 array[3];
+};
+
 
 typedef f32 fmat4[4][4];
 
@@ -67,6 +88,15 @@ fvec3 fvec3_add(fvec3 a, fvec3 b)
 }
 
 
+fvec2 fvec2_sub(fvec2 a, fvec2 b)
+{
+  fvec2 out = {};
+  out.x = a.x - b.x;
+  out.y = a.y - b.y;
+  return out;
+}
+
+
 fvec3 fvec3_sub(fvec3 a, fvec3 b)
 {
   fvec3 out = {};
@@ -86,6 +116,15 @@ fvec3 fvec3_div(fvec3 a, f32 scalar)
 }
 
 
+fvec2 fvec2_max(fvec2 a, fvec2 b)
+{
+  fvec2 out;
+  out.x = (a.x >= b.x) ? a.x : b.x;
+  out.y = (a.y >= b.y) ? a.y : b.y;
+  return out;
+}
+
+
 fvec3 fvec3_max(fvec3 a, fvec3 b)
 {
   fvec3 out;
@@ -102,6 +141,15 @@ f32 fvec3_max_elem(fvec3 a)
   max = (a.x > a.y) ? a.x : a.y;
   max = (max > a.z) ? max : a.z;
   return max;
+}
+
+
+fvec2 fvec2_min(fvec2 a, fvec2 b)
+{
+  fvec2 out;
+  out.x = (a.x <= b.x) ? a.x : b.x;
+  out.y = (a.y <= b.y) ? a.y : b.y;
+  return out;
 }
 
 
@@ -140,6 +188,13 @@ inline fvec3 normalize3(fvec3 vec)
     vec = fvec3_scale(vec, inverse);
   }
   return vec;
+}
+
+
+inline f32 cross2(fvec2 a, fvec2 b)
+{
+  f32 out = (a.x * b.y) - (b.x * a.y);
+  return out;
 }
 
 
