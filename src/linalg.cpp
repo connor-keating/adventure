@@ -72,6 +72,12 @@ void fmat4_lookat(fmat4 out, fvec3 eye, fvec3 center, fvec3 up);
 // void fmat4_lookat_cmaj(fmat4 m, fvec3 eye, fvec3 center, fvec3 up);
 
 
+ivec3 ivec3_uniform(i32 value)
+{
+  return ivec3{ {value, value, value} };
+}
+
+
 fvec3 fvec3_uniform(f32 value)
 {
   return fvec3{ {value, value, value} };
