@@ -140,7 +140,8 @@ int main(int argc, char **argv)
   // mesh bbox = model_bbox_add(&vert_buffer_lines, &elem_buffer_lines, teapot_model);
 
   // Voxelize the model
-  mesh bbox = model_voxelize(teapot_model, 2, &vert_buffer_lines, &elem_buffer_lines, &scratch);
+  i32 voxel_count = 2;
+  mesh bbox = model_voxelize(teapot_model, voxel_count, &vert_buffer_lines, &elem_buffer_lines, &scratch);
   // Update model
   render_buffer_push(lines_gpu, (void*)teapot_model.vertices, 0, teapot_buffer_size);
   // Add bbox to renderer
@@ -156,15 +157,13 @@ int main(int argc, char **argv)
   render_buffer_elements_push(lines_gpu, bbox.indices, bbox_starting_byte, bbox_bytes);
 
   // Set up instanced cube rendering for grid.
-  /*
   mesh cube = primitive_cube(&scratch);
   render_buffer instance_buffer = render_buffer_init((void*)cube.vertices, cube.vert_count*sizeof(vertex));
   render_buffer_attribute(instance_buffer, 0, 3, 3*sizeof(f32), (void*)0);
   render_buffer_elements_init(&instance_buffer, cube.indices, cube.index_count*sizeof(u32));
   u32 instance_program = render_program_init( &scratch, "shaders\\instance.vert", "shaders\\instance.frag");
-  fvec3 voxel_count = fvec3_uniform(1.0f);
-  voxel_grid_init(&scratch, voxel_count);
-  */
+  ivec3 grid_shape = ivec3_uniform(voxel_count);
+  voxel_grid_init(&scratch, grid_shape);
 
   // Set up the angular speed variable for the rotation
   bool rotation_on = false;
