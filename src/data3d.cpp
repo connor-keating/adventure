@@ -261,7 +261,7 @@ i64 model_starting_offset(arena *a, mesh model)
 }
 
 
-void voxel_grid_init(arena *a, fvec3 counts)
+void voxel_grid_init(arena *a, ivec3 counts)
 {
   u32 cube_count = (u32) (counts.x * counts.y * counts.z);
   // The initial cube is [-1, 1]
