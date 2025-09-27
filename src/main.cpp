@@ -301,7 +301,7 @@ int main(int argc, char **argv)
     grid_model = glm::rotate(grid_model, angle, rotation_axis_norm);
     grid_model = glm::scale(grid_model, grid_shape);
     glm::mat4 grid_mvp = view_projection * grid_model;
-    uniform_set_mat4(instance_program, "uMVP", &grid_mvp[0][0]);
+    uniform_set_mat4(instance_program, "view_projection", &grid_mvp[0][0]);
     draw_lines_instanced(instance_buffer, instance_program, (grid_shape.x * grid_shape.y * grid_shape.z));
 
     // Finalize and draw frame

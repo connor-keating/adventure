@@ -5,10 +5,10 @@ layout (std430, binding = 0) buffer InstanceData {
   mat4 M[];            // unbounded array of instance model matrices
 } inst;
 
-uniform mat4 uMVP;
+uniform mat4 view_projection;
 
 void main()
 {
   mat4 model = inst.M[gl_InstanceID];
-  gl_Position = uMVP * model * vec4(aPos, 1.0f); 
+  gl_Position = view_projection * model * vec4(aPos, 1.0f); 
 }
