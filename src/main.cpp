@@ -129,7 +129,6 @@ int main(int argc, char **argv)
 
   // Read in model data
   mesh teapot_model = model_load_obj("assets\\teapot.obj", &vert_buffer_lines, &elem_buffer_lines);
-  fvec3 teapot_centroid = model_centroid(teapot_model);
   size_t teapot_buffer_size = sizeof(teapot_model.vertices[0]) * teapot_model.vert_count;
   render_buffer_push(lines_gpu, (void*)teapot_model.vertices, 0, teapot_buffer_size);
   i64 teapot_starting_byte = model_starting_offset(&elem_buffer_lines, teapot_model);
@@ -162,7 +161,7 @@ int main(int argc, char **argv)
   render_buffer_attribute(instance_buffer, 0, 3, 3*sizeof(f32), (void*)0);
   render_buffer_elements_init(&instance_buffer, cube.indices, cube.index_count*sizeof(u32));
   u32 instance_program = render_program_init( &scratch, "shaders\\instance.vert", "shaders\\instance.frag");
-  ivec3 grid_shape = ivec3_uniform(voxel_count);
+  fvec3 grid_shape = fvec3_uniform(voxel_count);
   voxel_grid_init(&scratch, grid_shape);
 
   // Set up the angular speed variable for the rotation
@@ -221,8 +220,9 @@ int main(int argc, char **argv)
     // look at
     fvec3 bbox_max = model_max(bbox);
     fvec3 target = model_centroid(bbox);
+    glm::vec3 target_gpu = glm::vec3(target.x, target.y, target.z);
     glm::vec3 camera_pos    = glm::vec3(target.x, target.y, 2.5*bbox_max.z);
-    glm::vec3 camera_target = glm::vec3(target.x,target.y,target.z);
+    glm::vec3 camera_target = target_gpu;
     glm::vec3 camera_up     = glm::vec3(0,1,0);
     glm::mat4 view = glm::lookAt(camera_pos, camera_target, camera_up);
     // perspective
@@ -256,7 +256,9 @@ int main(int argc, char **argv)
 
     glm::mat4 teapot_transform = glm::mat4(1.0f);
     glm::vec3 rotation_axis_norm = glm::vec3(0,1,0);
+    teapot_transform = glm::translate(teapot_transform, target_gpu);
     teapot_transform = glm::rotate(teapot_transform, angle, rotation_axis_norm);
+    teapot_transform = glm::translate(teapot_transform, -target_gpu);
     glm::mat4 teapot_mvp = view_projection * teapot_transform;
     // Draw the model
     uniform_set_mat4(lines_program, "view_projection", &teapot_mvp[0][0]);
@@ -265,7 +267,9 @@ int main(int argc, char **argv)
 
     // Draw the model's bounding box 
     glm::mat4 perspective_model = glm::mat4(1.0f);
+    perspective_model = glm::translate(perspective_model, target_gpu);
     perspective_model = glm::rotate(perspective_model, angle, rotation_axis_norm);
+    perspective_model = glm::translate(perspective_model, -target_gpu);
     glm::mat4 mvp = view_projection * perspective_model;
     uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
     i64 bbox_index_offset  = model_starting_offset(&elem_buffer_lines, bbox);
@@ -279,37 +283,26 @@ int main(int argc, char **argv)
     */
 
     // Set color for instance grid
-    /*
     fvec3 color = {};
-    if (toggle)
-    {
-      color.array[0] = 0.0f;
-      color.array[1] = 1.0f;
-      color.array[2] = 0.0f;
-    }
-    else 
-    {
-      color.array[0] = 1.0f;
-      color.array[1] = 0.0f;
-      color.array[2] = 0.0f;
-    }
+    color.array[0] = 0.0f;
+    color.array[1] = 1.0f;
+    color.array[2] = 0.0f;
     uniform_set_vec3(instance_program, "mycolor", color);
 
     // Draw instance cube
     glm::mat4 grid_model = glm::mat4(1.0f);
-    glm::vec3 grid_center = glm::vec3(teapot_centroid.x, teapot_centroid.y, teapot_centroid.z);
+    glm::vec3 grid_center = glm::vec3(target.x, target.y, target.z);
     fvec3 bbox_min = model_min(bbox);
-    fvec3 bbox_max = model_max(bbox);
+    // fvec3 bbox_max = model_max(bbox);
     fvec3 temp = fvec3_scale(fvec3_sub(bbox_max, bbox_min), 0.5f);
     glm::vec3 grid_shape = glm::vec3(temp.x, temp.y, temp.z);
     // Normally it goes t * r * s, but here rotation should be last so it is rotated about the model center.
-    grid_model = glm::rotate(grid_model, angle, rotation_axis_norm);
     grid_model = glm::translate(grid_model, grid_center);
+    grid_model = glm::rotate(grid_model, angle, rotation_axis_norm);
     grid_model = glm::scale(grid_model, grid_shape);
-    glm::mat4 grid_mvp = perspective_proj * view * grid_model;
+    glm::mat4 grid_mvp = view_projection * grid_model;
     uniform_set_mat4(instance_program, "uMVP", &grid_mvp[0][0]);
-    draw_lines_instanced(instance_buffer, instance_program, (voxel_count.x * voxel_count.y * voxel_count.z));
-    */
+    draw_lines_instanced(instance_buffer, instance_program, (grid_shape.x * grid_shape.y * grid_shape.z));
 
     // Finalize and draw frame
     frame_render(&renderer);
