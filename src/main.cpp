@@ -139,7 +139,7 @@ int main(int argc, char **argv)
   // mesh bbox = model_bbox_add(&vert_buffer_lines, &elem_buffer_lines, teapot_model);
 
   // Voxelize the model
-  i32 voxel_count = 2;
+  i32 voxel_count = 4;
   mesh bbox = model_voxelize(teapot_model, voxel_count, &vert_buffer_lines, &elem_buffer_lines, &scratch);
   // Update model
   render_buffer_push(lines_gpu, (void*)teapot_model.vertices, 0, teapot_buffer_size);
