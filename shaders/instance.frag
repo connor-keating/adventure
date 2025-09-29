@@ -18,6 +18,7 @@ void main()
 
   // Read from 3D texture to determine if this voxel is "on"
   float is_on = texelFetch(voxels, ivec3(x,y,z), 0).r;
+  if (is_on < 1.0f) discard;
 
   // Color each cube based on its 3D grid position
   vec3 color = vec3(float(x), float(y), float(z)) / vec3(dimension - 1.0);
