@@ -140,7 +140,8 @@ int main(int argc, char **argv)
 
   // Voxelize the model
   i32 voxel_count = 4;
-  mesh bbox = model_voxelize(teapot_model, voxel_count, &vert_buffer_lines, &elem_buffer_lines, &scratch);
+  voxel_grid grid = model_voxelize(teapot_model, voxel_count, &vert_buffer_lines, &elem_buffer_lines, &scratch);
+  mesh bbox = bbox_create(grid.min, grid.max, &vert_buffer_lines, &elem_buffer_lines);
   // Update model
   render_buffer_push(lines_gpu, (void*)teapot_model.vertices, 0, teapot_buffer_size);
   // Add bbox to renderer
@@ -178,8 +179,7 @@ int main(int argc, char **argv)
   f32 angle_velocity = PI/4.0f;
   f32 angle = 0.0f;
   // How far is the camera from the model?
-  f32 cam_distance =  2.5 * fvec3_max_elem(model_max(bbox));
-
+  f32 cam_distance = 2.5*grid.max.z;
   // Instance shader toggle
   bool toggle = 0;
 
@@ -230,7 +230,7 @@ int main(int argc, char **argv)
     fvec3 bbox_max = model_max(bbox);
     fvec3 target = model_centroid(bbox);
     glm::vec3 target_gpu = glm::vec3(target.x, target.y, target.z);
-    glm::vec3 camera_pos    = glm::vec3(target.x, target.y, 2.5*bbox_max.z);
+    glm::vec3 camera_pos    = glm::vec3(target.x, target.y, cam_distance);
     glm::vec3 camera_target = target_gpu;
     glm::vec3 camera_up     = glm::vec3(0,1,0);
     glm::mat4 view = glm::lookAt(camera_pos, camera_target, camera_up);
