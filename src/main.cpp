@@ -164,6 +164,15 @@ int main(int argc, char **argv)
   fvec3 grid_shape = fvec3_uniform(voxel_count);
   voxel_grid_init(&scratch, grid_shape);
 
+  // I want the grid to be controlled as a 3D texture.
+  u32 grid_element_count = grid_shape.x * grid_shape.y * grid_shape.z;
+  u8 *grid_data = arena_push_array(&scratch, grid_element_count, u8);
+  memset(grid_data, 255, grid_element_count * sizeof(u8));
+
+  u32 grid_texture_id = texture3d_init(grid_data, grid_shape);
+  // TODO: Renderer needs a better way of handling texture slots
+  i32 grid_texture_slot = 1;
+
   // Set up the angular speed variable for the rotation
   bool rotation_on = false;
   f32 angle_velocity = PI/4.0f;
@@ -239,7 +248,7 @@ int main(int argc, char **argv)
     // Draw the UI
     // Bind the character atlas
     i32 text_slot = 0;
-    texture_bind(text_slot, text_texture_id);
+    texture2d_bind(text_slot, text_texture_id);
     // Set the uniform variables
     uniform_set_i32(text_shader, text_uniform, text_slot);
     glm::mat4 ortho = glm::ortho(0.0f, renderer.width, 0.0f, renderer.height, -1.0f, 1.0f);
@@ -273,7 +282,7 @@ int main(int argc, char **argv)
     glm::mat4 mvp = view_projection * perspective_model;
     uniform_set_mat4(lines_program, "view_projection", &mvp[0][0]);
     i64 bbox_index_offset  = model_starting_offset(&elem_buffer_lines, bbox);
-    draw_lines_elements(lines_gpu, lines_program, bbox.index_count, (void*)bbox_index_offset);
+    // draw_lines_elements(lines_gpu, lines_program, bbox.index_count, (void*)bbox_index_offset);
 
     // You could draw the whole buffer at once if you wanted to...
     /*
@@ -295,13 +304,17 @@ int main(int argc, char **argv)
     fvec3 bbox_min = model_min(bbox);
     // fvec3 bbox_max = model_max(bbox);
     fvec3 temp = fvec3_scale(fvec3_sub(bbox_max, bbox_min), 0.5f);
-    glm::vec3 grid_shape = glm::vec3(temp.x, temp.y, temp.z);
+    glm::vec3 grid_shape2 = glm::vec3(temp.x, temp.y, temp.z);
     // Normally it goes t * r * s, but here rotation should be last so it is rotated about the model center.
     grid_model = glm::translate(grid_model, grid_center);
     grid_model = glm::rotate(grid_model, angle, rotation_axis_norm);
-    grid_model = glm::scale(grid_model, grid_shape);
+    grid_model = glm::scale(grid_model, grid_shape2);
     glm::mat4 grid_mvp = view_projection * grid_model;
     uniform_set_mat4(instance_program, "view_projection", &grid_mvp[0][0]);
+    // Grid Texture
+    texture3d_bind(grid_texture_slot, grid_texture_id);
+    uniform_set_i32(instance_program, "voxels", grid_texture_slot);
+    uniform_set_vec3(instance_program, "dimension", grid_shape);
     draw_lines_instanced(instance_buffer, instance_program, (grid_shape.x * grid_shape.y * grid_shape.z));
 
     // Finalize and draw frame
