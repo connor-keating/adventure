@@ -15,6 +15,14 @@ struct mesh
 };
 
 
+struct voxel_grid
+{
+  u8 *contents;
+  fvec3 min;
+  fvec3 max;
+};
+
+
 internal mesh bbox_create(fvec3 min, fvec3 max, arena *vert_buffer, arena *elem_buffer)
 {
   mesh bbox = {};
@@ -297,46 +305,48 @@ void voxel_grid_init(arena *a, fvec3 counts)
 }
 
 
-mesh model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_buffer, arena *scratch)
+voxel_grid model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_buffer, arena *scratch)
 {
+  // Initialize output
+  voxel_grid grid = {};
   // First create a bbox that is a cube of the maximum distance of the raw bbox.
   fvec3 min = model_min(model);
   fvec3 max = model_max(model);
   // Output initialization
-  fvec3 bbox_min = min;
-  fvec3 bbox_max = max;
+  grid.min = min;
+  grid.max = max;
   fvec3 lengths = fvec3_sub(max, min);
   f32 max_length = fvec3_max_elem(lengths);
   if (max_length != lengths.x)
   {
     f32 delta = max_length - lengths.x; // compute differences between largest length and current length.
     f32 padding = delta / 2.0f; // Half of the total padding.
-    bbox_min.x = min.x - padding; // Apply padding before model min.
-    bbox_max.x = max.x + padding; // Apply padding after model max.
+    grid.min.x = min.x - padding; // Apply padding before model min.
+    grid.max.x = max.x + padding; // Apply padding after model max.
   }
   if (max_length != lengths.y)
   {
     f32 delta = max_length - lengths.y; // compute differences between largest length and current length.
     f32 padding = delta / 2.0f; // Half of the total padding.
-    bbox_min.y = min.y - padding; // Apply padding before model min.
-    bbox_max.y = max.y + padding; // Apply padding after model max.
+    grid.min.y = min.y - padding; // Apply padding before model min.
+    grid.max.y = max.y + padding; // Apply padding after model max.
   }
   if (max_length != lengths.z)
   {
     f32 delta = max_length - lengths.z; // compute differences between largest length and current length.
     f32 padding = delta / 2.0f; // Half of the total padding.
-    bbox_min.z = min.z - padding; // Apply padding before model min.
-    bbox_max.z = max.z + padding; // Apply padding after model max.
+    grid.min.z = min.z - padding; // Apply padding before model min.
+    grid.max.z = max.z + padding; // Apply padding after model max.
   }
   // TODO: Is this the best fix?
   // In case a triangle is axis-aligned and lies on a voxel edge, it may or may not be counted.
   f32 offset = (1 / 10001.0f);
-  fvec3 epsilon = fvec3_scale(fvec3_sub(bbox_max, bbox_min), offset);
-  bbox_min = fvec3_sub(bbox_min, epsilon);
-  bbox_max = fvec3_add(bbox_max, epsilon);
+  fvec3 epsilon = fvec3_scale(fvec3_sub(grid.max, grid.min), offset);
+  grid.min = fvec3_sub(grid.min, epsilon);
+  grid.max = fvec3_add(grid.max, epsilon);
   
   // Calculate voxel units
-  fvec3 bbox_diff = fvec3_sub(bbox_max, bbox_min);
+  fvec3 bbox_diff = fvec3_sub(grid.max, grid.min);
   f32 bbox_divisor = (1.0f/resolution);
   fvec3 units = fvec3_scale(bbox_diff, bbox_divisor);
   // Set all verts of the model to its cube bbox min
@@ -345,12 +355,11 @@ mesh model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_
   // TODO: Should you update the model or make a copy?
   for (int i = 0; i < model.vert_count; ++i)
   {
-    model.vertices[i].pos = fvec3_sub(model.vertices[i].pos, bbox_min);
+    model.vertices[i].pos = fvec3_sub(model.vertices[i].pos, grid.min);
   }
   // Create mesh
-  bbox_max = fvec3_sub(bbox_max, bbox_min);
-  bbox_min = fvec3_sub(bbox_min, bbox_min);
-  mesh bbox = bbox_create(bbox_min, bbox_max, vert_buffer, elem_buffer);
+  grid.max = fvec3_sub(grid.max, grid.min);
+  grid.min = fvec3_sub(grid.min, grid.min);
   // Start voxelization. 
   // Create an array that contains the enabled voxels
   u32 count = resolution * resolution * resolution;
@@ -428,5 +437,5 @@ mesh model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_
       }
     }
   }
-  return bbox;
+  return grid;
 }
