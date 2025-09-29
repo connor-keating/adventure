@@ -140,7 +140,8 @@ int main(int argc, char **argv)
 
   // Voxelize the model
   i32 voxel_count = 4;
-  voxel_grid grid = model_voxelize(teapot_model, voxel_count, &vert_buffer_lines, &elem_buffer_lines, &scratch);
+  // TODO: Where should the memory of the grid be stored
+  voxel_grid grid = model_voxelize(teapot_model, voxel_count, &vert_buffer_lines, &elem_buffer_lines, &memory);
   mesh bbox = bbox_create(grid.min, grid.max, &vert_buffer_lines, &elem_buffer_lines);
   // Update model
   render_buffer_push(lines_gpu, (void*)teapot_model.vertices, 0, teapot_buffer_size);
@@ -167,10 +168,11 @@ int main(int argc, char **argv)
 
   // I want the grid to be controlled as a 3D texture.
   u32 grid_element_count = grid_shape.x * grid_shape.y * grid_shape.z;
-  u8 *grid_data = arena_push_array(&scratch, grid_element_count, u8);
-  memset(grid_data, 255, grid_element_count * sizeof(u8));
+  // u8 *grid_data = arena_push_array(&scratch, grid_element_count, u8);
+  // memset(grid_data, 255, grid_element_count * sizeof(u8));
+  for (size_t i = 0; i < grid_element_count; ++i) grid.contents[i] = grid.contents[i] * 255;
 
-  u32 grid_texture_id = texture3d_init(grid_data, grid_shape);
+  u32 grid_texture_id = texture3d_init(grid.contents, grid_shape);
   // TODO: Renderer needs a better way of handling texture slots
   i32 grid_texture_slot = 1;
 
