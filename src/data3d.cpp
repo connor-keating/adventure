@@ -355,9 +355,8 @@ mesh model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_
   // Create an array that contains the enabled voxels
   u32 count = resolution * resolution * resolution;
   u8 *voxels = arena_push_array(scratch, count, u8);
-  return bbox;
   // Loop for each triangle
-  // u64 tri_count = ceil(model.index_count / 3);
+  u64 tri_count = ceil(model.index_count / 3);
   for (i64 i = 0; i < model.index_count; i+=3)
   {
     // Triangle vertices
@@ -401,7 +400,7 @@ mesh model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_
     // For each overlapping voxel examine YZ plane
     for (u32 y = grid_min.x; y <= grid_max.x; ++y)
     {
-      for (u32 z = grid_min.y; y <= grid_max.y; ++z)
+      for (u32 z = grid_min.y; z <= grid_max.y; ++z)
       {
         // 1. Check the location of the point and the triangle
         fvec2 point = fvec2{{ 
@@ -410,7 +409,6 @@ mesh model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_
         }};
         // Translate triangle so that point is origin
         u32 is_colliding = point_in_tri(v0_yz, v1_yz, v2_yz, point);
-        // TODO: TopLeftEdge function
         // 2. Check if point is inside, or touching an edge.
         if (
           ( (is_colliding == 1) && top_left_edge(v0_yz, v1_yz) ) ||
@@ -430,4 +428,5 @@ mesh model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_
       }
     }
   }
+  return bbox;
 }
