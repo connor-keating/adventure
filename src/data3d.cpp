@@ -355,6 +355,7 @@ mesh model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_
   // Create an array that contains the enabled voxels
   u32 count = resolution * resolution * resolution;
   u8 *voxels = arena_push_array(scratch, count, u8);
+  return bbox;
   // Loop for each triangle
   // u64 tri_count = ceil(model.index_count / 3);
   for (i64 i = 0; i < model.index_count; i+=3)
@@ -429,5 +430,4 @@ mesh model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_
       }
     }
   }
-  return bbox;
 }
