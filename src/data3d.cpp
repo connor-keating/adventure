@@ -305,7 +305,7 @@ void voxel_grid_init(arena *a, fvec3 counts)
 }
 
 
-voxel_grid model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_buffer, arena *scratch)
+voxel_grid model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_buffer, arena *memory)
 {
   // Initialize output
   voxel_grid grid = {};
@@ -350,7 +350,7 @@ voxel_grid model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena 
   f32 bbox_divisor = (1.0f/resolution);
   fvec3 units = fvec3_scale(bbox_diff, bbox_divisor);
   // Set all verts of the model to its cube bbox min
-  vertex *verts_new = arena_push_array(scratch, model.vert_count, vertex);
+  vertex *verts_new = arena_push_array(memory, model.vert_count, vertex);
   // the cubed bbox_min
   // TODO: Should you update the model or make a copy?
   for (int i = 0; i < model.vert_count; ++i)
@@ -363,7 +363,8 @@ voxel_grid model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena 
   // Start voxelization. 
   // Create an array that contains the enabled voxels
   u32 count = resolution * resolution * resolution;
-  u8 *voxels = arena_push_array(scratch, count, u8);
+  grid.contents = arena_push_array(memory, count, u8);
+  memset(grid.contents, 0, count*sizeof(grid.contents[0]));
   // Loop for each triangle
   u64 tri_count = ceil(model.index_count / 3);
   for (i64 i = 0; i < model.index_count; i+=3)
@@ -431,7 +432,7 @@ voxel_grid model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena 
           for (u32 x = 0; x <= xmax; ++x)
           {
             u32 location = x + (y * row_stride) + (z * slice_stride);
-            voxels[location] = 1;
+            grid.contents[location] = 1;
           }
         }
       }
