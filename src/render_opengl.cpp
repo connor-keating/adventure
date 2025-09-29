@@ -79,6 +79,9 @@ typedef ptrdiff_t   GLintptr;
 #define GL_PROGRAM_POINT_SIZE             0x8642
 #define GL_R8                             0x8229
 #define GL_SHADER_STORAGE_BUFFER          0x90D2
+#define GL_TEXTURE_3D                     0x806F
+#define GL_TEXTURE_WRAP_R                 0x8072
+#define GL_MAX_3D_TEXTURE_SIZE            0x8073
 #pragma endregion
 
 
@@ -130,8 +133,10 @@ typedef void (APIENTRY  *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum
     GL_FUNC_SIGNATURE(void, glDebugMessageInsert, GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const char *message)              \
     GL_FUNC_SIGNATURE(void, glVertexAttribDivisor, GLuint index, GLuint divisor)                                                                            \
     GL_FUNC_SIGNATURE(void, glDrawElementsInstanced, GLenum mode, GLsizei count, GLenum type, const void * indices, GLsizei primcount)                      \
-    GL_FUNC_SIGNATURE(void, glBindBufferBase,	GLenum target, GLuint index, GLuint buffer)                      \
-
+    GL_FUNC_SIGNATURE(void, glBindBufferBase,	GLenum target, GLuint index, GLuint buffer)                                                                   \
+    GL_FUNC_SIGNATURE(void, glTexStorage3D, GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth)             \
+    GL_FUNC_SIGNATURE(void, glTexSubImage3D, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid * pixels) \
+    GL_FUNC_SIGNATURE(void, glTexImage3D, GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid * data) \
 
 
     // end of list 
@@ -522,11 +527,55 @@ u32 texture2d_1channel_init(void *image, u32 width, u32 height)
 }
 
 
-void texture_bind(i32 slot, u32 texture_id)
+u32 texture3d_init(void *data, fvec3 shape)
+{
+  // Save current unpack alignment
+  GLint prevUnpackAlign = 0;
+  glGetIntegerv(GL_UNPACK_ALIGNMENT, &prevUnpackAlign);
+  // Set pixel alignment to 1 byte (default is 4 bytes)
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  // Generate texture ID
+  u32 tex;
+  glGenTextures( 1, &tex );
+  glBindTexture( GL_TEXTURE_3D, tex );
+  // Mutable texture
+  glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, shape.x, shape.y, shape.z, 0, GL_RED, GL_UNSIGNED_BYTE, data);
+  // Describe texture behavior
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+  // Unbind texture
+  glBindTexture(GL_TEXTURE_3D, 0);
+  // Restore previous unpack alignment
+  glPixelStorei(GL_UNPACK_ALIGNMENT, prevUnpackAlign);
+  return tex;
+}
+
+
+i32 texture3d_maxsize()
+{
+  // Check 3D texture limits
+  i32 max3d;
+  glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, &max3d);
+  return max3d;
+}
+
+
+void texture2d_bind(i32 slot, u32 texture_id)
 {
   glActiveTexture(GL_TEXTURE0 + slot);
   glBindTexture(GL_TEXTURE_2D, texture_id);
 }
+
+
+void texture3d_bind(i32 slot, u32 texture_id)
+{
+  glActiveTexture(GL_TEXTURE0 + slot);
+  glBindTexture(GL_TEXTURE_3D, texture_id);
+}
+
 
 
 void uniform_set_i32(u32 shader_program, const char *name, i32 data)
@@ -579,7 +628,7 @@ void frame_init(render_state *state)
 {
   glViewport(0, 0, state->width, state->height);
   // Clear screen
-  glClearColor(0.01, 0.06, 0.06, 1.0f);
+  glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
