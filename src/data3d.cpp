@@ -428,6 +428,10 @@ voxel_grid model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena 
     f32 min_z = ceil(tri_bbox_min.y / units.z - 0.5f);
     f32 max_y = floor(tri_bbox_max.x / units.y - 0.5f);
     f32 max_z = floor(tri_bbox_max.y / units.z - 0.5f);
+
+    // Skip if bounding box is invalid (min > max means no voxel centers overlap)
+    if (min_y > max_y || min_z > max_z) continue;
+
     fvec2 grid_min = fvec2{ {min_y, min_z} };
     fvec2 grid_max = fvec2{ {max_y, max_z} };
     // Determine indexing strides
