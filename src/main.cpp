@@ -139,7 +139,7 @@ int main(int argc, char **argv)
   // mesh bbox = model_bbox_add(&vert_buffer_lines, &elem_buffer_lines, teapot_model);
 
   // Voxelize the model
-  i32 voxel_count = 4;
+  i32 voxel_count = 20;
   // TODO: Where should the memory of the grid be stored
   voxel_grid grid = model_voxelize(teapot_model, voxel_count, &vert_buffer_lines, &elem_buffer_lines, &memory);
   mesh bbox = bbox_create(grid.min, grid.max, &vert_buffer_lines, &elem_buffer_lines);
