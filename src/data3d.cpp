@@ -62,7 +62,7 @@ internal bool triangle_is_ccw(fvec2 v0, fvec2 v1, fvec2 v2)
 }
 
 
-internal i32 voxel_x_get(fvec3 n, fvec3 v0, fvec2 point)
+internal f32 voxel_x_get(fvec3 n, fvec3 v0, fvec2 point)
 {
   // return ( -(tri_normal.y * (point.x - v0.y) + tri_normal.z * (point.y - v0.z) ) / tri_normal.x + v0.x);
   return (-(n.y * (point.x - v0.y) + n.z * (point.y - v0.z)) / n.x + v0.x);
@@ -124,7 +124,7 @@ bool point_in_tri(fvec2 v0, fvec2 v1, fvec2 v2, fvec2 point)
   f32 t3 = fabs(cross2(pc, pa));
   f32 pcpa_y = pc.x * pa.x;
   f32 pcpa_z = pc.y * pa.y;
-  bool overlapping3 = (t3 < float_error) && (pcpa_y <= 0) && (pcpa_y <= 0);
+  bool overlapping3 = (t3 < float_error) && (pcpa_y <= 0) && (pcpa_z <= 0);
   if (overlapping3) return 3;
   if ((t1 * t2 > 0) && (t1 * t3 > 0))
   {
@@ -434,9 +434,9 @@ voxel_grid model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena 
     u32 row_stride = resolution;
     u32 slice_stride = resolution * resolution;
     // For each overlapping voxel examine YZ plane
-    for (u32 y = grid_min.x; y <= grid_max.x; ++y)
+    for (u32 y = grid_min.x; y <= (u32)ceil(grid_max.x); ++y)
     {
-      for (u32 z = grid_min.y; z <= grid_max.y; ++z)
+      for (u32 z = grid_min.y; z <= (u32)ceil(grid_max.y); ++z)
       {
         // 1. Check the location of the point and the triangle
         fvec2 point = fvec2{{ 
@@ -454,7 +454,7 @@ voxel_grid model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena 
         )
         {
           // 3. Get X coordinate of the voxel
-          u32 xmax = i32( voxel_x_get(norm, v0, point) / units.x - 0.5f );
+          u32 xmax = (u32) floor( voxel_x_get(norm, v0, point) / units.x );
           for (u32 x = 0; x <= xmax; ++x)
           {
             u32 location = x + (y * row_stride) + (z * slice_stride);
