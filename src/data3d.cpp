@@ -62,17 +62,42 @@ internal bool triangle_is_ccw(fvec2 v0, fvec2 v1, fvec2 v2)
 }
 
 
-internal i32 voxel_x_get(fvec3 tri_normal, fvec3 v0, fvec2 point)
+internal i32 voxel_x_get(fvec3 n, fvec3 v0, fvec2 point)
 {
-  return ( -(tri_normal.y * (point.x - v0.y) + tri_normal.z * (point.y - v0.z) ) / tri_normal.x + v0.x);
+  // return ( -(tri_normal.y * (point.x - v0.y) + tri_normal.z * (point.y - v0.z) ) / tri_normal.x + v0.x);
+  return (-(n.y * (point.x - v0.y) + n.z * (point.y - v0.z)) / n.x + v0.x);
 }
 
 
 internal bool top_left_edge(fvec2 v0, fvec2 v1)
 {
-  return ( (v1.y < v0.y) || (v1.y == v0.y && v0.x > v1.x) );
+  // return ( (v1.y < v0.y) || (v1.y == v0.y && v0.x > v1.x) );
+  return ((v1.y < v0.y) || (v1.y == v0.y && v0.x > v1.x));
 }
 
+int check_point_triangle(fvec2 v0, fvec2 v1, fvec2 v2, fvec2 point) {
+  f32 float_error = 0.000001;
+  fvec2 PA = fvec2_sub(point, v0);
+  fvec2 PB = fvec2_sub(point, v1);
+  fvec2 PC = fvec2_sub(point, v2);
+
+  float t1 = PA.x * PB.y - PA.y * PB.x;
+  if (std::fabs(t1) < float_error && PA.x * PB.x <= 0 && PA.y * PB.y <= 0)
+    return 1;
+
+  float t2 = PB.x * PC.y - PB.y * PC.x;
+  if (std::fabs(t2) < float_error && PB.x * PC.x <= 0 && PB.y * PC.y <= 0)
+    return 2;
+
+  float t3 = PC.x * PA.y - PC.y * PA.x;
+  if (std::fabs(t3) < float_error && PC.x * PA.x <= 0 && PC.y * PA.y <= 0)
+    return 3;
+
+  if (t1 * t2 > 0 && t1 * t3 > 0)
+    return 0;
+  else
+    return -1;
+}
 
 // A point P lies inside a ccw triangle ABC iff P lies to the left of lines AB, BC, and CA.
 bool point_in_tri(fvec2 v0, fvec2 v1, fvec2 v2, fvec2 point)
@@ -350,7 +375,7 @@ voxel_grid model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena 
   f32 bbox_divisor = (1.0f/resolution);
   fvec3 units = fvec3_scale(bbox_diff, bbox_divisor);
   // Set all verts of the model to its cube bbox min
-  vertex *verts_new = arena_push_array(memory, model.vert_count, vertex);
+  // vertex *verts_new = arena_push_array(memory, model.vert_count, vertex);
   // the cubed bbox_min
   // TODO: Should you update the model or make a copy?
   for (int i = 0; i < model.vert_count; ++i)
@@ -379,6 +404,7 @@ voxel_grid model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena 
     fvec3 e2 = fvec3_sub(v0, v2);
     // Normal vector for triangle
     fvec3 norm = normalize3(cross3(e0, e1));
+    if (fabs(norm.x) < 0.000001f) continue;
     // Project points into yz plane
     fvec2 v0_yz = fvec2{ {v0.y, v0.z} };
     fvec2 v1_yz = fvec2{ {v1.y, v1.z} };
@@ -418,7 +444,7 @@ voxel_grid model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena 
           ((z + 0.5f) * units.z)
         }};
         // Translate triangle so that point is origin
-        u32 is_colliding = point_in_tri(v0_yz, v1_yz, v2_yz, point);
+        u32 is_colliding = check_point_triangle(v0_yz, v1_yz, v2_yz, point);
         // 2. Check if point is inside, or touching an edge.
         if (
           ( (is_colliding == 1) && top_left_edge(v0_yz, v1_yz) ) ||
@@ -428,11 +454,11 @@ voxel_grid model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena 
         )
         {
           // 3. Get X coordinate of the voxel
-          u32 xmax = u32( voxel_x_get(norm, v0, point) / units. x - 0.5f );
+          u32 xmax = i32( voxel_x_get(norm, v0, point) / units.x - 0.5f );
           for (u32 x = 0; x <= xmax; ++x)
           {
             u32 location = x + (y * row_stride) + (z * slice_stride);
-            grid.contents[location] = 1;
+            grid.contents[location] ^= 1;
           }
         }
       }
