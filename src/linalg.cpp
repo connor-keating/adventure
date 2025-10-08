@@ -178,6 +178,13 @@ fvec3 fvec3_scale(fvec3 vec, f32 scalar)
 }
 
 
+inline f32 dot2(fvec2 a, fvec2 b)
+{
+  f32 product = (a.x*b.x) + (a.y*b.y);
+  return product;
+}
+
+
 inline f32 dot3(fvec3 a, fvec3 b)
 {
   f32 product = (a.x*b.x) + (a.y*b.y) + (a.z*b.z);
