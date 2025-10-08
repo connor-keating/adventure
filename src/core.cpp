@@ -167,10 +167,6 @@ void arena_free_last(arena *a)
 
 void arena_free_all(arena *a)
 {
-  #if _DEBUG
-  // During development I want to ensure I don't use freed memory.
-  memset(a->buffer, 0, a->length);
-  #endif
   a->offset_new = 0;
   a->offset_old = 0;
 }
