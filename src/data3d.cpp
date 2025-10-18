@@ -391,8 +391,8 @@ voxel_grid model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena 
     // Calculate the critical point c (see paper)
     fvec3 c = {};
     c.x = (n.x > 0.0f) ? units.x : 0.0f;
-    c.y = (n.y > 0.0f) ? units.x : 0.0f;
-    c.z = (n.z > 0.0f) ? units.x : 0.0f;
+    c.y = (n.y > 0.0f) ? units.y : 0.0f;
+    c.z = (n.z > 0.0f) ? units.z : 0.0f;
     f32 d1 = dot3(n, fvec3_sub(c, v0));
     f32 d2 = dot3(n, fvec3_sub(fvec3_sub(units, c), v0));
     // XY plane normals
@@ -454,7 +454,7 @@ voxel_grid model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena 
         for (i32 x = tri_min_grid_x; x <= tri_max_grid_x; x++)
         {
           // Plane test
-          fvec3 p = fvec3_min(v0, fvec3_min(v1, v2));
+          fvec3 p = fvec3{ {(f32)x * units.x, (f32)y * units.y, (f32)z * units.z} };
           f32 n_dot_p = dot3(n, p);
           bool plane_overlap = ( (n_dot_p + d1) * (n_dot_p + d2) ) <= 0.0f;
           if (plane_overlap == false)
