@@ -376,9 +376,7 @@ voxel_grid model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena 
   grid.max = fvec3_sub(grid.max, grid.min);
   grid.min = fvec3_sub(grid.min, grid.min);
   // Loop through each triangle
-  // TODO: Is this loop properly looping over each triangle?( for (i64 i = 0; i < tri_count; i+=3) )?
-  u64 tri_count = ceil(model.index_count / 3);
-  for (i64 i = 0; i < tri_count; i+=3)
+  for (i64 i = 0; i < model.index_count; i+=3)
   {
     // Triangle vertices
     fvec3 v0 = model.vertices[model.indices[i+0]].pos;
