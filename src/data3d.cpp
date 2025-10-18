@@ -333,12 +333,170 @@ void voxel_grid_init(arena *a, fvec3 counts)
 voxel_grid model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena *elem_buffer, arena *memory)
 {
   voxel_grid grid = {};
-  grid.min = model_min(model);
-  grid.max = model_max(model);
-  // Create an array that contains the enabled voxels
+  // Create an array that contains the voxel grid
   u32 count = resolution * resolution * resolution;
   grid.contents = arena_push_array(memory, count, u8);
   memset(grid.contents, 0, count*sizeof(grid.contents[0]));
+  // Get model bounding box and its size
+  grid.min = model_min(model);
+  grid.max = model_max(model);
+  fvec3 lengths = fvec3_sub(grid.max, grid.min);
+  f32 max_length = fvec3_max_elem(lengths);
+  // Force BBox to be a cube of even lengths
+  if (max_length != lengths.x)
+  {
+    f32 delta = max_length - lengths.x;      // compute differences between largest length and current length.
+    f32 padding = delta / 2.0f;              // Half of the total padding.
+    grid.min.x = grid.min.x - padding;       // Apply padding before model min.
+    grid.max.x = grid.max.x + padding;       // Apply padding after model max.
+  }
+  if (max_length != lengths.y)
+  {
+    f32 delta = max_length - lengths.y;      // compute differences between largest length and current length.
+    f32 padding = delta / 2.0f;              // Half of the total padding.
+    grid.min.y = grid.min.y - padding;       // Apply padding before model min.
+    grid.max.y = grid.max.y + padding;       // Apply padding after model max.
+  }
+  if (max_length != lengths.z)
+  {
+    f32 delta = max_length - lengths.z;      // compute differences between largest length and current length.
+    f32 padding = delta / 2.0f;              // Half of the total padding.
+    grid.min.z = grid.min.z - padding;       // Apply padding before model min.
+    grid.max.z = grid.max.z + padding;       // Apply padding after model max.
+  }
+  // Calculate voxel units
+  fvec3 bbox_diff = fvec3_sub(grid.max, grid.min);
+  f32 bbox_divisor = (1.0f/resolution);
+  fvec3 units = fvec3_scale(bbox_diff, bbox_divisor);
+  // Set all vertices to min = (0,0,0)
+  for (int i = 0; i < model.vert_count; ++i)
+  {
+    model.vertices[i].pos = fvec3_sub(model.vertices[i].pos, grid.min);
+  }
+  grid.max = fvec3_sub(grid.max, grid.min);
+  grid.min = fvec3_sub(grid.min, grid.min);
+  // Loop through each triangle
+  // TODO: Is this loop properly looping over each triangle?( for (i64 i = 0; i < tri_count; i+=3) )?
+  u64 tri_count = ceil(model.index_count / 3);
+  for (i64 i = 0; i < tri_count; i+=3)
+  {
+    // Triangle vertices
+    fvec3 v0 = model.vertices[model.indices[i+0]].pos;
+    fvec3 v1 = model.vertices[model.indices[i+1]].pos;
+    fvec3 v2 = model.vertices[model.indices[i+2]].pos;
+    // Triangle edges
+    fvec3 e0 = fvec3_sub(v1, v0);
+    fvec3 e1 = fvec3_sub(v2, v1);
+    fvec3 e2 = fvec3_sub(v0, v2);
+    // Normal vector pointing up from the triangle
+    fvec3 n = normalize3(cross3(e0, e1));
+    // Calculate the critical point c (see paper)
+    fvec3 c = {};
+    c.x = (n.x > 0.0f) ? units.x : 0.0f;
+    c.y = (n.y > 0.0f) ? units.x : 0.0f;
+    c.z = (n.z > 0.0f) ? units.x : 0.0f;
+    f32 d1 = dot3(n, fvec3_sub(c, v0));
+    f32 d2 = dot3(n, fvec3_sub(fvec3_sub(units, c), v0));
+    // XY plane normals
+    fvec2 n_xy_e0 = fvec2{ {-e0.y, e0.x} };
+    fvec2 n_xy_e1 = fvec2{ {-e1.y, e1.x} };
+    fvec2 n_xy_e2 = fvec2{ {-e2.y, e2.x} };
+    if (n.z < 0.0f)
+    {
+      n_xy_e0 = fvec2_scale(n_xy_e0, -1.0f);
+      n_xy_e1 = fvec2_scale(n_xy_e1, -1.0f);
+      n_xy_e2 = fvec2_scale(n_xy_e2, -1.0f);
+    }
+    f32 d_xy_e0 = (-1.0f * dot2(n_xy_e0, fvec2_init(v0.x, v0.y))) + fmaxf(0.0f, units.x * n_xy_e0.x) + fmaxf(0.0f, units.y * n_xy_e0.y);
+    f32 d_xy_e1 = (-1.0f * dot2(n_xy_e1, fvec2_init(v1.x, v1.y))) + fmaxf(0.0f, units.x * n_xy_e1.x) + fmaxf(0.0f, units.y * n_xy_e1.y);
+    f32 d_xy_e2 = (-1.0f * dot2(n_xy_e2, fvec2_init(v2.x, v2.y))) + fmaxf(0.0f, units.x * n_xy_e2.x) + fmaxf(0.0f, units.y * n_xy_e2.y);
+    // YZ plane normals
+    fvec2 n_yz_e0 = fvec2{ {-e0.z, e0.y} };
+    fvec2 n_yz_e1 = fvec2{ {-e1.z, e1.y} };
+    fvec2 n_yz_e2 = fvec2{ {-e2.z, e2.y} };
+    if (n.x < 0.0f)
+    {
+      n_yz_e0 = fvec2_scale(n_yz_e0, -1.0f);
+      n_yz_e1 = fvec2_scale(n_yz_e1, -1.0f);
+      n_yz_e2 = fvec2_scale(n_yz_e2, -1.0f);
+    }
+    f32 d_yz_e0 = (-1.0f * dot2(n_yz_e0, fvec2_init(v0.y, v0.z))) + fmaxf(0.0f, units.y * n_yz_e0.x) + fmaxf(0.0f, units.z * n_yz_e0.y);
+    f32 d_yz_e1 = (-1.0f * dot2(n_yz_e1, fvec2_init(v1.y, v1.z))) + fmaxf(0.0f, units.y * n_yz_e1.x) + fmaxf(0.0f, units.z * n_yz_e1.y);
+    f32 d_yz_e2 = (-1.0f * dot2(n_yz_e2, fvec2_init(v2.y, v2.z))) + fmaxf(0.0f, units.y * n_yz_e2.x) + fmaxf(0.0f, units.z * n_yz_e2.y);
+    // ZX plane normals
+    fvec2 n_zx_e0 = fvec2{ {-e0.x, e0.z} };
+    fvec2 n_zx_e1 = fvec2{ {-e1.x, e1.z} };
+    fvec2 n_zx_e2 = fvec2{ {-e2.x, e2.z} };
+    if (n.y < 0.0f)
+    {
+      n_zx_e0 = fvec2_scale(n_zx_e0, -1.0f);
+      n_zx_e1 = fvec2_scale(n_zx_e1, -1.0f);
+      n_zx_e2 = fvec2_scale(n_zx_e2, -1.0f);
+    }
+    f32 d_zx_e0 = (-1.0f * dot2(n_zx_e0, fvec2_init(v0.z, v0.x))) + fmaxf(0.0f, units.x * n_zx_e0.x) + fmaxf(0.0f, units.z * n_zx_e0.y);
+    f32 d_zx_e1 = (-1.0f * dot2(n_zx_e1, fvec2_init(v1.z, v1.x))) + fmaxf(0.0f, units.x * n_zx_e1.x) + fmaxf(0.0f, units.z * n_zx_e1.y);
+    f32 d_zx_e2 = (-1.0f * dot2(n_zx_e2, fvec2_init(v2.z, v2.x))) + fmaxf(0.0f, units.x * n_zx_e2.x) + fmaxf(0.0f, units.z * n_zx_e2.y);
+    // Calculate the triangles bounding box in grid coordinates.
+    i32 grid_max = resolution - 1; // This is 0 to resolution-1 because I only work with uniform grids.
+    fvec3 tri_min_world = fvec3_min(v0, fvec3_min(v1, v2));
+    fvec3 tri_max_world = fvec3_max(v0, fvec3_max(v1, v2));
+    // grid min
+    i32 tri_min_grid_x = myclamp( (int)(tri_min_world.x / units.x), 0, grid_max );
+    i32 tri_min_grid_y = myclamp( (int)(tri_min_world.y / units.y), 0, grid_max );
+    i32 tri_min_grid_z = myclamp( (int)(tri_min_world.z / units.z), 0, grid_max );
+    // grid max
+    i32 tri_max_grid_x = myclamp( (int)(tri_max_world.x / units.x), 0, grid_max );
+    i32 tri_max_grid_y = myclamp( (int)(tri_max_world.y / units.y), 0, grid_max );
+    i32 tri_max_grid_z = myclamp( (int)(tri_max_world.z / units.z), 0, grid_max );
+    // For each voxel inside the triangle's bbox.
+    for (i32 z = tri_min_grid_z; z <= tri_max_grid_z; z++)
+    {
+      for (i32 y = tri_min_grid_y; y <= tri_max_grid_y; y++)
+      {
+        for (i32 x = tri_min_grid_x; x <= tri_max_grid_x; x++)
+        {
+          // Plane test
+          fvec3 p = fvec3_min(v0, fvec3_min(v1, v2));
+          f32 n_dot_p = dot3(n, p);
+          bool plane_overlap = ( (n_dot_p + d1) * (n_dot_p + d2) ) <= 0.0f;
+          if (plane_overlap == false)
+          {
+            // no voxel overlap
+            continue;
+          }
+          // Projection tests
+          f32 value = 0.0f;
+          // XY plane
+          fvec2 p_xy = fvec2_init(p.x, p.y);
+          value = dot2(n_xy_e0, p_xy) + d_xy_e0;
+          if (value < 0.0f) {continue;}
+          value = dot2(n_xy_e1, p_xy) + d_xy_e1;
+          if (value < 0.0f) {continue;}
+          value = dot2(n_xy_e2, p_xy) + d_xy_e2;
+          if (value < 0.0f) {continue;}
+          // YZ plane
+          fvec2 p_yz = fvec2_init(p.y, p.z);
+          value = dot2(n_yz_e0, p_yz) + d_yz_e0;
+          if (value < 0.0f) {continue;}
+          value = dot2(n_yz_e1, p_yz) + d_yz_e1;
+          if (value < 0.0f) {continue;}
+          value = dot2(n_yz_e2, p_yz) + d_yz_e2;
+          if (value < 0.0f) {continue;}
+          // ZX plane
+          fvec2 p_zx = fvec2_init(p.z, p.x);
+          value = dot2(n_zx_e0, p_zx) + d_zx_e0;
+          if (value < 0.0f) {continue;}
+          value = dot2(n_zx_e1, p_zx) + d_zx_e1;
+          if (value < 0.0f) {continue;}
+          value = dot2(n_zx_e2, p_zx) + d_zx_e2;
+          if (value < 0.0f) {continue;}
+          // If all values are less than 0.0f the voxel is overlapping
+          size_t location = x + (y * resolution) + (z * resolution * resolution);
+          grid.contents[location] = 1;
+        }
+      }
+    }
+  }
   return grid;
 }
 

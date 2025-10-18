@@ -72,6 +72,13 @@ void fmat4_lookat(fmat4 out, fvec3 eye, fvec3 center, fvec3 up);
 // void fmat4_lookat_cmaj(fmat4 m, fvec3 eye, fvec3 center, fvec3 up);
 
 
+inline fvec2 fvec2_init(f32 x, f32 y)
+{
+  fvec2 v = { .array = {x, y} };
+  return v;
+}
+
+
 ivec3 ivec3_uniform(i32 value)
 {
   return ivec3{ {value, value, value} };
@@ -166,6 +173,14 @@ fvec3 fvec3_min(fvec3 a, fvec3 b)
   out.y = (a.y <= b.y) ? a.y : b.y;
   out.z = (a.z <= b.z) ? a.z : b.z;
   return out;
+}
+
+
+fvec2 fvec2_scale(fvec2 vec, f32 scalar)
+{
+  vec.x *= scalar;
+  vec.y *= scalar;
+  return vec;
 }
 
 
