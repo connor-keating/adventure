@@ -56,13 +56,13 @@ int main(int argc, char **argv)
 #else
   void *memory_base = 0;
 #endif
-  size_t memory_size = (size_t) Gigabytes(1);
+  size_t memory_size = (size_t) Gigabytes(5);
   void *raw_memory = platform_memory_alloc(memory_base, memory_size);
   arena memory = arena_init(raw_memory, memory_size);
 
   // Init CPU buffers
   // Scratch arena that can be freed frequently.
-  u32 scratch_max = Megabytes(20);
+  u32 scratch_max = Gigabytes(3);
   arena scratch = subarena_init(&memory, scratch_max);
   // Render buffer that contains line data
   u32 lines_max = 100000;
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
   }
 
   // Read in model data
-  mesh teapot_model = model_load_obj("assets\\teapot.obj", &vert_buffer_lines, &elem_buffer_lines);
+  mesh teapot_model = model_load_obj("assets\\bunny.obj", &vert_buffer_lines, &elem_buffer_lines);
   size_t teapot_buffer_size = sizeof(teapot_model.vertices[0]) * teapot_model.vert_count;
   render_buffer_push(lines_gpu, (void*)teapot_model.vertices, 0, teapot_buffer_size);
   i64 teapot_starting_byte = model_starting_offset(&elem_buffer_lines, teapot_model);
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
   // mesh bbox = model_bbox_add(&vert_buffer_lines, &elem_buffer_lines, teapot_model);
 
   // Voxelize the model
-  i32 voxel_count = 20;
+  i32 voxel_count = 50;
   // TODO: Where should the memory of the grid be stored
   voxel_grid grid = model_voxelize(teapot_model, voxel_count, &vert_buffer_lines, &elem_buffer_lines, &memory);
   mesh bbox = bbox_create(grid.min, grid.max, &vert_buffer_lines, &elem_buffer_lines);
@@ -156,6 +156,9 @@ int main(int argc, char **argv)
     bbox.indices[i] += bbox_starting_index;
   }
   render_buffer_elements_push(lines_gpu, bbox.indices, bbox_starting_byte, bbox_bytes);
+
+  // Free scratch
+  arena_free_all(&scratch);
 
   // Set up instanced cube rendering for grid.
   mesh cube = primitive_cube(&scratch);
