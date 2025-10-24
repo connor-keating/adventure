@@ -538,6 +538,7 @@ voxel_grid model_voxelize2(mesh model, u32 resolution, arena *vert_buffer, arena
   f32 bbox_divisor = (1.0f/resolution);
   fvec3 units = fvec3_scale(bbox_diff, bbox_divisor);
 
+  // Note: If you don't do this, you won't edit the model. In the loop just subtract each vN by grid.min and divide by units.
   // Transform vertices to voxel grid space (translate and scale)
   // After this, vertices are in a coordinate system where each voxel is 1x1x1
   for (int i = 0; i < model.vert_count; ++i)
