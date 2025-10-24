@@ -538,6 +538,19 @@ voxel_grid model_voxelize2(mesh model, u32 resolution, arena *vert_buffer, arena
   f32 bbox_divisor = (1.0f/resolution);
   fvec3 units = fvec3_scale(bbox_diff, bbox_divisor);
 
+  // Transform vertices to voxel grid space (translate and scale)
+  // After this, vertices are in a coordinate system where each voxel is 1x1x1
+  for (int i = 0; i < model.vert_count; ++i)
+  {
+    model.vertices[i].pos = fvec3_sub(model.vertices[i].pos, grid.min);
+    model.vertices[i].pos.x /= units.x;
+    model.vertices[i].pos.y /= units.y;
+    model.vertices[i].pos.z /= units.z;
+  }
+  grid.max = fvec3_sub(grid.max, grid.min);
+  grid.min = fvec3_sub(grid.min, grid.min);
+
+
   // Loop through each triangle
   for (i64 i = 0; i < model.index_count; i+=3)
   {
@@ -547,14 +560,11 @@ voxel_grid model_voxelize2(mesh model, u32 resolution, arena *vert_buffer, arena
     fvec3 v1_world = model.vertices[model.indices[i+1]].pos;
     fvec3 v2_world = model.vertices[model.indices[i+2]].pos;
 
-    fvec3 v0 = fvec3_sub(v0_world, grid.min);
-    v0.x /= units.x; v0.y /= units.y; v0.z /= units.z;
+    // Triangle vertices (already in voxel grid space)
+    fvec3 v0 = model.vertices[model.indices[i+0]].pos;
+    fvec3 v1 = model.vertices[model.indices[i+1]].pos;
+    fvec3 v2 = model.vertices[model.indices[i+2]].pos;
 
-    fvec3 v1 = fvec3_sub(v1_world, grid.min);
-    v1.x /= units.x; v1.y /= units.y; v1.z /= units.z;
-
-    fvec3 v2 = fvec3_sub(v2_world, grid.min);
-    v2.x /= units.x; v2.y /= units.y; v2.z /= units.z;
     // determine bounding box in xz
     fvec2 vmin = fvec2_init(
       min(v0.x, min(v1.x, v2.x)),
@@ -662,7 +672,6 @@ voxel_grid model_voxelize2(mesh model, u32 resolution, arena *vert_buffer, arena
       }
     }
   }
-
   return grid;
 }
 
