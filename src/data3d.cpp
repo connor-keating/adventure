@@ -499,6 +499,174 @@ voxel_grid model_voxelize(mesh model, u32 resolution, arena *vert_buffer, arena 
 }
 
 
+voxel_grid model_voxelize2(mesh model, u32 resolution, arena *vert_buffer, arena *elem_buffer, arena *memory)
+{
+  voxel_grid grid = {};
+  // Create an array that contains the voxel grid
+  u32 count = resolution * resolution * resolution;
+  grid.contents = arena_push_array(memory, count, u8);
+  memset(grid.contents, 0, count*sizeof(grid.contents[0]));
+  // Get model bounding box and its size
+  grid.min = model_min(model);
+  grid.max = model_max(model);
+  fvec3 lengths = fvec3_sub(grid.max, grid.min);
+  f32 max_length = fvec3_max_elem(lengths);
+  // Force BBox to be a cube of even lengths
+  if (max_length != lengths.x)
+  {
+    f32 delta = max_length - lengths.x;      // compute differences between largest length and current length.
+    f32 padding = delta / 2.0f;              // Half of the total padding.
+    grid.min.x = grid.min.x - padding;       // Apply padding before model min.
+    grid.max.x = grid.max.x + padding;       // Apply padding after model max.
+  }
+  if (max_length != lengths.y)
+  {
+    f32 delta = max_length - lengths.y;      // compute differences between largest length and current length.
+    f32 padding = delta / 2.0f;              // Half of the total padding.
+    grid.min.y = grid.min.y - padding;       // Apply padding before model min.
+    grid.max.y = grid.max.y + padding;       // Apply padding after model max.
+  }
+  if (max_length != lengths.z)
+  {
+    f32 delta = max_length - lengths.z;      // compute differences between largest length and current length.
+    f32 padding = delta / 2.0f;              // Half of the total padding.
+    grid.min.z = grid.min.z - padding;       // Apply padding before model min.
+    grid.max.z = grid.max.z + padding;       // Apply padding after model max.
+  }
+  // Calculate voxel units
+  fvec3 bbox_diff = fvec3_sub(grid.max, grid.min);
+  f32 bbox_divisor = (1.0f/resolution);
+  fvec3 units = fvec3_scale(bbox_diff, bbox_divisor);
+
+  // Loop through each triangle
+  for (i64 i = 0; i < model.index_count; i+=3)
+  {
+    // Get triangle vertices and transform to voxel grid space
+    // (translate by grid.min and scale so each voxel is 1x1x1)
+    fvec3 v0_world = model.vertices[model.indices[i+0]].pos;
+    fvec3 v1_world = model.vertices[model.indices[i+1]].pos;
+    fvec3 v2_world = model.vertices[model.indices[i+2]].pos;
+
+    fvec3 v0 = fvec3_sub(v0_world, grid.min);
+    v0.x /= units.x; v0.y /= units.y; v0.z /= units.z;
+
+    fvec3 v1 = fvec3_sub(v1_world, grid.min);
+    v1.x /= units.x; v1.y /= units.y; v1.z /= units.z;
+
+    fvec3 v2 = fvec3_sub(v2_world, grid.min);
+    v2.x /= units.x; v2.y /= units.y; v2.z /= units.z;
+    // determine bounding box in xz
+    fvec2 vmin = fvec2_init(
+      min(v0.x, min(v1.x, v2.x)),
+      min(v0.z, min(v1.z, v2.z))
+    );
+    fvec2 vmax = fvec2_init(
+      max(v0.x, max(v1.x, v2.x)),
+      max(v0.z, max(v1.z, v2.z))
+    );
+    // derive bounding box of covered voxel columns
+    ivec2 voxmin = ivec2_init(
+      max(0, i32(floor(vmin.x + 0.4999f))),
+      max(0, i32(floor(vmin.y + 0.4999f)))
+    );
+    ivec2 voxmax = ivec2_init(
+      min(i32(resolution), i32(floor(vmax.x + 0.5f))),
+      min(i32(resolution), i32(floor(vmax.y + 0.5f)))
+    );
+
+    // check if any voxel columns are covered at all
+    if ( (voxmin.x >= voxmax.x) || (voxmin.y >= voxmax.y) )
+      continue;
+    
+    // triangle setup
+    const fvec3 e0 = fvec3_sub(v1, v0);
+    const fvec3 e1 = fvec3_sub(v2, v1);
+    const fvec3 e2 = fvec3_sub(v2, v0);
+    const fvec3 n = cross3(e0, e2);
+    if (n.y == 0.0f)
+      continue;
+
+    // triangle's plane
+    const f32 dtri = -1.0f * dot3(n, v0);
+
+    // edge equation
+    fvec2 ne0 = fvec2_init(-e0.z, e0.x);
+    fvec2 ne1 = fvec2_init(-e1.z, e1.x);
+    fvec2 ne2 = fvec2_init( e2.z,-e2.x);
+    if (n.y > 0.0f)
+    {
+      ne0 = fvec2_scale(ne0, -1.0f);
+      ne1 = fvec2_scale(ne1, -1.0f);
+      ne2 = fvec2_scale(ne2, -1.0f);
+    }
+    const f32 de0 = -1.0f * (ne0.x * v0.x + ne0.y * v0.z);
+    const f32 de1 = -1.0f * (ne1.x * v1.x + ne1.y * v1.z);
+    const f32 de2 = -1.0f * (ne2.x * v0.x + ne2.y * v0.z);
+
+    // Determine whether edge is left edge or top edge
+    const f32 eps = 1.17549435e-38f; // smallest normalized positive number
+    f32 ce0 = 0.0f;
+    f32 ce1 = 0.0f;
+    f32 ce2 = 0.0f;
+    if (ne0.x > 0.0f ||(ne0.x == 0.0f && ne0.y < 0.0f)) ce0 = eps;
+    if (ne1.x > 0.0f ||(ne1.x == 0.0f && ne1.y < 0.0f)) ce1 = eps;
+    if (ne2.x > 0.0f ||(ne2.x == 0.0f && ne2.y < 0.0f)) ce2 = eps;
+    const f32 ny_inv = 1.0f / n.y;
+
+    // determine covered pixels / volume columns
+    for (i32 z = voxmin.y; z < voxmax.y; z++)
+    {
+      for (i32 x = voxmin.x; x < voxmax.x; x++)
+      {
+        // pixel center in voxel grid space
+        fvec2 p = fvec2_init(f32(x) + 0.5f, f32(z) + 0.5f);
+        // test whether pixel is inside triangle
+        // if it is exactly on an edge, the ce* term makes the expression positive if the edge is a left or top edge
+        if (((dot2(ne0, p) + de0) + ce0) <= 0.0f) continue;
+        if (((dot2(ne1, p) + de1) + ce1) <= 0.0f) continue;
+        if (((dot2(ne2, p) + de2) + ce2) <= 0.0f) continue;
+
+        // project p onto plane along y axis (ray/plane intersection)
+        const f32 py = -1.0f * (p.x * n.x + p.y * n.z + dtri) * ny_inv;
+        i32 y = i32(py + 0.5f);
+        if(y < 0 || i32(resolution) <= y)
+          continue;
+        // flip voxel's state at intersection point
+        u32 location = x + (y * resolution) + (z * resolution * resolution);
+        grid.contents[location] ^= 1;
+      }
+    }
+  }
+
+  // Propagation pass: XOR each voxel with the one below it
+  // This propagates the inside/outside state upward through each column
+  for (i32 z = 0; z < resolution; z++)
+  {
+    for (i32 x = 0; x < resolution; x++)
+    {
+      // Start with the state at y=0
+      u32 location0 = x + (0 * resolution) + (z * resolution * resolution);
+      u8 last_state = grid.contents[location0];
+
+      // Propagate from y=1 upward
+      for (i32 y = 1; y < resolution; y++)
+      {
+        u32 location = x + (y * resolution) + (z * resolution * resolution);
+        u8 curr_state = grid.contents[location];
+        if (last_state != 0)
+        {
+          curr_state = curr_state ^ last_state;
+          grid.contents[location] = curr_state;
+        }
+        last_state = curr_state;
+      }
+    }
+  }
+
+  return grid;
+}
+
+
 voxel_grid model_voxelize_solid(mesh model, u32 resolution, arena *vert_buffer, arena *elem_buffer, arena *memory)
 {
   // Initialize output
