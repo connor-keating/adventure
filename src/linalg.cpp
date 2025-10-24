@@ -79,6 +79,13 @@ inline fvec2 fvec2_init(f32 x, f32 y)
 }
 
 
+inline ivec2 ivec2_init(i32 x, i32 y)
+{
+  ivec2 v = { .array = {x, y} };
+  return v;
+}
+
+
 ivec3 ivec3_uniform(i32 value)
 {
   return ivec3{ {value, value, value} };
