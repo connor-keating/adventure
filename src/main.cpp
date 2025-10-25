@@ -5,17 +5,14 @@
 
 #include "core.cpp"
 #include "linalg.cpp"
+#include "platform.h"
 
 
 // Globals
 global bool is_running;
 
 
-// Merge source code into single translation unit
-#ifdef PLATFORM_WINDOWS
-#include "platform_win32.cpp"
-#endif
-
+#if 0
 #ifdef _DX11
 #include "render_dx11.cpp"
 #elif _OPENGL
@@ -46,8 +43,17 @@ void input_reset(control_state *input_state)
     }
   }
 }
+#endif
 
 
+int main(int argc, char **argv)
+{
+  platform_status();
+  return 0;
+}
+
+
+#if 0
 int main(int argc, char **argv)
 {
   // Allocate all program memory upfront.
@@ -336,3 +342,4 @@ int main(int argc, char **argv)
 
   return 0;
 }
+#endif
