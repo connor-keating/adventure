@@ -128,27 +128,27 @@ int main(int argc, char **argv)
   }
 
   // Read in model data
-  mesh teapot_model = model_load_obj("assets\\bunny.obj", &vert_buffer_lines, &elem_buffer_lines);
-  size_t teapot_buffer_size = sizeof(teapot_model.vertices[0]) * teapot_model.vert_count;
-  render_buffer_push(lines_gpu, (void*)teapot_model.vertices, 0, teapot_buffer_size);
-  i64 teapot_starting_byte = model_starting_offset(&elem_buffer_lines, teapot_model);
-  i64 teapot_bytes = teapot_model.index_count * sizeof(u32);
-  render_buffer_elements_push(lines_gpu, teapot_model.indices, teapot_starting_byte, teapot_bytes);
+  mesh object_model = model_load_obj("assets\\bunny.obj", &vert_buffer_lines, &elem_buffer_lines);
+  size_t object_buffer_size = sizeof(object_model.vertices[0]) * object_model.vert_count;
+  render_buffer_push(lines_gpu, (void*)object_model.vertices, 0, object_buffer_size);
+  i64 object_starting_byte = model_starting_offset(&elem_buffer_lines, object_model);
+  i64 object_bytes = object_model.index_count * sizeof(u32);
+  render_buffer_elements_push(lines_gpu, object_model.indices, object_starting_byte, object_bytes);
 
   // Get bounding box
-  // mesh bbox = model_bbox_add(&vert_buffer_lines, &elem_buffer_lines, teapot_model);
+  // mesh bbox = model_bbox_add(&vert_buffer_lines, &elem_buffer_lines, object_model);
 
   // Voxelize the model
   i32 voxel_count = 50;
   // TODO: Where should the memory of the grid be stored
-  // voxel_grid grid = model_voxelize2(teapot_model, voxel_count, &vert_buffer_lines, &elem_buffer_lines, &memory);
-  voxel_grid grid = model_voxelize_solid(teapot_model, voxel_count, &vert_buffer_lines, &elem_buffer_lines, &memory);
+  // voxel_grid grid = model_voxelize2(object_model, voxel_count, &vert_buffer_lines, &elem_buffer_lines, &memory);
+  voxel_grid grid = model_voxelize_solid(object_model, voxel_count, &vert_buffer_lines, &elem_buffer_lines, &memory);
   mesh bbox = bbox_create(grid.min, grid.max, &vert_buffer_lines, &elem_buffer_lines);
   // Update model
-  render_buffer_push(lines_gpu, (void*)teapot_model.vertices, 0, teapot_buffer_size);
+  render_buffer_push(lines_gpu, (void*)object_model.vertices, 0, object_buffer_size);
   // Add bbox to renderer
   size_t bbox_vbo_size = sizeof(bbox.vertices[0]) * bbox.vert_count;
-  render_buffer_push(lines_gpu, (void*)bbox.vertices, teapot_buffer_size, bbox_vbo_size);
+  render_buffer_push(lines_gpu, (void*)bbox.vertices, object_buffer_size, bbox_vbo_size);
   i64 bbox_starting_byte = model_starting_offset(&elem_buffer_lines, bbox);
   i64 bbox_starting_index = bbox_starting_byte / sizeof(bbox.indices[0]);
   i64 bbox_bytes   = bbox.index_count * sizeof(u32);
@@ -263,22 +263,22 @@ int main(int argc, char **argv)
     // glm::vec3 tpos = glm::vec3(renderer.width * 0.5f, renderer.height * 0.5f, 0.0f);
     glm::vec3 tpos = glm::vec3(0.0f, 0.0f, 0.0f);
     // Add text data to gpu buffer
-    text_add(&text_buffer, "TEAPOT!", 6, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
+    text_add(&text_buffer, "TEXT!", 5, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
     render_buffer_push(text_gpu_buffer, text_buffer.buffer, 0, text_buffer.offset_new);
     // Draw text
     u32 text_vert_count = text_count_get(&text_buffer);
     draw_text(text_gpu_buffer, text_shader, text_vert_count);
 
-    glm::mat4 teapot_transform = glm::mat4(1.0f);
+    glm::mat4 object_transform = glm::mat4(1.0f);
     glm::vec3 rotation_axis_norm = glm::vec3(0,1,0);
-    teapot_transform = glm::translate(teapot_transform, target_gpu);
-    teapot_transform = glm::rotate(teapot_transform, angle, rotation_axis_norm);
-    teapot_transform = glm::translate(teapot_transform, -target_gpu);
-    glm::mat4 teapot_mvp = view_projection * teapot_transform;
+    object_transform = glm::translate(object_transform, target_gpu);
+    object_transform = glm::rotate(object_transform, angle, rotation_axis_norm);
+    object_transform = glm::translate(object_transform, -target_gpu);
+    glm::mat4 object_mvp = view_projection * object_transform;
     // Draw the model
-    uniform_set_mat4(lines_program, "view_projection", &teapot_mvp[0][0]);
-    i64 teapot_offset = model_starting_offset(&elem_buffer_lines, teapot_model);
-    draw_wireframe_elements(lines_gpu, lines_program, teapot_model.index_count, (void*)teapot_offset);
+    uniform_set_mat4(lines_program, "view_projection", &object_mvp[0][0]);
+    i64 object_offset = model_starting_offset(&elem_buffer_lines, object_model);
+    draw_wireframe_elements(lines_gpu, lines_program, object_model.index_count, (void*)object_offset);
 
     // Draw the model's bounding box 
     glm::mat4 perspective_model = glm::mat4(1.0f);
