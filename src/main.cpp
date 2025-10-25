@@ -51,6 +51,10 @@ int main(int argc, char **argv)
   // Create a window for the application
   platform_window window = platform_window_init();
   platform_window_show();
+  while (platform_is_running())
+  {
+    platform_message_process(&window);
+  }
   return 0;
 }
 
