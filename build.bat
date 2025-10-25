@@ -17,7 +17,18 @@ set linker_flags=-luser32 -lgdi32 -lwinmm -ld3d11 -ldxgi -lopengl32
 
 echo %assembly% compiling...
 
-clang++ %compiler_flags% %app_flags% main.cpp %code_files% -o %outdir%\%assembly%.exe %defines% %includes% %linker_flags%
+:: Build platform libraries
+
+:: Windows
+set plat_assembly=platform
+set plat_defines=-D_DEBUG -D_EXPORT
+set plat_includes=-I/src/ -I../external/
+set plat_flags_comp=-g -std=c++20 -shared -Wvarargs -Wall -Werror -Wno-deprecated -Wno-unused-function
+set plat_flags_link=-luser32 -lgdi32 -lwinmm
+clang++ %plat_flags_comp% %plat_defines% platform_win32.cpp core.cpp -o %OUTDIR%/%plat_assembly%.dll %plat_includes% %plat_flags_link%
+
+:: Build application
+clang++ %compiler_flags% %app_flags% main.cpp %code_files% -o %outdir%\%assembly%.exe %defines% %includes% %linker_flags% -L%OUTDIR% -l%plat_assembly%.lib
 
 popd 
 
