@@ -1,4 +1,6 @@
 
+#include "platform.h"
+
 #include <windows.h>
 
 #define TINYOBJ_LOADER_C_IMPLEMENTATION
@@ -13,17 +15,6 @@ struct platform_window
   f32 width;
   f32 height;
 };
-
-
-struct clock
-{
-  f64 secs_per_frame; // The amount of time between frames (seconds).
-  f64 ticks_per_sec;  // The frequencey of the performance counter which is fixed at start up and constant (Hz).
-  i64 curr;           // The current value of the counter at the start of the frame (ticks).
-  i64 prev;           // The value of the counter at the start of the previous frame (ticks).
-  f64 delta;          // The amount of seconds that have passed from the beginning of the frame to the end (secs).
-};
-
 
 enum control_bindings
 {
@@ -50,7 +41,7 @@ internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT messag
   {
     case WM_CLOSE:
     {
-      is_running = false;
+      // is_running = false;
       PostQuitMessage(0);
       break;
     }
@@ -112,6 +103,12 @@ internal void get_file_data(void* ctx, const char* filename, const int is_mtl, c
   size_t data_len = 0;
   *data = mmap_file(&data_len, filename);
   (*len) = data_len;
+}
+
+
+void platform_status()
+{
+  printf("Library working\n");
 }
 
 
