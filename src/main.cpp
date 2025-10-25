@@ -65,7 +65,7 @@ int main(int argc, char **argv)
   u32 scratch_max = Gigabytes(3);
   arena scratch = subarena_init(&memory, scratch_max);
   // Render buffer that contains line data
-  u32 lines_max = 100000;
+  u32 lines_max = 1000000;
   arena vert_buffer_lines = subarena_init(&memory, lines_max*sizeof(vertex));
   arena elem_buffer_lines = subarena_init(&memory, lines_max*sizeof(u32));
   // Text (chars) buffer
@@ -141,7 +141,8 @@ int main(int argc, char **argv)
   // Voxelize the model
   i32 voxel_count = 50;
   // TODO: Where should the memory of the grid be stored
-  voxel_grid grid = model_voxelize(teapot_model, voxel_count, &vert_buffer_lines, &elem_buffer_lines, &memory);
+  // voxel_grid grid = model_voxelize2(teapot_model, voxel_count, &vert_buffer_lines, &elem_buffer_lines, &memory);
+  voxel_grid grid = model_voxelize_solid(teapot_model, voxel_count, &vert_buffer_lines, &elem_buffer_lines, &memory);
   mesh bbox = bbox_create(grid.min, grid.max, &vert_buffer_lines, &elem_buffer_lines);
   // Update model
   render_buffer_push(lines_gpu, (void*)teapot_model.vertices, 0, teapot_buffer_size);
@@ -184,7 +185,7 @@ int main(int argc, char **argv)
   f32 angle_velocity = PI/4.0f;
   f32 angle = 0.0f;
   // How far is the camera from the model?
-  f32 cam_distance = 2.5*grid.max.z;
+  f32 cam_distance = 3*grid.max.z;
   // Instance shader toggle
   bool toggle = 0;
 
