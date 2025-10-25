@@ -11,6 +11,7 @@ struct platform_state
 {
   HWND handle;
   HINSTANCE instance;
+  bool is_running; 
 };
 
 enum control_bindings
@@ -42,7 +43,7 @@ internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT messag
   {
     case WM_CLOSE:
     {
-      // is_running = false;
+      state.is_running = false;
       PostQuitMessage(0);
       break;
     }
@@ -182,7 +183,6 @@ platform_window platform_window_init()
     0
   );
   ASSERT(window_success, "Failed to resize and open window.");
-  wind.is_running = true;
   wind.width = window_w;
   wind.height = window_h;
   wind.state = &state;
@@ -192,9 +192,29 @@ platform_window platform_window_init()
 
 void platform_window_show()
 {
+  state.is_running = true;
   i32 display_flags = SW_SHOW;
   ShowWindow(state.handle, display_flags);
   UpdateWindow(state.handle);
+}
+
+
+bool platform_is_running()
+{
+  return state.is_running;
+}
+
+
+void platform_message_process(platform_window *window)
+{
+  MSG message = {};
+  // This has to be in condition otherwise you'll process the message twice.
+  while (PeekMessageA(&message, state.handle, 0, 0, PM_REMOVE))
+  {
+    // This section basically sends the message to the loop we setup with our window. (win32_message_procedure_ansi)
+    TranslateMessage(&message); // turn keystrokes into characters
+    DispatchMessageA(&message); // tell OS to call window procedure
+  }
 }
 
 

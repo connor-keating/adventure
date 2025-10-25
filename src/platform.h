@@ -19,7 +19,6 @@ extern "C" {
 // Types
 struct platform_window
 {
-  bool is_running;
   f32 width;
   f32 height;
   void *state;
@@ -41,6 +40,9 @@ LIBFUNC void             platform_status();
 LIBFUNC void*            platform_memory_alloc(void *mem_base, size_t mem_size);
 LIBFUNC platform_window  platform_window_init();
 LIBFUNC void             platform_window_show();
+LIBFUNC bool             platform_is_running();
+LIBFUNC void             platform_message_process(platform_window *window);
+
 
 // Ending stuff
 #ifdef __cplusplus
