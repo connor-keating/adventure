@@ -16,6 +16,16 @@
 extern "C" {
 #endif
 
+// Types
+struct platform_window
+{
+  bool is_running;
+  f32 width;
+  f32 height;
+  void *state;
+};
+
+
 struct clock
 {
   f64 secs_per_frame; // The amount of time between frames (seconds).
@@ -27,8 +37,10 @@ struct clock
 
 
 // Functions
-LIBFUNC void  platform_status();
-LIBFUNC void* platform_memory_alloc(void *mem_base, size_t mem_size);
+LIBFUNC void             platform_status();
+LIBFUNC void*            platform_memory_alloc(void *mem_base, size_t mem_size);
+LIBFUNC platform_window  platform_window_init();
+LIBFUNC void             platform_window_show();
 
 // Ending stuff
 #ifdef __cplusplus
