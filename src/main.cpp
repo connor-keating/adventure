@@ -48,7 +48,9 @@ void input_reset(control_state *input_state)
 
 int main(int argc, char **argv)
 {
-  platform_status();
+  // Create a window for the application
+  platform_window window = platform_window_init();
+  platform_window_show();
   return 0;
 }
 
