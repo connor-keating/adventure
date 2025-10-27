@@ -12,16 +12,14 @@
 global bool is_running;
 
 
-#if 0
 #ifdef _DX11
 #include "render_dx11.cpp"
 #elif _OPENGL
 #include "render_opengl.cpp"
-#endif
 
 // Application layers
-#include "text.cpp"
-#include "data3d.cpp"
+// #include "text.cpp"
+// #include "data3d.cpp"
 
 // TODO: Why does app crash when I share it with discord?
 
@@ -60,12 +58,19 @@ int main(int argc, char **argv)
 
   // Start the platform layer
   platform_init(&memory);
+
   // Create a window for the application
   platform_window window = platform_window_init();
+
+  // Initialize renderer
+  render_state renderer = render_init(&window);
+
   platform_window_show();
   while (platform_is_running())
   {
     platform_message_process(&window);
+    frame_init(&renderer);
+    frame_render();
   }
   return 0;
 }
