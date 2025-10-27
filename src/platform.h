@@ -61,6 +61,7 @@ LIBFUNC bool             platform_is_running();
 LIBFUNC void             platform_message_process(platform_window *window);
 LIBFUNC void             platform_opengl_init();
 LIBFUNC void             platform_swapbuffers();
+LIBFUNC int              platform_file_exists(const char *filepath);
 LIBFUNC const char *     platform_file_read(const char *file, arena *scratch, size_t *out_size);
 
 
