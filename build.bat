@@ -34,6 +34,7 @@ if %ERRORLEVEL% neq 0 (
     exit /b %ERRORLEVEL%
 )
 echo Building %plat_assembly% complete
+echo:
 
 :: Build application
 echo %assembly% compiling...
