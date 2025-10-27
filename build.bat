@@ -11,7 +11,7 @@ pushd "src"
 set assembly=application
 set app_flags=-D_OPENGL -D_DEBUG
 set compiler_flags=-g -std=c++20 -Wvarargs -Wall -Werror -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-deprecated
-set includes=-I/src/ -I../external/
+set includes=-I\src\ -I..\external\
 set linker_flags=-luser32 -lgdi32 -lwinmm -ld3d11 -ldxgi -lopengl32
 :: set defines=
 
@@ -22,10 +22,10 @@ echo %assembly% compiling...
 :: Windows
 set plat_assembly=platform
 set plat_defines=-D_DEBUG -D_EXPORT
-set plat_includes=-I/src/ -I../external/
+set plat_includes=-I\src\ -I..\external\
 set plat_flags_comp=-g -std=c++20 -shared -Wvarargs -Wall -Werror -Wno-deprecated -Wno-unused-function
 set plat_flags_link=-luser32 -lgdi32 -lwinmm
-clang++ %plat_flags_comp% %plat_defines% platform_win32.cpp core.cpp -o %OUTDIR%/%plat_assembly%.dll %plat_includes% %plat_flags_link%
+clang++ %plat_flags_comp% %plat_defines% platform_win32.cpp core.cpp -o %OUTDIR%\%plat_assembly%.dll %plat_includes% %plat_flags_link%
 
 :: Build application
 clang++ %compiler_flags% %app_flags% main.cpp %code_files% -o %outdir%\%assembly%.exe %defines% %includes% %linker_flags% -L%OUTDIR% -l%plat_assembly%.lib
