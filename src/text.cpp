@@ -38,11 +38,11 @@ char_atlas text_atlas_init(arena *memory, const char * font_file)
   glm::mat4 view_projection;
   u32 pixel_height;
   // Check file exists
-  int answer = file_exists(font_file);
+  int answer = platform_file_exists(font_file);
   ASSERT(answer == 1, "Font file not found.");
   // Read the font file
   size_t font_file_size;
-  u8 *font_file_contents = (u8*) read_file(font_file, memory, &font_file_size);
+  u8 *font_file_contents = (u8*) platform_file_read(font_file, memory, &font_file_size);
   u32 font_count = stbtt_GetNumberOfFonts(font_file_contents);
   ASSERT(font_count == 1, "Found more than one font in the file.");
   // Load the font
