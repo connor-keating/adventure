@@ -18,7 +18,7 @@ global bool is_running;
 #include "render_opengl.cpp"
 
 // Application layers
-// #include "text.cpp"
+#include "text.cpp"
 // #include "data3d.cpp"
 
 // TODO: Why does app crash when I share it with discord?
@@ -43,7 +43,7 @@ void input_reset(control_state *input_state)
 }
 #endif
 
-
+#if 1
 int main(int argc, char **argv)
 {
   // Allocate all program memory upfront.
@@ -56,6 +56,10 @@ int main(int argc, char **argv)
   void *raw_memory = platform_memory_alloc(memory_base, memory_size);
   arena memory = arena_init(raw_memory, memory_size);
 
+  // Init CPU buffers
+  // Scratch arena that can be freed frequently.
+  u32 scratch_max = Gigabytes(3);
+  arena scratch = subarena_init(&memory, scratch_max);
   // Start the platform layer
   platform_init(&memory);
 
@@ -65,16 +69,70 @@ int main(int argc, char **argv)
   // Initialize renderer
   render_state renderer = render_init(&window);
 
+  // VSYNC
+  wglSwapIntervalEXT(0); // 1 is on 0 is off.
+
+  // Text (chars) buffer
+  u32 text_vert_count = 6000;
+  // 6000 text verts = 1000 quads
+  arena text_buffer = text_buffer_init(&memory, text_vert_count);
+  render_buffer text_gpu_buffer = text_gpu_init(text_vert_count);
+  // Load application assets
+  const char *font_file = "C:\\WINDOWS\\Fonts\\arial.ttf";
+  // Create the char atlas bitmap image
+  u32 text_texture_id = text_init( &scratch, font_file );
+  u32 text_shader = render_program_init( &scratch, "shaders\\text.vert", "shaders\\text.frag");
+  // You'll have to bind the texture each time you want to use this.
+  const char *text_uniform = "texture_image";
+  bool use_ndc = false;
+  f32 text_scale = 0.0f;
+  // Are the coordinates in screen space of NDC
+  if (use_ndc)
+  {
+    text_scale = 2.0f / window.height; // NDC
+  }
+  else
+  {
+    text_scale = 1.0f; // screen space
+  }
+
+  // TODO: What should happen with render state? Specifically the w/h dimensions? Could always just read it from platform...
+  // Set render window dimensions (for now the whole canvas)
+  renderer.width = window.width;
+  renderer.height = window.height;
+
+  // Free scratch
+  arena_free_all(&scratch);
   platform_window_show();
   while (platform_is_running())
   {
     platform_message_process(&window);
+
+    arena_free_all( &text_buffer );
+
     frame_init(&renderer);
+
+    // Draw the UI
+    // Bind the character atlas
+    i32 text_slot = 0;
+    texture2d_bind(text_slot, text_texture_id);
+    // Set the uniform variables
+    uniform_set_i32(text_shader, text_uniform, text_slot);
+    glm::mat4 ortho = glm::ortho(0.0f, window.width, 0.0f, window.height, -1.0f, 1.0f);
+    uniform_set_mat4(text_shader, "projection", &ortho[0][0]);
+    glm::vec3 tpos = glm::vec3(0.0f, 0.0f, 0.0f);
+    // Add text data to gpu buffer
+    text_add(&text_buffer, "TEXT!", 5, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
+    render_buffer_push(text_gpu_buffer, text_buffer.buffer, 0, text_buffer.offset_new);
+    // Draw text
+    u32 text_vert_count = text_count_get(&text_buffer);
+    draw_text(text_gpu_buffer, text_shader, text_vert_count);
+
     frame_render();
   }
   return 0;
 }
-
+#endif
 
 #if 0
 int main(int argc, char **argv)
