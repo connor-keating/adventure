@@ -329,6 +329,18 @@ const char * platform_file_read(const char *file, arena *scratch, size_t *out_si
 }
 
 
+int platform_file_exists(const char *filepath)
+{
+  int exists = 0;
+  FILE *file = fopen(filepath, "r");
+  if (file) {
+    fclose(file);
+    exists =  1;
+  }
+  return exists;
+}
+
+
 const char* control_state_log(control_state s) {
   switch (s) {
   case CONTROL_UP:       return "up";
@@ -496,16 +508,6 @@ void * platform_memory_alloc(void *mem_base, size_t mem_size)
 }
 
 
-int file_exists(const char *filepath)
-{
-  int exists = 0;
-  FILE *file = fopen(filepath, "r");
-  if (file) {
-    fclose(file);
-    exists =  1;
-  }
-  return exists;
-}
 
 
 
