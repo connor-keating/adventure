@@ -1,4 +1,9 @@
 
+
+#define TINYOBJ_LOADER_C_IMPLEMENTATION
+#include "tinyobj_loader_c.h"
+
+
 // Application data types
 struct vertex
 {
@@ -46,7 +51,7 @@ internal mesh bbox_create(fvec3 min, fvec3 max, arena *vert_buffer, arena *elem_
     4,5, 5,6, 6,7, 7,4,
     0,4, 1,5, 2,6, 3,7
   };
-  std::memcpy(bbox.indices, indices, sizeof(indices)); 
+  memcpy(bbox.indices, indices, sizeof(indices)); 
   return bbox;
 }
 
@@ -82,15 +87,15 @@ int check_point_triangle(fvec2 v0, fvec2 v1, fvec2 v2, fvec2 point) {
   fvec2 PC = fvec2_sub(point, v2);
 
   float t1 = PA.x * PB.y - PA.y * PB.x;
-  if (std::fabs(t1) < float_error && PA.x * PB.x <= 0 && PA.y * PB.y <= 0)
+  if (fabs(t1) < float_error && PA.x * PB.x <= 0 && PA.y * PB.y <= 0)
     return 1;
 
   float t2 = PB.x * PC.y - PB.y * PC.x;
-  if (std::fabs(t2) < float_error && PB.x * PC.x <= 0 && PB.y * PC.y <= 0)
+  if (fabs(t2) < float_error && PB.x * PC.x <= 0 && PB.y * PC.y <= 0)
     return 2;
 
   float t3 = PC.x * PA.y - PC.y * PA.x;
-  if (std::fabs(t3) < float_error && PC.x * PA.x <= 0 && PC.y * PA.y <= 0)
+  if (fabs(t3) < float_error && PC.x * PA.x <= 0 && PC.y * PA.y <= 0)
     return 3;
 
   if (t1 * t2 > 0 && t1 * t3 > 0)
@@ -160,8 +165,8 @@ mesh primitive_cube(arena *a)
   output.index_count = ARRAY_COUNT(indices);
   output.vertices = arena_push_array(a, output.vert_count, vertex);
   output.indices = arena_push_array(a, output.index_count, u32);
-  std::memcpy(output.vertices, verts, sizeof(verts)); 
-  std::memcpy(output.indices, indices, sizeof(indices)); 
+  memcpy(output.vertices, verts, sizeof(verts)); 
+  memcpy(output.indices, indices, sizeof(indices)); 
   return output;
 }
 
@@ -184,7 +189,7 @@ mesh model_load_obj(const char *file, arena *vert_buffer, arena *elem_buffer)
     &materials,
     &num_materials,
     file,
-    get_file_data, // Required callback function read file as is.
+    platform_file_data, // Required callback function read file as is.
     NULL,
     flags
   );
