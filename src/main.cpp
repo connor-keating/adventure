@@ -19,7 +19,7 @@ global bool is_running;
 
 // Application layers
 #include "text.cpp"
-// #include "data3d.cpp"
+#include "data3d.cpp"
 
 // TODO: Why does app crash when I share it with discord?
 
