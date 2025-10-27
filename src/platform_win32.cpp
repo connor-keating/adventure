@@ -4,10 +4,6 @@
 #include "opengl.h"
 
 
-#define TINYOBJ_LOADER_C_IMPLEMENTATION
-#include "tinyobj_loader_c.h"
-
-
 struct platform_state
 {
   HWND handle;
@@ -15,8 +11,6 @@ struct platform_state
   HDC render_context;
   bool is_running; 
 };
-
-
 
 
 // Internal global state
@@ -55,7 +49,7 @@ internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT messag
 }
 
 
-internal char* mmap_file(size_t* len, const char* filename) {
+internal char* file_mmap(size_t* len, const char* filename) {
   HANDLE file = CreateFileA(
     filename,
     GENERIC_READ,
@@ -79,7 +73,7 @@ internal char* mmap_file(size_t* len, const char* filename) {
 }
 
 
-internal void get_file_data(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len)
+void platform_file_data(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len)
 {
   // NOTE: If you allocate the buffer with malloc(),
   // You can define your own memory management struct and pass it through `ctx`
@@ -96,7 +90,7 @@ internal void get_file_data(void* ctx, const char* filename, const int is_mtl, c
     return;
   }
   size_t data_len = 0;
-  *data = mmap_file(&data_len, filename);
+  *data = file_mmap(&data_len, filename);
   (*len) = data_len;
 }
 

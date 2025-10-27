@@ -63,6 +63,9 @@ LIBFUNC void             platform_opengl_init();
 LIBFUNC void             platform_swapbuffers();
 LIBFUNC int              platform_file_exists(const char *filepath);
 LIBFUNC const char *     platform_file_read(const char *file, arena *scratch, size_t *out_size);
+LIBFUNC const char *     platform_file_read(const char *file, arena *scratch, size_t *out_size);
+// TODO: Delete this, see if you can use the C++ tinyobj
+LIBFUNC void             platform_file_data(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len);
 
 
 // Ending stuff
