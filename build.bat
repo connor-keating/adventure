@@ -23,7 +23,7 @@ set plat_assembly=platform
 set plat_defines=-D_DEBUG -D_EXPORT
 set plat_includes=-I\src\ -I..\external\
 set plat_flags_comp=-g -std=c++20 -shared -Wvarargs -Wall -Werror -Wno-deprecated -Wno-unused-function
-set plat_flags_link=-luser32 -lgdi32 -lwinmm
+set plat_flags_link=-luser32 -lgdi32 -lwinmm -lopengl32
 
 echo %plat_assembly% compiling...
 clang++ %plat_flags_comp% %plat_defines% platform_win32.cpp core.cpp -o %OUTDIR%\%plat_assembly%.dll %plat_includes% %plat_flags_link%
