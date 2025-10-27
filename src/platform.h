@@ -34,6 +34,23 @@ struct clock
   f64 delta;          // The amount of seconds that have passed from the beginning of the frame to the end (secs).
 };
 
+// TODO: Move controller type info to main.cpp
+enum control_state
+{
+  CONTROL_UP,
+  CONTROL_HELD,
+  CONTROL_DOWN,
+  CONTROL_RELEASED,
+};
+
+enum control_bindings
+{
+  ACTION1,
+  ACTION2,
+  ACTION3,
+  ACTION_COUNT,
+};
+
 
 // Functions
 LIBFUNC void             platform_init(arena *a);
@@ -42,6 +59,8 @@ LIBFUNC platform_window  platform_window_init();
 LIBFUNC void             platform_window_show();
 LIBFUNC bool             platform_is_running();
 LIBFUNC void             platform_message_process(platform_window *window);
+LIBFUNC void             platform_opengl_init();
+LIBFUNC void             platform_swapbuffers();
 
 
 // Ending stuff
