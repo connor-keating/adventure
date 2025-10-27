@@ -15,19 +15,28 @@ set includes=-I\src\ -I..\external\
 set linker_flags=-luser32 -lgdi32 -lwinmm -ld3d11 -ldxgi -lopengl32
 :: set defines=
 
-echo %assembly% compiling...
 
 :: Build platform libraries
 
-:: Windows
+:: Windows platform lib
 set plat_assembly=platform
 set plat_defines=-D_DEBUG -D_EXPORT
 set plat_includes=-I\src\ -I..\external\
 set plat_flags_comp=-g -std=c++20 -shared -Wvarargs -Wall -Werror -Wno-deprecated -Wno-unused-function
 set plat_flags_link=-luser32 -lgdi32 -lwinmm
+
+echo %plat_assembly% compiling...
 clang++ %plat_flags_comp% %plat_defines% platform_win32.cpp core.cpp -o %OUTDIR%\%plat_assembly%.dll %plat_includes% %plat_flags_link%
 
+if %ERRORLEVEL% neq 0 (
+    popd 
+    echo Build failed with errors!
+    exit /b %ERRORLEVEL%
+)
+echo Building %plat_assembly% complete
+
 :: Build application
+echo %assembly% compiling...
 clang++ %compiler_flags% %app_flags% main.cpp %code_files% -o %outdir%\%assembly%.exe %defines% %includes% %linker_flags% -L%OUTDIR% -l%plat_assembly%.lib
 
 popd 
