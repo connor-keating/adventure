@@ -311,6 +311,24 @@ void platform_swapbuffers()
 }
 
 
+const char * platform_file_read(const char *file, arena *scratch, size_t *out_size)
+{
+  FILE *stream;
+  char *contents = 0;
+  fopen_s(&stream, file, "rb");
+  ASSERT(stream, "ERROR: Failed to read file.");
+  fseek(stream, 0, SEEK_END);
+  *out_size = ftell(stream);
+  contents = (char*) arena_alloc(scratch, *out_size);
+  fseek(stream, 0, SEEK_SET);
+  size_t bytes_read = fread(contents, 1, *out_size, stream);
+  bool8 success = bytes_read == *out_size;
+  ASSERT(success, "ERROR: Read incorrect number of bytes from file.");
+  fclose(stream);
+  return contents;
+}
+
+
 const char* control_state_log(control_state s) {
   switch (s) {
   case CONTROL_UP:       return "up";
@@ -490,28 +508,9 @@ int file_exists(const char *filepath)
 }
 
 
-/// @brief 
-/// @param file 
-/// @param scratch 
-/// @return 
-const char * read_file(const char *file, arena *scratch, size_t *out_size)
-{
-  FILE *stream;
-  char *contents = 0;
-  fopen_s(&stream, file, "rb");
-  ASSERT(stream, "ERROR: Failed to read file.");
-  fseek(stream, 0, SEEK_END);
-  *out_size = ftell(stream);
-  contents = (char*) arena_alloc(scratch, *out_size);
-  fseek(stream, 0, SEEK_SET);
-  size_t bytes_read = fread(contents, 1, *out_size, stream);
-  bool8 success = bytes_read == *out_size;
-  ASSERT(success, "ERROR: Read incorrect number of bytes from file.");
-  fclose(stream);
-  return contents;
-}
 
 
+// TODO: Delete?
 const char * read_textfile(const char *file, arena *scratch, size_t *out_size)
 {
   FILE *stream;
