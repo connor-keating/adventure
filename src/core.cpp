@@ -98,8 +98,6 @@ uintptr_t pointer_align_forward(uintptr_t pointer, size_t alignment)
 }
 
 
-#define arena_push_array(arena, count, type) (type *) arena_alloc_align(arena, count*sizeof(type), _Alignof(type))
-#define arena_push_struct(arena, type) (type*) arena_alloc_align(arena, sizeof(type), _Alignof(type))
 void *arena_alloc_align(arena *arena, size_t size, size_t align)
 {
   // Align 'offset_new' forward to the specified alignment
@@ -136,8 +134,6 @@ arena subarena_init(arena *parent, size_t byte_count)
 }
 
 
-// Use this to create subarenas dedicated to a specific data type so its densely packed in memory.
-#define subarena_for(parent, count, type) subarena_aligned_init((parent), (count*sizeof(type)), _Alignof(type))
 arena subarena_aligned_init(arena *parent, size_t byte_count, size_t alignment)
 {
   void *raw = arena_alloc_align(parent, byte_count, alignment);
