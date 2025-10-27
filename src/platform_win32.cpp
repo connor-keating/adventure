@@ -186,6 +186,20 @@ void platform_window_show()
 }
 
 
+void platform_window_size(platform_window *wind)
+{
+  // Get window dimension
+  RECT size;
+  GetClientRect(state->handle, &size);
+  wind->width  = size.right;
+  wind->height = size.bottom;
+  if ((wind->width == 0) && (wind->height == 0))
+  {
+    printf("minimized\n");
+  }
+}
+
+
 bool platform_is_running()
 {
   return state->is_running;
@@ -479,19 +493,6 @@ void message_process(HWND handle, i32 *input_map, control_state *input_state)
   }
 }
 
-
-void window_size_get(platform_window *wind)
-{
-  // Get window dimension
-  RECT size;
-  GetClientRect(state->handle, &size);
-  wind->width  = size.right;
-  wind->height = size.bottom;
-  if ((wind->width == 0) && (wind->height == 0))
-  {
-    printf("minimized\n");
-  }
-}
 
 
 void * platform_memory_alloc(void *mem_base, size_t mem_size)

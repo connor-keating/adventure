@@ -57,12 +57,17 @@ LIBFUNC void             platform_init(arena *a);
 LIBFUNC void*            platform_memory_alloc(void *mem_base, size_t mem_size);
 LIBFUNC platform_window  platform_window_init();
 LIBFUNC void             platform_window_show();
+LIBFUNC void             platform_window_size(platform_window *wind);
 LIBFUNC bool             platform_is_running();
 LIBFUNC void             platform_message_process(platform_window *window);
 LIBFUNC void             platform_opengl_init();
 LIBFUNC void             platform_swapbuffers();
 LIBFUNC int              platform_file_exists(const char *filepath);
 LIBFUNC const char *     platform_file_read(const char *file, arena *scratch, size_t *out_size);
+LIBFUNC clock            platform_clock_init(f64 fps_target);
+LIBFUNC i64              platform_clock_time();
+LIBFUNC void             platform_clock_update(clock *c);
+
 // TODO: Delete this, see if you can use the C++ tinyobj
 LIBFUNC void             platform_file_data(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len);
 

@@ -43,7 +43,7 @@ void input_reset(control_state *input_state)
 }
 #endif
 
-#if 1
+#if 0
 int main(int argc, char **argv)
 {
   // Allocate all program memory upfront.
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
 }
 #endif
 
-#if 0
+#if 1
 int main(int argc, char **argv)
 {
   // Allocate all program memory upfront.
@@ -160,9 +160,10 @@ int main(int argc, char **argv)
   // 6000 text verts = 1000 quads
   arena text_buffer = text_buffer_init(&memory, text_vert_count);
 
+  // Start the platform layer
+  platform_init(&memory);
   // Create a window for the application
-  platform_window window = {};
-  window_init(&window);
+  platform_window window = platform_window_init();
 
   // Application clock
   f64 fps_target = 60;                // The amount of frames presented in a second.
@@ -173,7 +174,7 @@ int main(int argc, char **argv)
   control_state input_state[ACTION_COUNT];
 
   // Set the bindings
-  platform_control_set(input_map);
+  // platform_control_set(input_map);
 
   // Initialize renderer
   render_state renderer = render_init(&window);
@@ -279,22 +280,19 @@ int main(int argc, char **argv)
   // VSynch
   wglSwapIntervalEXT(0); // 1 is on 0 is off.
   // Show window
-  i32 display_flags = SW_SHOW;
-  ShowWindow(window.handle, display_flags);
-  UpdateWindow(window.handle);
-  is_running = true;
-  while (is_running)
+  platform_window_show();
+  while (platform_is_running())
   {
     // Frame start
     platform_clock_update(&app_clock);
-    message_process(window.handle, input_map, input_state);
+    platform_message_process(&window);
 
     // Free resources
     arena_free_all(&scratch);
     arena_free_all( &text_buffer );
 
     // Check window dimensions
-    window_size_get(&window);
+    platform_window_size(&window);
     // Set render window dimensions (for now the whole canvas)
     renderer.width = window.width;
     renderer.height = window.height;
@@ -411,7 +409,7 @@ int main(int argc, char **argv)
     draw_lines_instanced(instance_buffer, instance_program, (grid_shape.x * grid_shape.y * grid_shape.z));
 
     // Finalize and draw frame
-    frame_render(&renderer);
+    frame_render();
     // Reset input after processing everything
     input_reset(input_state);
   }
@@ -419,7 +417,6 @@ int main(int argc, char **argv)
   // close and release all existing COM objects
   // program_close(&prog);
   // program_close(&prog2);
-  render_close(&renderer);
 
   return 0;
 }
