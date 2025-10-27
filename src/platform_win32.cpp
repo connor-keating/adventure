@@ -1,7 +1,8 @@
+#include <windows.h>
 
 #include "platform.h"
+#include "opengl.h"
 
-#include <windows.h>
 
 #define TINYOBJ_LOADER_C_IMPLEMENTATION
 #include "tinyobj_loader_c.h"
@@ -11,28 +12,20 @@ struct platform_state
 {
   HWND handle;
   HINSTANCE instance;
+  HDC render_context;
   bool is_running; 
 };
 
-enum control_bindings
-{
-  ACTION1,
-  ACTION2,
-  ACTION3,
-  ACTION_COUNT,
-};
 
-enum control_state
-{
-  CONTROL_UP,
-  CONTROL_HELD,
-  CONTROL_DOWN,
-  CONTROL_RELEASED,
-};
 
 
 // Internal global state
 global platform_state *state; // Global ptr to internal state
+
+
+// Unique windows functions not supposed to be loaded with the others.
+typedef BOOL WINAPI glfunc_wglChoosePixelFormatARB(HDC hdc, const int *piAttribIList, const FLOAT *pfAttribFList, UINT nMaxFormats, int *piFormats, UINT *nNumFormats);
+typedef HGLRC WINAPI glfunc_wglCreateContextAttribsARB (HDC hDC, HGLRC hShareContext, const int *attribList);
 
 
 internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT message_id, WPARAM param_w, LPARAM param_l)
@@ -215,6 +208,106 @@ void platform_message_process(platform_window *window)
     TranslateMessage(&message); // turn keystrokes into characters
     DispatchMessageA(&message); // tell OS to call window procedure
   }
+}
+
+
+void platform_opengl_init()
+{
+  glfunc_wglChoosePixelFormatARB *wglChoosePixelFormatARB = 0;
+  glfunc_wglCreateContextAttribsARB *wglCreateContextAttribsARB = 0;
+
+  // Use first window to load OpenGL stuff
+  {
+    HDC fakeDC = GetDC(state->handle);
+    PIXELFORMATDESCRIPTOR pixelFormat = {0};
+    pixelFormat.nSize = sizeof(pixelFormat);
+    pixelFormat.nVersion = 1;
+    pixelFormat.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+    pixelFormat.iPixelType = PFD_TYPE_RGBA;
+    pixelFormat.cColorBits = 32;
+    pixelFormat.cAlphaBits = 8;
+    pixelFormat.cDepthBits = 24;
+  
+    int chosenPixelFormat = ChoosePixelFormat(fakeDC, &pixelFormat);
+    ASSERT(chosenPixelFormat != 0, "ERROR: Failed to choose pixel format descriptor.");
+
+    int isPixelFormatSet = SetPixelFormat(fakeDC, chosenPixelFormat, &pixelFormat);
+    ASSERT(isPixelFormatSet != 0, "ERROR: Failed to set the pixel format descriptor.");
+
+    HGLRC fakeRC = wglCreateContext(fakeDC);
+    ASSERT(fakeRC != 0, "ERROR: Failed to create fake rendering context.");
+
+    int isFakeCurrent = wglMakeCurrent(fakeDC, fakeRC);
+    ASSERT(isFakeCurrent != 0, "ERROR: Failed to make the OpenGL rendering context the current rendering context.");
+
+    wglChoosePixelFormatARB    = (glfunc_wglChoosePixelFormatARB*) wglGetProcAddress("wglChoosePixelFormatARB");
+    wglCreateContextAttribsARB = (glfunc_wglCreateContextAttribsARB*) wglGetProcAddress("wglCreateContextAttribsARB");
+    bool loading_failed = (wglChoosePixelFormatARB == 0 || wglCreateContextAttribsARB == 0);
+    ASSERT(loading_failed == false, "ERROR: Failed to load OpenGL functions.");
+    wglMakeCurrent(fakeDC, 0);
+    wglDeleteContext(fakeRC);
+    ReleaseDC(state->handle, fakeDC);
+    DestroyWindow(state->handle);
+    UnregisterClassA("WINDOW_CLASS", state->instance);
+    state->handle = nullptr;
+    state->instance = nullptr;
+  }
+
+  // Create the real window
+  {
+    // Re-create the window
+    platform_window_init();
+    // Get the device context
+    state->render_context = GetDC(state->handle);
+    ASSERT(state->render_context != 0, "ERROR: Failed to get device context.");
+    const int pixelAttribs[] =
+    {
+      WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
+      WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
+      WGL_DOUBLE_BUFFER_ARB,  GL_TRUE,
+      WGL_SWAP_METHOD_ARB,    WGL_SWAP_COPY_ARB,
+      WGL_PIXEL_TYPE_ARB,     WGL_TYPE_RGBA_ARB,
+      WGL_ACCELERATION_ARB,   WGL_FULL_ACCELERATION_ARB,
+      WGL_COLOR_BITS_ARB,     32,
+      WGL_ALPHA_BITS_ARB,     8,
+      WGL_DEPTH_BITS_ARB,     24,
+      0 // Terminate with 0, otherwise OpenGL will throw an Error!
+    };
+    UINT numPixelFormats;
+    int pixelFormat = 0;
+    BOOL chosenPixelFormatARB = wglChoosePixelFormatARB(
+      state->render_context,
+      pixelAttribs,
+      0, // Float List
+      1, // Max Formats
+      &pixelFormat,
+      &numPixelFormats
+    );
+    ASSERT(chosenPixelFormatARB != 0, "ERROR: Failed to wglChoosePixelFormatARB");
+    PIXELFORMATDESCRIPTOR pixelFormatDescriptor = {0};
+    DescribePixelFormat(state->render_context, pixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pixelFormatDescriptor);
+    BOOL isPixelFormatSet = SetPixelFormat(state->render_context, pixelFormat, &pixelFormatDescriptor);
+    ASSERT(isPixelFormatSet != 0, "ERROR: Failed to set the pixel format.");
+    const int contextAttribs[] = {
+        WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+        WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+        WGL_CONTEXT_PROFILE_MASK_ARB, 
+        WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+        WGL_CONTEXT_FLAGS_ARB, 
+        WGL_CONTEXT_DEBUG_BIT_ARB,
+        0 // Terminate the Array
+    };
+    HGLRC renderingContext = wglCreateContextAttribsARB(state->render_context, 0, contextAttribs);
+    ASSERT(renderingContext != 0, "ERROR: Failed to create rendering context.");
+    BOOL isContextSet = wglMakeCurrent(state->render_context, renderingContext);
+    ASSERT(isContextSet != 0, "ERROR: Failed to set the device and rendering context.");
+  }
+}
+
+
+void platform_swapbuffers()
+{
+  SwapBuffers(state->render_context);
 }
 
 
