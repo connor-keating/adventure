@@ -36,7 +36,7 @@ struct clock
 
 
 // Functions
-LIBFUNC void             platform_status();
+LIBFUNC void             platform_init(arena *a);
 LIBFUNC void*            platform_memory_alloc(void *mem_base, size_t mem_size);
 LIBFUNC platform_window  platform_window_init();
 LIBFUNC void             platform_window_show();

@@ -32,7 +32,7 @@ enum control_state
 
 
 // Internal global state
-global platform_state state;
+global platform_state *state; // Global ptr to internal state
 
 
 internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT message_id, WPARAM param_w, LPARAM param_l)
@@ -43,7 +43,7 @@ internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT messag
   {
     case WM_CLOSE:
     {
-      state.is_running = false;
+      state->is_running = false;
       PostQuitMessage(0);
       break;
     }
@@ -108,16 +108,17 @@ internal void get_file_data(void* ctx, const char* filename, const int is_mtl, c
 }
 
 
-void platform_status()
+void platform_init(arena *a)
 {
-  printf("Library working\n");
+  state = arena_push_struct(a, platform_state);
+  state->is_running = true;
 }
 
 
 platform_window platform_window_init()
 {
   platform_window wind = {};
-  state.instance = GetModuleHandleA(0);
+  state->instance = GetModuleHandleA(0);
   i32 window_x = 50;
   i32 window_y = 90;
   i32 window_w = 50;
@@ -128,7 +129,7 @@ platform_window platform_window_init()
   window_class.cbSize = sizeof(window_class);
   window_class.style = CS_HREDRAW|CS_VREDRAW; // |CS_OWNDC;
   window_class.lpfnWndProc = win32_message_callback;
-  window_class.hInstance = state.instance;
+  window_class.hInstance = state->instance;
   window_class.hCursor = LoadCursor(0, IDC_ARROW);
   // window_class.hbrBackground = CreateSolidBrush(RGB(255, 0, 255)); // Magenta background
   window_class.hbrBackground = (HBRUSH)COLOR_WINDOW;
@@ -137,7 +138,7 @@ platform_window platform_window_init()
   ASSERT(window_id, "ERROR: Failed to register window.");
   
   // Create the window we described.
-  state.handle = CreateWindowExA(
+  state->handle = CreateWindowExA(
     WS_EX_CLIENTEDGE,            // style_extended: has list of possible values.    
     window_class.lpszClassName,  // class_name: null-terminated string.         
     window_name,                  // name: string window name to display in title bar.              
@@ -148,22 +149,22 @@ platform_window platform_window_init()
     window_h,                          // height: Window height in screen coordinates
     0,                          // window_parent: Handle to the parent window.
     0,                          // window_menu: Optional child window ID.
-    state.instance,      // window_handle: handle to this window's module.
+    state->instance,      // window_handle: handle to this window's module.
     0                          // window_data_pointer: Pointer to CREATESTRUCT var that sends a message to the window.
   );
-  ASSERT(state.handle, "ERROR: Failed to create window.");
+  ASSERT(state->handle, "ERROR: Failed to create window.");
 
   // Get monitor info and resize the window.
   MONITORINFO monitor_info = {};
   monitor_info.cbSize = sizeof(MONITORINFO);
-  HMONITOR monitor_handle = MonitorFromWindow(state.handle, MONITOR_DEFAULTTOPRIMARY);
+  HMONITOR monitor_handle = MonitorFromWindow(state->handle, MONITOR_DEFAULTTOPRIMARY);
   BOOL monitor_info_success = GetMonitorInfoA(monitor_handle, &monitor_info);
   ASSERT(monitor_info_success, "ERROR: Failed to get monitor info.");
   i32 monitor_width  = monitor_info.rcMonitor.right - monitor_info.rcMonitor.left;
   i32 monitor_height = monitor_info.rcMonitor.bottom - monitor_info.rcMonitor.top;
   // Calculate our desired window dimensions.
   // Get DPI scaling factor
-  u32 dpi = GetDpiForWindow(state.handle);
+  u32 dpi = GetDpiForWindow(state->handle);
   f32 scale_factor = dpi / 96.0f; // Scaling factor (1.0 at 96 DPI, 1.5 at 144 DPI, etc.)
   i32 client_w = MulDiv(monitor_width, 1, 2 * scale_factor);
   i32 client_h = MulDiv(monitor_height, 1, 2 * scale_factor);
@@ -174,7 +175,7 @@ platform_window platform_window_init()
   window_x = (monitor_width  - window_w) / 2;
   window_y = (monitor_height - window_h) / 2;
   BOOL window_success = SetWindowPos(
-    state.handle,
+    state->handle,
     HWND_TOP,
     window_x,
     window_y,
@@ -192,16 +193,15 @@ platform_window platform_window_init()
 
 void platform_window_show()
 {
-  state.is_running = true;
   i32 display_flags = SW_SHOW;
-  ShowWindow(state.handle, display_flags);
-  UpdateWindow(state.handle);
+  ShowWindow(state->handle, display_flags);
+  UpdateWindow(state->handle);
 }
 
 
 bool platform_is_running()
 {
-  return state.is_running;
+  return state->is_running;
 }
 
 
@@ -209,7 +209,7 @@ void platform_message_process(platform_window *window)
 {
   MSG message = {};
   // This has to be in condition otherwise you'll process the message twice.
-  while (PeekMessageA(&message, state.handle, 0, 0, PM_REMOVE))
+  while (PeekMessageA(&message, state->handle, 0, 0, PM_REMOVE))
   {
     // This section basically sends the message to the loop we setup with our window. (win32_message_procedure_ansi)
     TranslateMessage(&message); // turn keystrokes into characters
@@ -367,7 +367,7 @@ void window_size_get(platform_window *wind)
 {
   // Get window dimension
   RECT size;
-  GetClientRect(state.handle, &size);
+  GetClientRect(state->handle, &size);
   wind->width  = size.right;
   wind->height = size.bottom;
   if ((wind->width == 0) && (wind->height == 0))
