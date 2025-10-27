@@ -78,6 +78,7 @@ render_state render_init(platform_window *window)
   return state;
 }
 
+
 void frame_init(render_state *state)
 {
   glViewport(0, 0, state->width, state->height);
@@ -93,7 +94,6 @@ void frame_render()
 }
 
 
-#if 0
 render_buffer render_buffer_init(void *data, size_t length)
 {
   render_buffer buffer = {};
@@ -177,7 +177,10 @@ void render_point_size_set(f32 size)
 u32 shader_compile(const char *filepath, i32 type, arena *scratch)
 {
   size_t byte_count;
-  const char* source = read_textfile(filepath, scratch, &byte_count);
+  const char* source = platform_file_read(filepath, scratch, &byte_count);
+  // Shaders must be null-terminated.
+  char *ending = arena_push_array(scratch, 1, char);
+  *ending = '\0';
   u32 shader = glCreateShader(type);
   glShaderSource(shader, 1, &source, NULL);
   glCompileShader(shader);
@@ -391,8 +394,6 @@ void buffer_cube_add()
 }
 
 
-
-
 void uniform_set_mat4(u32 shader_program, const char *name, const f32 *data)
 {
   glUseProgram(shader_program);
@@ -509,18 +510,7 @@ void draw_wireframe_elements(render_buffer buffer, u32 shader_program, u32 amoun
 }
 
 
-
-
 void shader_close(u32 shader_program)
 {
   glDeleteProgram(shader_program);
 }
-
-
-void render_close(render_state *state)
-{
-  HWND handle = WindowFromDC(state->context);
-  ReleaseDC(handle, state->context);
-}
-
-#endif
