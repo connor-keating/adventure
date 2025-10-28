@@ -11,10 +11,11 @@ global bool is_running;
 #include "render_dx11.cpp"
 #elif _OPENGL
 #include "render_opengl.cpp"
+#endif
 
 // Application layers
-#include "text.cpp"
-#include "data3d.cpp"
+// #include "text.cpp"
+// #include "data3d.cpp"
 
 // TODO: Why does app crash when I share it with discord?
 
@@ -36,8 +37,50 @@ void input_reset(control_state *input_state)
     }
   }
 }
-#endif
 
+
+int main(int argc, char **argv)
+{
+  // Allocate all program memory upfront.
+  #if _DEBUG
+    void *memory_base = (void*)Terabytes(2);
+  #else
+    void *memory_base = 0;
+  #endif
+  size_t memory_size = (size_t) Gigabytes(5);
+  void *raw_memory = platform_memory_alloc(memory_base, memory_size);
+  arena memory = arena_init(raw_memory, memory_size);
+
+  // Init CPU buffers
+  // Scratch arena that can be freed frequently.
+  u32 scratch_max = Gigabytes(3);
+  arena scratch = subarena_init(&memory, scratch_max);
+  // Start the platform layer
+  platform_init(&memory);
+
+  // Create a window for the application
+  platform_window window = platform_window_init();
+
+  // Initialize renderer
+  render_init(&memory);
+
+  // Free scratch
+  arena_free_all(&scratch);
+  platform_window_show();
+  while (platform_is_running())
+  {
+    platform_message_process(&window);
+
+    arena_free_all( &scratch );
+
+    frame_init();
+
+    frame_render();
+  }
+  return 0;
+}
+
+#if 0
 int main(int argc, char **argv)
 {
   // Allocate all program memory upfront.
@@ -322,3 +365,4 @@ int main(int argc, char **argv)
 
   return 0;
 }
+#endif
