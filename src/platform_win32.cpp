@@ -313,6 +313,12 @@ void platform_opengl_init()
 }
 
 
+void * platform_window_handle()
+{
+  return (void*)&state->handle;
+}
+
+
 void platform_swapbuffers()
 {
   SwapBuffers(state->render_context);

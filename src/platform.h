@@ -58,6 +58,7 @@ LIBFUNC void*            platform_memory_alloc(void *mem_base, size_t mem_size);
 LIBFUNC platform_window  platform_window_init();
 LIBFUNC void             platform_window_show();
 LIBFUNC void             platform_window_size(platform_window *wind);
+LIBFUNC void*            platform_window_handle();
 LIBFUNC bool             platform_is_running();
 LIBFUNC void             platform_message_process(platform_window *window);
 LIBFUNC void             platform_opengl_init();
