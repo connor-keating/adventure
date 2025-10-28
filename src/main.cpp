@@ -277,8 +277,7 @@ int main(int argc, char **argv)
   // Instance shader toggle
   bool toggle = 0;
 
-  // VSynch
-  wglSwapIntervalEXT(0); // 1 is on 0 is off.
+  render_vsync(0);
   // Show window
   platform_window_show();
   while (platform_is_running())

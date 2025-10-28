@@ -514,3 +514,8 @@ void shader_close(u32 shader_program)
 {
   glDeleteProgram(shader_program);
 }
+
+void render_vsync(i32 status)
+{
+  wglSwapIntervalEXT(status); // 1 is on 0 is off.
+}
