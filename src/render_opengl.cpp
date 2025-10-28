@@ -43,6 +43,7 @@ static void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GL
 
 #endif
 
+// TODO: Remove window input, I can just set the size elsewhere
 render_state render_init(platform_window *window)
 {
   render_state state = {};
