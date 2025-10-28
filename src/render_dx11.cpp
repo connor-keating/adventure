@@ -13,10 +13,14 @@ struct render_state
   ID3D11RenderTargetView* render_target; // Pointer to object containing render target info
 };
 
-render_state render_init(HWND handle)
+global render_state *renderer;
+
+
+void render_init(arena *a)
 {
   // Initialize render state data
-  render_state state = {};
+  renderer = arena_push_struct(a, render_state);
+  HWND *window = (HWND*) platform_window_handle();
   // Initialize result variable used for a lot of creation
   HRESULT result;
   UINT device_flags = 0;
@@ -40,16 +44,16 @@ render_state render_init(HWND handle)
     device_flags, 
     0, 0,              // default feature level array
     D3D11_SDK_VERSION,
-    &state.device,
+    &renderer->device,
     &feature_level,
-    &state.context     // Immediate context
+    &renderer->context     // Immediate context
   );
   ASSERT(SUCCEEDED(result), "ERROR: Failed to create the device.");
   ASSERT(feature_level == D3D_FEATURE_LEVEL_11_0, "ERROR: Failed to init d3d11.");
 
   // Check 4X MSAA quality support
   u32 msaa_quality;
-  result = state.device->CheckMultisampleQualityLevels(
+  result = renderer->device->CheckMultisampleQualityLevels(
 		DXGI_FORMAT_R8G8B8A8_UNORM,
     4,
     &msaa_quality
@@ -75,13 +79,13 @@ render_state render_init(HWND handle)
 
   scd.BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	scd.BufferCount  = 1;
-	scd.OutputWindow = handle;
+	scd.OutputWindow = *window;
   scd.Windowed = TRUE;
 	scd.SwapEffect   = DXGI_SWAP_EFFECT_DISCARD;
 	scd.Flags        = 0;
 
   IDXGIDevice* dxgiDevice = 0;
-	result = state.device->QueryInterface(__uuidof(IDXGIDevice), (void**)&dxgiDevice);
+	result = renderer->device->QueryInterface(__uuidof(IDXGIDevice), (void**)&dxgiDevice);
 	      
 	IDXGIAdapter* dxgiAdapter = 0;
 	result = dxgiDevice->GetParent(__uuidof(IDXGIAdapter), (void**)&dxgiAdapter);
@@ -89,7 +93,7 @@ render_state render_init(HWND handle)
 	IDXGIFactory* dxgiFactory = 0;
 	result = dxgiAdapter->GetParent(__uuidof(IDXGIFactory), (void**)&dxgiFactory);
 
-	result = dxgiFactory->CreateSwapChain(state.device, &scd, &state.swapchain);
+	result = dxgiFactory->CreateSwapChain(renderer->device, &scd, &renderer->swapchain);
   ASSERT(SUCCEEDED(result), "ERROR: Failed to create the swapchain.");
 	
 	dxgiDevice->Release();
@@ -102,26 +106,27 @@ render_state render_init(HWND handle)
   // TODO: Is this still necessary?
   // Create render target view
   ID3D11Texture2D* backBuffer = nullptr;
-  state.swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer);
-  state.device->CreateRenderTargetView(backBuffer, nullptr, &state.render_target);
+  renderer->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer);
+  renderer->device->CreateRenderTargetView(backBuffer, nullptr, &renderer->render_target);
   backBuffer->Release();
-  state.context->OMSetRenderTargets(1, &state.render_target, nullptr);
-
-
-  return state;
+  renderer->context->OMSetRenderTargets(1, &renderer->render_target, nullptr);
 }
 
-void frame_render(render_state *state)
+void frame_init()
 {
   f32 color[4] = {0.0f, 0.325f, 0.282f, 1.0f};
-  state->context->ClearRenderTargetView(state->render_target, color);
-  state->swapchain->Present(1, 0); // vsync on
+  renderer->context->ClearRenderTargetView(renderer->render_target, color);
 }
 
-void render_close(render_state *state)
+void frame_render()
 {
-  state->render_target->Release();
-  state->swapchain->Release();
-  state->context->Release();
-  state->device->Release();
+  renderer->swapchain->Present(1, 0); // vsync on
+}
+
+void render_close()
+{
+  renderer->render_target->Release();
+  renderer->swapchain->Release();
+  renderer->context->Release();
+  renderer->device->Release();
 }
