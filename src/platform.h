@@ -28,10 +28,10 @@ struct platform_window
 struct clock
 {
   f64 secs_per_frame; // The amount of time between frames (seconds).
-  f64 ticks_per_sec;  // The frequencey of the performance counter which is fixed at start up and constant (Hz).
-  i64 curr;           // The current value of the counter at the start of the frame (ticks).
-  i64 prev;           // The value of the counter at the start of the previous frame (ticks).
-  f64 delta;          // The amount of seconds that have passed from the beginning of the frame to the end (secs).
+  f64 secs_per_count; // The inverse frequencey of the performance counter which is fixed at start up and constant (secs/count).
+  i64 curr;           // The current value of the counter at the start of the frame (counts).
+  i64 prev;           // The value of the counter at the start of the previous frame (counts).
+  f64 delta;          // The amount of seconds that have passed from the beginning of the frame to the end (seconds).
 };
 
 // TODO: Move controller type info to main.cpp

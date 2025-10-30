@@ -538,6 +538,7 @@ const char * read_textfile(const char *file, arena *scratch, size_t *out_size)
 i64 platform_clock_time()
 {
   LARGE_INTEGER temp;
+  // This func gives time units "counts"
   QueryPerformanceCounter(&temp);
   return temp.QuadPart;
 }
@@ -548,8 +549,10 @@ clock platform_clock_init(f64 fps_target)
   clock c = {};
   c.secs_per_frame = 1.0 / fps_target;
   LARGE_INTEGER temp;
+  // This function gives a frequency (counts per sec or counts/sec)
   QueryPerformanceFrequency(&temp);
-  c.ticks_per_sec = (f64) temp.QuadPart;
+  f64 counts_per_sec = (f64) temp.QuadPart;
+  c.secs_per_count = 1.0f / counts_per_sec;
   c.prev = platform_clock_time();
   return c;
 }
@@ -561,7 +564,15 @@ void platform_clock_update(clock *c)
   // The amount of ticks that have passed from the beginning of the frame to the end (ticks).
   // TODO: Should this be its own function?
   f64 delta_ticks = (f64) (c->curr - c->prev);
-  c->delta = delta_ticks / c->ticks_per_sec;
-  // TODO: End wall clock diff
+  c->delta = delta_ticks * c->secs_per_count;
+  // Prepare for next frame
   c->prev = c->curr;
+  // Force nonnegative.  The DXSDK's CDXUTTimer mentions that if the 
+	// processor goes into a power save mode or we get shuffled to another
+	// processor, then mDeltaTime can be negative.
+	if(c->delta < 0.0)
+	{
+		c->delta = 0.0;
+	}
+  // TODO: End wall clock diff
 }
