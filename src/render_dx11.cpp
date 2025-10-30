@@ -11,9 +11,68 @@ struct render_state
   IDXGISwapChain* swapchain;
   ID3D11DeviceContext* context;
   ID3D11RenderTargetView* render_target; // Pointer to object containing render target info
+	D3D11_VIEWPORT viewport;
+	ID3D11Texture2D* depth_buffer;
+	ID3D11DepthStencilView* depth_view;
 };
 
 global render_state *renderer;
+
+
+void render_resize(i32 width, i32 height)
+{
+  // Release the old views, as they hold references to the buffers we
+	// will be destroying.  Also release the old depth/stencil buffer.
+
+	renderer->render_target->Release();
+	renderer->depth_view->Release();
+	renderer->depth_buffer->Release();
+
+	// Resize the swap chain and recreate the render target view.
+  HRESULT success = 0;
+	success = renderer->swapchain->ResizeBuffers(1, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
+  ASSERT(success, "Failed to resize swapchain buffers.");
+	ID3D11Texture2D* backBuffer;
+	success = renderer->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)(&backBuffer));
+  ASSERT(success, "Failed to get back buffer.");
+	success = renderer->device->CreateRenderTargetView(backBuffer, 0, &renderer->render_target);
+	backBuffer->Release();
+
+	// Create the depth/stencil buffer and view.
+	D3D11_TEXTURE2D_DESC depthStencilDesc = {};
+	depthStencilDesc.Width     = width;
+	depthStencilDesc.Height    = height;
+	depthStencilDesc.MipLevels = 1;
+	depthStencilDesc.ArraySize = 1;
+	depthStencilDesc.Format    = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+	// Use 4X MSAA? --must match swap chain MSAA values.
+	// No MSAA
+  depthStencilDesc.SampleDesc.Count   = 1;
+  depthStencilDesc.SampleDesc.Quality = 0;
+	depthStencilDesc.Usage          = D3D11_USAGE_DEFAULT;
+	depthStencilDesc.BindFlags      = D3D11_BIND_DEPTH_STENCIL;
+	depthStencilDesc.CPUAccessFlags = 0; 
+	depthStencilDesc.MiscFlags      = 0;
+
+	success = renderer->device->CreateTexture2D(&depthStencilDesc, 0, &renderer->depth_buffer);
+  ASSERT(success, "Failed to create depth buffer.");
+	success = renderer->device->CreateDepthStencilView(renderer->depth_buffer, 0, &renderer->depth_view);
+  ASSERT(success, "Failed to create depth view.");
+
+	// Bind the render target view and depth/stencil view to the pipeline.
+	renderer->context->OMSetRenderTargets(1, &renderer->render_target, renderer->depth_view);
+
+	// Set the viewport transform.
+	renderer->viewport.TopLeftX = 0;
+	renderer->viewport.TopLeftY = 0;
+	renderer->viewport.Width    = static_cast<float>(width);
+	renderer->viewport.Height   = static_cast<float>(height);
+	renderer->viewport.MinDepth = 0.0f;
+	renderer->viewport.MaxDepth = 1.0f;
+
+	renderer->context->RSSetViewports(1, &renderer->viewport);
+}
 
 
 void render_init(arena *a)
@@ -29,11 +88,6 @@ void render_init(arena *a)
   #endif
 
   D3D_DRIVER_TYPE driver_type = D3D_DRIVER_TYPE_HARDWARE;
-	ID3D11Texture2D* depth_buffer;
-	ID3D11RenderTargetView* render_view;
-	ID3D11DepthStencilView* depth_view;
-	D3D11_VIEWPORT viewport;
-
 
   // Feature level array
   D3D_FEATURE_LEVEL feature_level;
@@ -80,7 +134,7 @@ void render_init(arena *a)
   scd.BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	scd.BufferCount  = 1;
 	scd.OutputWindow = *window;
-  scd.Windowed = TRUE;
+  scd.Windowed     = TRUE;
 	scd.SwapEffect   = DXGI_SWAP_EFFECT_DISCARD;
 	scd.Flags        = 0;
 
@@ -100,17 +154,61 @@ void render_init(arena *a)
 	dxgiAdapter->Release();
 	dxgiFactory->Release();
 
+  RECT size;
+  GetClientRect(*window, &size);
+  i32 width = size.right;
+  i32 height = size.bottom;
+  // TODO: All code below is duplicated in render_resize, but at this time there's nothing to release.
+  // It feels wasteful to include an if(x) then release everytime we call resize...
 
-  // TODO: Copy/create OnResize() function as seen in d3d11-book and call it here
-  
-  // TODO: Is this still necessary?
-  // Create render target view
-  ID3D11Texture2D* backBuffer = nullptr;
-  renderer->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer);
-  renderer->device->CreateRenderTargetView(backBuffer, nullptr, &renderer->render_target);
-  backBuffer->Release();
-  renderer->context->OMSetRenderTargets(1, &renderer->render_target, nullptr);
+  // Resize the swap chain and recreate the render target view.
+  HRESULT success = 0;
+	success = renderer->swapchain->ResizeBuffers(1, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
+  ASSERT( (success>=0) , "Failed to resize swapchain buffers.");
+	ID3D11Texture2D* backBuffer;
+	success = renderer->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)(&backBuffer));
+  ASSERT( (success>=0) , "Failed to get back buffer.");
+	success = renderer->device->CreateRenderTargetView(backBuffer, 0, &renderer->render_target);
+  ASSERT( (success>=0) , "Failed to create render target view.");
+	backBuffer->Release();
+
+	// Create the depth/stencil buffer and view.
+	D3D11_TEXTURE2D_DESC depthStencilDesc = {};
+	depthStencilDesc.Width     = width;
+	depthStencilDesc.Height    = height;
+	depthStencilDesc.MipLevels = 1;
+	depthStencilDesc.ArraySize = 1;
+	depthStencilDesc.Format    = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+	// Use 4X MSAA? --must match swap chain MSAA values.
+	// No MSAA
+  depthStencilDesc.SampleDesc.Count   = 1;
+  depthStencilDesc.SampleDesc.Quality = 0;
+	depthStencilDesc.Usage          = D3D11_USAGE_DEFAULT;
+	depthStencilDesc.BindFlags      = D3D11_BIND_DEPTH_STENCIL;
+	depthStencilDesc.CPUAccessFlags = 0; 
+	depthStencilDesc.MiscFlags      = 0;
+
+	success = renderer->device->CreateTexture2D(&depthStencilDesc, 0, &renderer->depth_buffer);
+  ASSERT( (success>=0) , "Failed to create depth buffer.");
+	success = renderer->device->CreateDepthStencilView(renderer->depth_buffer, 0, &renderer->depth_view);
+  ASSERT( (success>=0) , "Failed to create depth view.");
+
+	// Bind the render target view and depth/stencil view to the pipeline.
+	renderer->context->OMSetRenderTargets(1, &renderer->render_target, renderer->depth_view);
+
+	// Set the viewport transform.
+	renderer->viewport.TopLeftX = 0;
+	renderer->viewport.TopLeftY = 0;
+	renderer->viewport.Width    = (float)(width);
+	renderer->viewport.Height   = (float)(height);
+	renderer->viewport.MinDepth = 0.0f;
+	renderer->viewport.MaxDepth = 1.0f;
+
+	renderer->context->RSSetViewports(1, &renderer->viewport);
+
 }
+
 
 void frame_init()
 {
@@ -118,10 +216,12 @@ void frame_init()
   renderer->context->ClearRenderTargetView(renderer->render_target, color);
 }
 
+
 void frame_render()
 {
   renderer->swapchain->Present(1, 0); // vsync on
 }
+
 
 void render_close()
 {
