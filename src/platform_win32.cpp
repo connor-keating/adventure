@@ -547,14 +547,29 @@ i64 platform_clock_time()
 clock platform_clock_init(f64 fps_target)
 {
   clock c = {};
+  c.base = 0;
+  c.curr = 0;
+  c.prev = 0;
+  c.stop = 0;
+  c.delta = -1.0f;
+  c.paused = false;
   c.secs_per_frame = 1.0 / fps_target;
   LARGE_INTEGER temp;
   // This function gives a frequency (counts per sec or counts/sec)
   QueryPerformanceFrequency(&temp);
   f64 counts_per_sec = (f64) temp.QuadPart;
   c.secs_per_count = 1.0f / counts_per_sec;
-  c.prev = platform_clock_time();
   return c;
+}
+
+
+void platform_clock_reset(clock *c)
+{
+  i64 t_current = platform_clock_time();
+  c->base = t_current;
+  c->prev = t_current;
+  c->paused = false;
+  c->stop = 0;
 }
 
 

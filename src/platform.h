@@ -29,9 +29,12 @@ struct clock
 {
   f64 secs_per_frame; // The amount of time between frames (seconds).
   f64 secs_per_count; // The inverse frequencey of the performance counter which is fixed at start up and constant (secs/count).
+  i64 base;           // The time at the start of the frame.
   i64 curr;           // The current value of the counter at the start of the frame (counts).
   i64 prev;           // The value of the counter at the start of the previous frame (counts).
+  i64 stop;           // The amount of time we are paused.
   f64 delta;          // The amount of seconds that have passed from the beginning of the frame to the end (seconds).
+  bool paused;        // A flag for pausing the timer.
 };
 
 // TODO: Move controller type info to main.cpp
@@ -67,6 +70,7 @@ LIBFUNC int              platform_file_exists(const char *filepath);
 LIBFUNC const char *     platform_file_read(const char *file, arena *scratch, size_t *out_size);
 LIBFUNC clock            platform_clock_init(f64 fps_target);
 LIBFUNC i64              platform_clock_time();
+LIBFUNC void             platform_clock_reset(clock *c);
 LIBFUNC void             platform_clock_update(clock *c);
 
 // TODO: Delete this, see if you can use the C++ tinyobj

@@ -64,12 +64,19 @@ int main(int argc, char **argv)
   // Initialize renderer
   render_init(&memory);
 
+  // Initialize clock
+  f64 fps_target = 60; // The amount of frames presented in a second.
+  clock timer = platform_clock_init(fps_target);
+
   // Free scratch
   arena_free_all(&scratch);
   platform_window_show();
   while (platform_is_running())
   {
+    platform_clock_reset(&timer);
     platform_message_process(&window);
+    platform_clock_update(&timer);
+    printf("Delta: %.8f\n", timer.delta);
 
     arena_free_all( &scratch );
 
