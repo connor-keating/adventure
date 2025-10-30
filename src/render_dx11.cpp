@@ -31,11 +31,12 @@ void render_resize(i32 width, i32 height)
 	// Resize the swap chain and recreate the render target view.
   HRESULT success = 0;
 	success = renderer->swapchain->ResizeBuffers(1, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
-  ASSERT(success, "Failed to resize swapchain buffers.");
+  ASSERT(SUCCEEDED(success), "Failed to resize swapchain buffers.");
 	ID3D11Texture2D* backBuffer;
 	success = renderer->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)(&backBuffer));
-  ASSERT(success, "Failed to get back buffer.");
+  ASSERT(SUCCEEDED(success), "Failed to get back buffer.");
 	success = renderer->device->CreateRenderTargetView(backBuffer, 0, &renderer->render_target);
+  ASSERT(SUCCEEDED(success), "Failed to create render target view.");
 	backBuffer->Release();
 
 	// Create the depth/stencil buffer and view.
@@ -56,9 +57,9 @@ void render_resize(i32 width, i32 height)
 	depthStencilDesc.MiscFlags      = 0;
 
 	success = renderer->device->CreateTexture2D(&depthStencilDesc, 0, &renderer->depth_buffer);
-  ASSERT(success, "Failed to create depth buffer.");
+  ASSERT(SUCCEEDED(success), "Failed to create depth buffer.");
 	success = renderer->device->CreateDepthStencilView(renderer->depth_buffer, 0, &renderer->depth_view);
-  ASSERT(success, "Failed to create depth view.");
+  ASSERT(SUCCEEDED(success), "Failed to create depth view.");
 
 	// Bind the render target view and depth/stencil view to the pipeline.
 	renderer->context->OMSetRenderTargets(1, &renderer->render_target, renderer->depth_view);
@@ -164,12 +165,12 @@ void render_init(arena *a)
   // Resize the swap chain and recreate the render target view.
   HRESULT success = 0;
 	success = renderer->swapchain->ResizeBuffers(1, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
-  ASSERT( (success>=0) , "Failed to resize swapchain buffers.");
+  ASSERT( SUCCEEDED(success) , "Failed to resize swapchain buffers.");
 	ID3D11Texture2D* backBuffer;
 	success = renderer->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)(&backBuffer));
-  ASSERT( (success>=0) , "Failed to get back buffer.");
+  ASSERT( SUCCEEDED(success) , "Failed to get back buffer.");
 	success = renderer->device->CreateRenderTargetView(backBuffer, 0, &renderer->render_target);
-  ASSERT( (success>=0) , "Failed to create render target view.");
+  ASSERT( SUCCEEDED(success) , "Failed to create render target view.");
 	backBuffer->Release();
 
 	// Create the depth/stencil buffer and view.
@@ -190,9 +191,9 @@ void render_init(arena *a)
 	depthStencilDesc.MiscFlags      = 0;
 
 	success = renderer->device->CreateTexture2D(&depthStencilDesc, 0, &renderer->depth_buffer);
-  ASSERT( (success>=0) , "Failed to create depth buffer.");
+  ASSERT( SUCCEEDED(success) , "Failed to create depth buffer.");
 	success = renderer->device->CreateDepthStencilView(renderer->depth_buffer, 0, &renderer->depth_view);
-  ASSERT( (success>=0) , "Failed to create depth view.");
+  ASSERT( SUCCEEDED(success) , "Failed to create depth view.");
 
 	// Bind the render target view and depth/stencil view to the pipeline.
 	renderer->context->OMSetRenderTargets(1, &renderer->render_target, renderer->depth_view);
