@@ -70,10 +70,12 @@ int main(int argc, char **argv)
 
   // Free scratch
   arena_free_all(&scratch);
+
+  // Application start
   platform_window_show();
+  platform_clock_reset(&timer);
   while (platform_is_running())
   {
-    platform_clock_reset(&timer);
     platform_message_process(&window);
     platform_clock_update(&timer);
     printf("Delta: %.8f\n", timer.delta);
