@@ -1,15 +1,14 @@
 #include "core.cpp"
 #include "linalg.cpp"
 #include "platform.h"
+#include "render.h"
 
 
 // Globals
 global bool is_running;
 
 
-#ifdef _DX11
-#include "render_dx11.cpp"
-#elif _OPENGL
+#ifdef _OPENGL
 #include "render_opengl.cpp"
 #endif
 
@@ -64,6 +63,9 @@ int main(int argc, char **argv)
   // Initialize renderer
   render_init(&memory);
 
+  // Prepare buffers
+  shaders_ptr tri_prog = render_triangle(&scratch);
+
   // Initialize clock
   f64 fps_target = 60; // The amount of frames presented in a second.
   clock timer = platform_clock_init(fps_target);
@@ -80,9 +82,11 @@ int main(int argc, char **argv)
     platform_clock_update(&timer);
     printf("Delta: %.8f\n", timer.delta);
 
-    arena_free_all( &scratch );
+    // arena_free_all( &scratch );
 
     frame_init();
+
+    render_draw(tri_prog);
 
     frame_render();
   }
