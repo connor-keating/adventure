@@ -6,6 +6,27 @@ SetLocal EnableDelayedExpansion
 set outdir=%cd%\bin
 if not exist %outdir% mkdir %outdir%
 
+:: Build shaders
+echo building shaders...
+pushd "shaders"
+
+set windows_sdk="C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64"
+set hlsl_flags=/nologo /T
+set cfg=/Od /Zi
+
+%windows_sdk%\fxc.exe %hlsl_flags% vs_5_0 /E vertex_shader /Fo "%outdir%\tri_vs.cso" %cfg% "tri.hlsl"
+%windows_sdk%\fxc.exe %hlsl_flags% ps_5_0 /E pixel_shader  /Fo "%outdir%\tri_ps.cso" %cfg% "tri.hlsl"
+
+if ERRORLevel 1 (
+    echo ERROR: Shaders failed to compile
+    popd
+    exit /b 1
+)
+popd
+echo shaders complete!!!
+echo:
+
+:: Go into source code directory
 pushd "src"
 
 set assembly=application
@@ -36,9 +57,10 @@ if %ERRORLEVEL% neq 0 (
 echo Building %plat_assembly% complete
 echo:
 
+
 :: Build application
 echo %assembly% compiling...
-clang++ %compiler_flags% %app_flags% main.cpp %code_files% -o %outdir%\%assembly%.exe %defines% %includes% %linker_flags% -L%OUTDIR% -l%plat_assembly%.lib
+clang++ %compiler_flags% %app_flags% main.cpp render_dx11.cpp %code_files% -o %outdir%\%assembly%.exe %defines% %includes% %linker_flags% -L%OUTDIR% -l%plat_assembly%.lib
 
 popd 
 
