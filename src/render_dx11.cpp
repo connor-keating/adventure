@@ -11,9 +11,9 @@ struct render_state
   IDXGISwapChain* swapchain;
   ID3D11DeviceContext* context;
   ID3D11RenderTargetView* render_target; // Pointer to object containing render target info
-	D3D11_VIEWPORT viewport;
-	ID3D11Texture2D* depth_buffer;
-	ID3D11DepthStencilView* depth_view;
+  D3D11_VIEWPORT viewport;
+  ID3D11Texture2D* depth_buffer;
+  ID3D11DepthStencilView* depth_view;
 };
 
 global render_state *renderer;
