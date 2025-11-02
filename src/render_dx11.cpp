@@ -4,6 +4,10 @@
 #include <d3dcompiler.h>
 
 
+/*
+1. Create array of ID3D11RasterizerState variables. It can be global and made in the init function.
+*/
+
 // Data types
 struct render_state
 {
