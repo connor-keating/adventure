@@ -1,13 +1,19 @@
 
-struct vertex { float4 pos : SV_POSITION; float4 col : COL; };
+struct out_vertex { float4 pos : SV_POSITION; float4 col : COL; };
 
-vertex vertex_shader(uint vid : SV_VERTEXID)
+out_vertex vertex_shader(uint vid : SV_VERTEXID)
 { 
-    vertex output = { float4(vid * 0.5f, vid & 1, 1, 1.5f) - 0.5f, float4(vid == 0, vid == 1, vid == 2, 1) };
-    return output;
+  // vid=0; float4(0.0, 0.0, 1, 1.5)-0.5=(-0.5, -0.5, 0.5, 1.0), red (1,0,0,1)
+  // vid=1; float4(0.5, 1.0, 1, 1.5)-0.5=( 0.0,  0.5, 0.5, 1.0), grn (0,1,0,1)
+  // vid=2; float4(1.0, 0.0, 1, 1.5)-0.5=( 0.5, -0.5, 0.5, 1.0), blu (0,0,1,1)
+  out_vertex output = { 
+    float4(vid * 0.5f, vid & 1, 1, 1.5f) - 0.5f,
+    float4(vid == 0, vid == 1, vid == 2, 1) 
+  };
+  return output;
 }
 
-float4 pixel_shader(vertex input) : SV_TARGET 
+float4 pixel_shader(out_vertex input) : SV_TARGET 
 { 
-    return input.col;
+  return input.col;
 }
