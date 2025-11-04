@@ -80,7 +80,7 @@ int main(int argc, char **argv)
   {
     platform_message_process(&window);
     platform_clock_update(&timer);
-    printf("Delta: %.8f\n", timer.delta);
+    // printf("Delta: %.8f\n", timer.delta);
 
     // arena_free_all( &scratch );
 
