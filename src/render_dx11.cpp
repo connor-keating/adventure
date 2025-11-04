@@ -241,7 +241,90 @@ shaders_ptr render_triangle(arena *a)
 {
   // Init output
   shaders *s = arena_push_struct(a, shaders);
+  
+  // Result store
+  HRESULT hr;
+
+  // TODO: Move to describe buffer function.
+  // Describe the buffer
+  
   // Read the files
+  // D3DReadFileToBlob(L"vertex.cso", &vsBlob);
+  // renderer->device->CreateVertexShader(
+    // vsBlob->GetBufferPointer(),
+    // vsBlob->GetBufferSize(),
+    // nullptr,
+    // &vs
+  // );
+
+  // 1) Compile vertex/pixel shaders
+  ID3DBlob* vsBlob = nullptr;
+  ID3DBlob* psBlob = nullptr;
+  ID3DBlob* err    = nullptr;
+
+  D3DCompileFromFile(L"shaders/tri2.hlsl", nullptr, nullptr,
+                    "vertex_shader", "vs_5_0",
+                    D3DCOMPILE_ENABLE_STRICTNESS, 0,
+                    &vsBlob, &err);
+
+  D3DCompileFromFile(L"shaders/tri2.hlsl", nullptr, nullptr,
+                    "pixel_shader", "ps_5_0",
+                    D3DCOMPILE_ENABLE_STRICTNESS, 0,
+                    &psBlob, &err);
+  // 2) Create shader objects
+  // ID3D11VertexShader* vs = nullptr;
+  // ID3D11PixelShader*  ps = nullptr;
+  renderer->device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &s->vertex);
+  renderer->device->CreatePixelShader (psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &s->pixel);
+
+  // 3) Define input layout (pos: float3, color: float3 interleaved)
+  D3D11_INPUT_ELEMENT_DESC il[] =
+  {
+      { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+      { "COLOR",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+  };
+
+  ID3D11InputLayout* layout = nullptr;
+  renderer->device->CreateInputLayout(
+  il, _countof(il),
+  vsBlob->GetBufferPointer(),
+  vsBlob->GetBufferSize(),
+  &layout);
+  
+  // TODO: Move this to another function.
+  // 4) Create a vertex buffer (one vertex: xyz rgb)
+  // create data
+  // f32 *vertices = arena_push_array(a, 9, f32);
+  f32 vertices[18] = 
+  {
+    // position          // color
+    -0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 0.0f,
+     0.0f,  0.5f, 0.5f,  0.0f, 1.0f, 1.0f,
+     0.5f, -0.5f, 0.5f,  1.0f, 0.0f, 1.0f,
+  };
+  D3D11_BUFFER_DESC vbd;
+  vbd.Usage = D3D11_USAGE_IMMUTABLE;
+  vbd.ByteWidth = sizeof(vertices);
+  vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+  vbd.CPUAccessFlags = 0;
+  vbd.MiscFlags = 0;
+  D3D11_SUBRESOURCE_DATA vinitData;
+  vinitData.pSysMem = vertices;
+  ID3D11Buffer* vertex_buffer;
+  hr = renderer->device->CreateBuffer(&vbd, &vinitData, &vertex_buffer);
+  ASSERT( SUCCEEDED(hr), "Failed to create vertex buffer." );
+
+  // TODO: Move this to draw call. So buffer creation needs a function sep from shader creation.
+  // Set vertex buffer. 
+  UINT stride = sizeof(f32) * 6;
+  UINT offset = 0;
+  renderer->context->IASetVertexBuffers(0, 1, &vertex_buffer, &stride, &offset);
+  renderer->context->IASetInputLayout(layout);
+  // renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+  renderer->context->VSSetShader(s->vertex, nullptr, 0);
+  renderer->context->PSSetShader(s->pixel, nullptr, 0);
+
+  /* old ways
   size_t vsSize = 0;
   size_t psSize = 0;
   const char *vs_path = "bin/tri_vs.cso";
@@ -249,12 +332,13 @@ shaders_ptr render_triangle(arena *a)
   const char *vs_bytes = platform_file_read(vs_path, a, &vsSize);
   const char *ps_bytes = platform_file_read(ps_path, a, &psSize);
   // Create the shaders
-  HRESULT hr;
   
   hr = renderer->device->CreateVertexShader(vs_bytes, vsSize, 0, &s->vertex);
   ASSERT( SUCCEEDED(hr), "Failed to create vertex shader." );
   hr = renderer->device->CreatePixelShader(ps_bytes, psSize, 0, &s->pixel);
   ASSERT( SUCCEEDED(hr), "Failed to create pixel shader." );
+  // TODO: Can I free the bytes from the shader?
+  */
   
   return s;
 }
@@ -262,11 +346,11 @@ shaders_ptr render_triangle(arena *a)
 
 void render_draw(shaders_ptr s)
 {
-  renderer->context->IASetInputLayout(0);
-  ID3D11Buffer *nullVB = 0;
-  unsigned int stride = 0;
+  // renderer->context->IASetInputLayout(0);
+  // ID3D11Buffer *nullVB = 0;
+  unsigned int stride = sizeof(f32) * 6;
   unsigned int offset = 0;
-  renderer->context->IASetVertexBuffers(0, 1, &nullVB, &stride, &offset);
+  // renderer->context->IASetVertexBuffers(0, 1, &nullVB, &stride, &offset);
   renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
   renderer->context->VSSetShader(s->vertex, 0, 0);
   renderer->context->PSSetShader(s->pixel, 0, 0);
