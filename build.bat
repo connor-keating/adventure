@@ -6,31 +6,38 @@ SetLocal EnableDelayedExpansion
 set outdir=%cd%\bin
 if not exist %outdir% mkdir %outdir%
 
-:: Build shaders
-echo building shaders...
-pushd "shaders"
+:: Mode
+:: Should be _DEBUG or _PRODUCTION
+set mode=_DEBUG
 
-set windows_sdk="C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64"
-set hlsl_flags=/nologo /T
-set cfg=/Od /Zi
+if %mode% == _PRODUCTION (
+    :: Build shaders
+    echo building shaders...
+    pushd "shaders"
 
-%windows_sdk%\fxc.exe %hlsl_flags% vs_5_0 /E vertex_shader /Fo "%outdir%\tri_vs.cso" %cfg% "tri.hlsl"
-%windows_sdk%\fxc.exe %hlsl_flags% ps_5_0 /E pixel_shader  /Fo "%outdir%\tri_ps.cso" %cfg% "tri.hlsl"
+    set windows_sdk="C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64"
+    set hlsl_flags=/nologo /T
+    set cfg=/Od /Zi
 
-if ERRORLevel 1 (
-    echo ERROR: Shaders failed to compile
+    %windows_sdk%\fxc.exe %hlsl_flags% vs_5_0 /E vertex_shader /Fo "%outdir%\tri_vs.cso" %cfg% "tri.hlsl"
+    %windows_sdk%\fxc.exe %hlsl_flags% ps_5_0 /E pixel_shader  /Fo "%outdir%\tri_ps.cso" %cfg% "tri.hlsl"
+
+    if ERRORLevel 1 (
+        echo ERROR: Shaders failed to compile
+        popd
+        exit /b 1
+    )
     popd
-    exit /b 1
+    echo shaders complete!!!
+    echo:
 )
-popd
-echo shaders complete!!!
-echo:
+
 
 :: Go into source code directory
 pushd "src"
 
 set assembly=application
-set app_flags=-D_DX11 -D_DEBUG
+set app_flags=-D_DX11 -D%mode%
 set compiler_flags=-g -std=c++20 -Wvarargs -Wall -Werror -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-deprecated
 set includes=-I\src\ -I..\external\
 set linker_flags=-luser32 -lgdi32 -lwinmm -ld3d11 -ldxgi -lopengl32 -ld3dcompiler
@@ -41,7 +48,7 @@ set linker_flags=-luser32 -lgdi32 -lwinmm -ld3d11 -ldxgi -lopengl32 -ld3dcompile
 
 :: Windows platform lib
 set plat_assembly=platform
-set plat_defines=-D_DEBUG -D_EXPORT
+set plat_defines=-D%mode% -D_EXPORT
 set plat_includes=-I\src\ -I..\external\
 set plat_flags_comp=-g -std=c++20 -shared -Wvarargs -Wall -Werror -Wno-deprecated -Wno-unused-function
 set plat_flags_link=-luser32 -lgdi32 -lwinmm -lopengl32
