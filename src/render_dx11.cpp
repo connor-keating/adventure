@@ -330,20 +330,6 @@ shaders_ptr render_triangle(arena *a)
 }
 
 
-void frame_init()
-{
-  f32 color[4] = {0.0f, 0.325f, 0.282f, 1.0f};
-  renderer->context->ClearRenderTargetView(renderer->render_target, color);
-  renderer->context->ClearDepthStencilView(renderer->depth_view, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-}
-
-
-void frame_render()
-{
-  renderer->swapchain->Present(1, 0); // vsync on
-}
-
-
 void render_draw(shaders_ptr s)
 {
   // renderer->context->IASetInputLayout(0);
@@ -355,6 +341,20 @@ void render_draw(shaders_ptr s)
   renderer->context->VSSetShader(s->vertex, 0, 0);
   renderer->context->PSSetShader(s->pixel, 0, 0);
   renderer->context->Draw(3, 0);
+}
+
+
+void frame_init()
+{
+  f32 color[4] = {0.0f, 0.325f, 0.282f, 1.0f};
+  renderer->context->ClearRenderTargetView(renderer->render_target, color);
+  renderer->context->ClearDepthStencilView(renderer->depth_view, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+}
+
+
+void frame_render()
+{
+  renderer->swapchain->Present(1, 0); // vsync on
 }
 
 
