@@ -10,6 +10,7 @@
 struct shaders
 {
   ID3D11VertexShader *vertex;
+  ID3D11InputLayout  *vertex_in;
   ID3D11PixelShader  *pixel;
 };
 
@@ -38,6 +39,25 @@ struct render_state
 };
 
 global render_state *renderer;
+
+
+internal ID3D11InputLayout * render_vertex_description(ID3DBlob *vert_shader)
+{
+  D3D11_INPUT_ELEMENT_DESC il[] =
+  {
+    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "COLOR",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+  };
+  ID3D11InputLayout* layout = nullptr;
+  renderer->device->CreateInputLayout(
+    il, 
+    _countof(il),
+    vert_shader->GetBufferPointer(),
+    vert_shader->GetBufferSize(),
+    &layout
+  );
+  return layout;
+}
 
 
 void render_resize(i32 width, i32 height)
@@ -297,28 +317,15 @@ shaders_ptr render_triangle(arena *a)
   renderer->device->CreatePixelShader (psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &s->pixel);
 
   // 3) Define input layout (pos: float3, color: float3 interleaved)
-  D3D11_INPUT_ELEMENT_DESC il[] =
-  {
-      { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-      { "COLOR",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-  };
+  s->vertex_in = render_vertex_description(vsBlob);
 
-  ID3D11InputLayout* layout = nullptr;
-  renderer->device->CreateInputLayout(
-    il, _countof(il),
-    vsBlob->GetBufferPointer(),
-    vsBlob->GetBufferSize(),
-    &layout
-  );
-  
-  // TODO: Move this to another function.
   // 4) Create a vertex buffer (one vertex: xyz rgb)
   render_buffer vbuffer = render_buffer_init();
 
   // TODO: Move this to draw call. So buffer creation needs a function sep from shader creation.
   // Set vertex buffer. 
   renderer->context->IASetVertexBuffers(0, 1, &vbuffer.buffer, &vbuffer.stride, &vbuffer.offset);
-  renderer->context->IASetInputLayout(layout);
+  // renderer->context->IASetInputLayout(layout);
   renderer->context->VSSetShader(s->vertex, nullptr, 0);
   renderer->context->PSSetShader(s->pixel, nullptr, 0);
 
@@ -349,6 +356,7 @@ void render_draw(shaders_ptr s)
   unsigned int stride = sizeof(f32) * 6;
   unsigned int offset = 0;
   // renderer->context->IASetVertexBuffers(0, 1, &nullVB, &stride, &offset);
+  renderer->context->IASetInputLayout(s->vertex_in);
   renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
   renderer->context->VSSetShader(s->vertex, 0, 0);
   renderer->context->PSSetShader(s->pixel, 0, 0);
