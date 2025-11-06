@@ -7,6 +7,8 @@ struct shaders;
 struct render_buffer;
 
 typedef shaders* shaders_ptr;
+// TODO: Left off defining this and then implementing it
+typedef render_buffer* rbuffer_ptr;
 
 
 void          render_init(arena *a);

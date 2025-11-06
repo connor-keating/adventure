@@ -319,15 +319,8 @@ shaders_ptr render_triangle(arena *a)
   // 3) Define input layout (pos: float3, color: float3 interleaved)
   s->vertex_in = render_vertex_description(vsBlob);
 
-  // 4) Create a vertex buffer (one vertex: xyz rgb)
-  render_buffer vbuffer = render_buffer_init();
-
   // TODO: Move this to draw call. So buffer creation needs a function sep from shader creation.
   // Set vertex buffer. 
-  renderer->context->IASetVertexBuffers(0, 1, &vbuffer.buffer, &vbuffer.stride, &vbuffer.offset);
-  // renderer->context->IASetInputLayout(layout);
-  renderer->context->VSSetShader(s->vertex, nullptr, 0);
-  renderer->context->PSSetShader(s->pixel, nullptr, 0);
 
   /* old ways
   size_t vsSize = 0;
@@ -349,13 +342,11 @@ shaders_ptr render_triangle(arena *a)
 }
 
 
-void render_draw(shaders_ptr s)
+void render_draw(rbuffer_ptr vbuffer, shaders_ptr s)
 {
   // renderer->context->IASetInputLayout(0);
   // ID3D11Buffer *nullVB = 0;
-  unsigned int stride = sizeof(f32) * 6;
-  unsigned int offset = 0;
-  // renderer->context->IASetVertexBuffers(0, 1, &nullVB, &stride, &offset);
+  renderer->context->IASetVertexBuffers(0, 1, &vbuffer.buffer, &vbuffer.stride, &vbuffer.offset);
   renderer->context->IASetInputLayout(s->vertex_in);
   renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
   renderer->context->VSSetShader(s->vertex, 0, 0);
