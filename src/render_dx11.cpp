@@ -14,6 +14,13 @@ struct shaders
 };
 
 
+struct render_buffer
+{
+  ID3D11Buffer* buffer;
+  u32 stride;
+  u32 offset;
+};
+
 /*
 1. Create array of ID3D11RasterizerState variables. It can be global and made in the init function.
 */
@@ -223,6 +230,30 @@ void render_init(arena *a)
 }
 
 
+render_buffer render_buffer_init()
+{
+  render_buffer out = {};
+  f32 vertices[18] = 
+  {
+    // position          // color
+    -0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 0.0f,
+     0.0f,  0.5f, 0.5f,  0.0f, 1.0f, 1.0f,
+     0.5f, -0.5f, 0.5f,  1.0f, 0.0f, 1.0f,
+  };
+  D3D11_BUFFER_DESC vbd;
+  vbd.Usage = D3D11_USAGE_IMMUTABLE;
+  vbd.ByteWidth = sizeof(vertices);
+  vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+  vbd.CPUAccessFlags = 0;
+  vbd.MiscFlags = 0;
+  D3D11_SUBRESOURCE_DATA vinitData;
+  vinitData.pSysMem = vertices;
+  HRESULT hr = renderer->device->CreateBuffer(&vbd, &vinitData, &out.buffer);
+  ASSERT( SUCCEEDED(hr), "Failed to create vertex buffer." );
+  return out;
+}
+
+
 shaders_ptr render_triangle(arena *a)
 {
   // Init output
@@ -279,32 +310,13 @@ shaders_ptr render_triangle(arena *a)
   
   // TODO: Move this to another function.
   // 4) Create a vertex buffer (one vertex: xyz rgb)
-  // create data
-  // f32 *vertices = arena_push_array(a, 9, f32);
-  f32 vertices[18] = 
-  {
-    // position          // color
-    -0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 0.0f,
-     0.0f,  0.5f, 0.5f,  0.0f, 1.0f, 1.0f,
-     0.5f, -0.5f, 0.5f,  1.0f, 0.0f, 1.0f,
-  };
-  D3D11_BUFFER_DESC vbd;
-  vbd.Usage = D3D11_USAGE_IMMUTABLE;
-  vbd.ByteWidth = sizeof(vertices);
-  vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-  vbd.CPUAccessFlags = 0;
-  vbd.MiscFlags = 0;
-  D3D11_SUBRESOURCE_DATA vinitData;
-  vinitData.pSysMem = vertices;
-  ID3D11Buffer* vertex_buffer;
-  hr = renderer->device->CreateBuffer(&vbd, &vinitData, &vertex_buffer);
-  ASSERT( SUCCEEDED(hr), "Failed to create vertex buffer." );
+  render_buffer vbuffer = render_buffer_init();
 
   // TODO: Move this to draw call. So buffer creation needs a function sep from shader creation.
   // Set vertex buffer. 
   UINT stride = sizeof(f32) * 6;
   UINT offset = 0;
-  renderer->context->IASetVertexBuffers(0, 1, &vertex_buffer, &stride, &offset);
+  renderer->context->IASetVertexBuffers(0, 1, &vbuffer.buffer, &stride, &offset);
   renderer->context->IASetInputLayout(layout);
   // renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
   renderer->context->VSSetShader(s->vertex, nullptr, 0);
