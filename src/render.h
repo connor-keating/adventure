@@ -11,7 +11,7 @@ typedef shaders* shaders_ptr;
 
 void          render_init(arena *a);
 void          render_resize(i32 width, i32 height);
-// void          render_buffer_init();
+render_buffer render_buffer_init();
 shaders_ptr   render_triangle(arena *a);
 void          render_draw(shaders_ptr s);
 void          render_close();
