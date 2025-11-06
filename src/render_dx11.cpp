@@ -250,6 +250,8 @@ render_buffer render_buffer_init()
   vinitData.pSysMem = vertices;
   HRESULT hr = renderer->device->CreateBuffer(&vbd, &vinitData, &out.buffer);
   ASSERT( SUCCEEDED(hr), "Failed to create vertex buffer." );
+  out.stride = sizeof(vertices[0]) * 6;
+  out.offset = 0;
   return out;
 }
 
@@ -303,10 +305,11 @@ shaders_ptr render_triangle(arena *a)
 
   ID3D11InputLayout* layout = nullptr;
   renderer->device->CreateInputLayout(
-  il, _countof(il),
-  vsBlob->GetBufferPointer(),
-  vsBlob->GetBufferSize(),
-  &layout);
+    il, _countof(il),
+    vsBlob->GetBufferPointer(),
+    vsBlob->GetBufferSize(),
+    &layout
+  );
   
   // TODO: Move this to another function.
   // 4) Create a vertex buffer (one vertex: xyz rgb)
@@ -314,11 +317,8 @@ shaders_ptr render_triangle(arena *a)
 
   // TODO: Move this to draw call. So buffer creation needs a function sep from shader creation.
   // Set vertex buffer. 
-  UINT stride = sizeof(f32) * 6;
-  UINT offset = 0;
-  renderer->context->IASetVertexBuffers(0, 1, &vbuffer.buffer, &stride, &offset);
+  renderer->context->IASetVertexBuffers(0, 1, &vbuffer.buffer, &vbuffer.stride, &vbuffer.offset);
   renderer->context->IASetInputLayout(layout);
-  // renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
   renderer->context->VSSetShader(s->vertex, nullptr, 0);
   renderer->context->PSSetShader(s->pixel, nullptr, 0);
 
