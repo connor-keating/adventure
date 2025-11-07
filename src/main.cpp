@@ -64,16 +64,22 @@ int main(int argc, char **argv)
   render_init(&memory);
 
   // Prepare buffers
-  f32 tri_verts[18] = 
-  {
+  f32 tri_verts[24] = {
     // position          // color
-    -0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 0.0f,
-     0.0f,  0.5f, 0.5f,  0.0f, 1.0f, 1.0f,
-     0.5f, -0.5f, 0.5f,  1.0f, 0.0f, 1.0f,
+    -0.5f, -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, // low right
+    -0.5f,  0.5f, 0.5f,  1.0f, 0.0f, 1.0f, // up  left
+     0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 0.0f, // low left
+     0.5f,  0.5f, 0.5f,  1.0f, 1.0f, 1.0f, // up  right
+  };
+  u32 tri_elems[6] = {
+    // D3D11 is counter-clockwise winding order for front.
+    0, 1, 2, // tri 1
+    1, 3, 2, // tri 2
   };
   u32 tri_size = sizeof(tri_verts);
   u32 tri_stride = sizeof(tri_verts[0]) * 6;
   rbuffer_ptr vbuffer = render_buffer_init(&memory, VERTS, (void*)tri_verts, tri_stride, tri_size);
+  rbuffer_ptr ebuffer = render_buffer_init(&memory, ELEMS, (void*)tri_elems, 1, sizeof(tri_elems));
   shaders_ptr tri_prog = shader_init(&memory);
   shader_load(tri_prog, VERTEX, "shaders/tri2.hlsl", "vertex_shader", "vs_5_0");
   shader_load(tri_prog, PIXEL,  "shaders/tri2.hlsl", "pixel_shader" , "ps_5_0");
@@ -95,7 +101,8 @@ int main(int argc, char **argv)
 
     frame_init();
 
-    render_draw(vbuffer, tri_prog);
+    // render_draw(vbuffer, tri_prog);
+    render_draw_elems(vbuffer, ebuffer, tri_prog, 0, 0);
 
     frame_render();
   }

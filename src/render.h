@@ -29,6 +29,7 @@ void          render_init(arena *a);
 void          render_resize(i32 width, i32 height);
 rbuffer_ptr   render_buffer_init(arena *a, buffer_type t, void* data, u32 stride, u32 byte_count);
 void          render_draw(rbuffer_ptr vertex_buffer, shaders_ptr s);
+void          render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, u32 elem_start, u32 vert_start);
 void          render_close();
 
 shaders_ptr   shader_init(arena *a);

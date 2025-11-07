@@ -335,6 +335,18 @@ void render_draw(rbuffer_ptr vbuffer, shaders_ptr s)
 }
 
 
+void render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, u32 elem_start, u32 vert_start)
+{
+  renderer->context->IASetVertexBuffers(0, 1, &vbuffer->buffer, &vbuffer->stride, &vbuffer->offset);
+  renderer->context->IASetIndexBuffer(ebuffer->buffer, DXGI_FORMAT_R32_UINT, 0);
+  renderer->context->IASetInputLayout(s->vertex_in);
+  renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  renderer->context->VSSetShader(s->vertex, 0, 0);
+  renderer->context->PSSetShader(s->pixel, 0, 0);
+  renderer->context->DrawIndexed(6, elem_start, vert_start);
+}
+
+
 void frame_init()
 {
   f32 color[4] = {0.0f, 0.325f, 0.282f, 1.0f};
