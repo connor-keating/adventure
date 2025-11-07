@@ -51,6 +51,7 @@ internal ID3D11InputLayout * render_vertex_description(ID3DBlob *vert_shader)
   {
     { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
     { "COLOR",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
   };
   ID3D11InputLayout* layout = nullptr;
   renderer->device->CreateInputLayout(
@@ -385,7 +386,6 @@ void shader_load(shaders *s, shader_type t, const char *file, const char *entry,
     case (VERTEX):
     {
       renderer->device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &s->vertex);
-      // 3) Define input layout 
       s->vertex_in = render_vertex_description(blob);
       break;
     }

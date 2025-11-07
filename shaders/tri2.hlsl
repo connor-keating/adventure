@@ -5,6 +5,7 @@ struct VSInput
 {
     float3 pos : POSITION;   // 12 bytes offset 0
     float3 col : COLOR;      // 12 bytes offset 12
+    float2 tex : TEXCOORD;   // 8  bytes offset 24
 };
 
 // Vertex shader output: position goes to SV_POSITION, color passed to pixel shader

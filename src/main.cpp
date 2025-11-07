@@ -65,12 +65,12 @@ int main(int argc, char **argv)
   render_init(&memory);
 
   // Prepare buffers
-  f32 tri_verts[24] = {
-    // position          // color
-    -0.5f, -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, // low right
-    -0.5f,  0.5f, 0.5f,  1.0f, 0.0f, 1.0f, // up  left
-     0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 0.0f, // low left
-     0.5f,  0.5f, 0.5f,  1.0f, 1.0f, 1.0f, // up  right
+  f32 tri_verts[32] = {
+    // position          // color          // Texture
+    -0.5f, -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f,  // low right
+    -0.5f,  0.5f, 0.5f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // up  left
+     0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f, // low left
+     0.5f,  0.5f, 0.5f,  1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // up  right
   };
   u32 tri_elems[6] = {
     // D3D11 is counter-clockwise winding order for front.
@@ -78,7 +78,7 @@ int main(int argc, char **argv)
     1, 3, 2, // tri 2
   };
   u32 tri_size = sizeof(tri_verts);
-  u32 tri_stride = sizeof(tri_verts[0]) * 6;
+  u32 tri_stride = sizeof(tri_verts[0]) * 8;
   rbuffer_ptr vbuffer = render_buffer_init(&memory, VERTS, (void*)tri_verts, tri_stride, tri_size);
   rbuffer_ptr ebuffer = render_buffer_init(&memory, ELEMS, (void*)tri_elems, 1, sizeof(tri_elems));
   shaders_ptr tri_prog = shader_init(&memory);
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
   shader_load(tri_prog, PIXEL,  "shaders/tri2.hlsl", "pixel_shader" , "ps_5_0");
 
   // Text init
-  render_text_init(&memory);
+  // render_text_init(&memory);
 
   // Initialize clock
   f64 fps_target = 60; // The amount of frames presented in a second.
