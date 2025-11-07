@@ -64,7 +64,7 @@ int main(int argc, char **argv)
   render_init(&memory);
 
   // Prepare buffers
-  render_buffer vbuffer = render_buffer_init();
+  rbuffer_ptr vbuffer = render_buffer_init(&memory);
   shaders_ptr tri_prog = render_triangle(&scratch);
 
   // Initialize clock
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 
     frame_init();
 
-    render_draw(tri_prog);
+    render_draw(vbuffer, tri_prog);
 
     frame_render();
   }

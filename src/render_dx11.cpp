@@ -250,9 +250,9 @@ void render_init(arena *a)
 }
 
 
-render_buffer render_buffer_init()
+rbuffer_ptr render_buffer_init(arena *a)
 {
-  render_buffer out = {};
+  render_buffer *out = arena_push_struct(a, render_buffer);
   f32 vertices[18] = 
   {
     // position          // color
@@ -268,10 +268,10 @@ render_buffer render_buffer_init()
   vbd.MiscFlags = 0;
   D3D11_SUBRESOURCE_DATA vinitData;
   vinitData.pSysMem = vertices;
-  HRESULT hr = renderer->device->CreateBuffer(&vbd, &vinitData, &out.buffer);
+  HRESULT hr = renderer->device->CreateBuffer(&vbd, &vinitData, &out->buffer);
   ASSERT( SUCCEEDED(hr), "Failed to create vertex buffer." );
-  out.stride = sizeof(vertices[0]) * 6;
-  out.offset = 0;
+  out->stride = sizeof(vertices[0]) * 6;
+  out->offset = 0;
   return out;
 }
 
@@ -346,7 +346,7 @@ void render_draw(rbuffer_ptr vbuffer, shaders_ptr s)
 {
   // renderer->context->IASetInputLayout(0);
   // ID3D11Buffer *nullVB = 0;
-  renderer->context->IASetVertexBuffers(0, 1, &vbuffer.buffer, &vbuffer.stride, &vbuffer.offset);
+  renderer->context->IASetVertexBuffers(0, 1, &vbuffer->buffer, &vbuffer->stride, &vbuffer->offset);
   renderer->context->IASetInputLayout(s->vertex_in);
   renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
   renderer->context->VSSetShader(s->vertex, 0, 0);
