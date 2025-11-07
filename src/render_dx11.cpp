@@ -253,6 +253,8 @@ void render_init(arena *a)
 rbuffer_ptr render_buffer_init(arena *a, buffer_type t, void* data, u32 stride, u32 byte_count)
 {
   render_buffer *out = arena_push_struct(a, render_buffer);
+  out->stride = stride;
+  out->offset = 0;
   u32 flags = 0;
   switch (t)
   {
@@ -271,8 +273,6 @@ rbuffer_ptr render_buffer_init(arena *a, buffer_type t, void* data, u32 stride, 
   vinitData.pSysMem = data;
   HRESULT hr = renderer->device->CreateBuffer(&vbd, &vinitData, &out->buffer);
   ASSERT( SUCCEEDED(hr), "Failed to create vertex buffer." );
-  out->stride = stride;
-  out->offset = 0;
   return out;
 }
 
