@@ -20,20 +20,27 @@ enum buffer_type
 
 struct shaders;
 struct render_buffer;
+struct vert_texture
+{
+  f32 x, y, z, u, v;
+};
+
 
 typedef shaders* shaders_ptr;
 typedef render_buffer* rbuffer_ptr;
 
 
+
 void          render_init(arena *a);
 void          render_resize(i32 width, i32 height);
 rbuffer_ptr   render_buffer_init(arena *a, buffer_type t, void* data, u32 stride, u32 byte_count);
+void          render_text_init(arena *a);
 void          render_draw(rbuffer_ptr vertex_buffer, shaders_ptr s, u32 count);
 void          render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, u32 count, u32 elem_start, u32 vert_start);
 void          render_close();
 
 shaders_ptr   shader_init(arena *a);
-void shader_load(shaders *s, shader_type t, const char *file, const char *entry, const char *target);
+void          shader_load(shaders *s, shader_type t, const char *file, const char *entry, const char *target);
 
 void          frame_init();
 void          frame_render();

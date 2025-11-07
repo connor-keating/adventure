@@ -4,6 +4,7 @@
 #include "render.h"
 
 
+
 // Globals
 global bool is_running;
 
@@ -83,6 +84,9 @@ int main(int argc, char **argv)
   shaders_ptr tri_prog = shader_init(&memory);
   shader_load(tri_prog, VERTEX, "shaders/tri2.hlsl", "vertex_shader", "vs_5_0");
   shader_load(tri_prog, PIXEL,  "shaders/tri2.hlsl", "pixel_shader" , "ps_5_0");
+
+  // Text init
+  render_text_init(&memory);
 
   // Initialize clock
   f64 fps_target = 60; // The amount of frames presented in a second.
