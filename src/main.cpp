@@ -65,8 +65,9 @@ int main(int argc, char **argv)
 
   // Prepare buffers
   rbuffer_ptr vbuffer = render_buffer_init(&memory);
-  shaders_ptr tri_prog = render_triangle(&scratch);
-
+  shaders_ptr tri_prog = shader_init(&scratch);
+  shader_load(tri_prog, VERTEX, L"shaders/tri2.hlsl", "vertex_shader", "vs_5_0");
+  shader_load(tri_prog, PIXEL,  L"shaders/tri2.hlsl", "pixel_shader" , "ps_5_0");
   // Initialize clock
   f64 fps_target = 60; // The amount of frames presented in a second.
   clock timer = platform_clock_init(fps_target);

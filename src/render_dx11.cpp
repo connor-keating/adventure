@@ -276,50 +276,47 @@ rbuffer_ptr render_buffer_init(arena *a)
 }
 
 
-shaders_ptr render_triangle(arena *a)
+shaders_ptr shader_init(arena *a)
 {
   // Init output
   shaders *s = arena_push_struct(a, shaders);
-  
-  // Result store
-  HRESULT hr;
-
-  // 1) Compile vertex/pixel shaders
-  ID3DBlob* vsBlob = nullptr;
-  ID3DBlob* psBlob = nullptr;
-  ID3DBlob* err    = nullptr;
-
-  hr = D3DCompileFromFile(
-    L"shaders/tri2.hlsl",
-    nullptr,
-    nullptr,
-    "vertex_shader",
-    "vs_5_0",
-    D3DCOMPILE_ENABLE_STRICTNESS,
-    0,
-    &vsBlob,
-    &err
-  );
-
-  hr = D3DCompileFromFile(
-    L"shaders/tri2.hlsl",
-    nullptr,
-    nullptr,
-    "pixel_shader",
-    "ps_5_0",
-    D3DCOMPILE_ENABLE_STRICTNESS,
-    0,
-    &psBlob,
-    &err
-  );
-  // 2) Create shader objects
-  renderer->device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &s->vertex);
-  renderer->device->CreatePixelShader (psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &s->pixel);
-
-  // 3) Define input layout (pos: float3, color: float3 interleaved)
-  s->vertex_in = render_vertex_description(vsBlob);
-
   return s;
+}
+
+
+void shader_load(shaders *s, shader_type t, wchar_t *filename, char *entry, char *target)
+{
+  // Compile shaders
+  ID3DBlob* blob = nullptr;
+  ID3DBlob* erro = nullptr;
+  HRESULT hr = D3DCompileFromFile(
+    filename,
+    nullptr,
+    nullptr,
+    entry,
+    target,
+    D3DCOMPILE_ENABLE_STRICTNESS,
+    0,
+    &blob,
+    &erro
+  );
+  // Create shader object
+  switch (t)
+  {
+    case (VERTEX):
+    {
+      renderer->device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &s->vertex);
+      // 3) Define input layout 
+      s->vertex_in = render_vertex_description(blob);
+      break;
+    }
+    case (PIXEL):
+    {
+      renderer->device->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &s->pixel);
+      break;
+    }
+    default: break;
+  };
 }
 
 
