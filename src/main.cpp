@@ -65,15 +65,13 @@ int main(int argc, char **argv)
 
   // Prepare buffers
   rbuffer_ptr vbuffer = render_buffer_init(&memory);
-  shaders_ptr tri_prog = shader_init(&scratch);
+  shaders_ptr tri_prog = shader_init(&memory);
   shader_load(tri_prog, VERTEX, "shaders/tri2.hlsl", "vertex_shader", "vs_5_0");
   shader_load(tri_prog, PIXEL,  "shaders/tri2.hlsl", "pixel_shader" , "ps_5_0");
+
   // Initialize clock
   f64 fps_target = 60; // The amount of frames presented in a second.
   clock timer = platform_clock_init(fps_target);
-
-  // Free scratch
-  arena_free_all(&scratch);
 
   // Application start
   platform_window_show();
@@ -84,7 +82,7 @@ int main(int argc, char **argv)
     platform_clock_update(&timer);
     // printf("Delta: %.8f\n", timer.delta);
 
-    // arena_free_all( &scratch );
+    arena_free_all( &scratch );
 
     frame_init();
 
