@@ -64,7 +64,16 @@ int main(int argc, char **argv)
   render_init(&memory);
 
   // Prepare buffers
-  rbuffer_ptr vbuffer = render_buffer_init(&memory, VERTS);
+  f32 tri_verts[18] = 
+  {
+    // position          // color
+    -0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 0.0f,
+     0.0f,  0.5f, 0.5f,  0.0f, 1.0f, 1.0f,
+     0.5f, -0.5f, 0.5f,  1.0f, 0.0f, 1.0f,
+  };
+  u32 tri_size = sizeof(tri_verts);
+  u32 tri_stride = sizeof(tri_verts[0]) * 6;
+  rbuffer_ptr vbuffer = render_buffer_init(&memory, VERTS, (void*)tri_verts, tri_stride, tri_size);
   shaders_ptr tri_prog = shader_init(&memory);
   shader_load(tri_prog, VERTEX, "shaders/tri2.hlsl", "vertex_shader", "vs_5_0");
   shader_load(tri_prog, PIXEL,  "shaders/tri2.hlsl", "pixel_shader" , "ps_5_0");

@@ -250,16 +250,9 @@ void render_init(arena *a)
 }
 
 
-rbuffer_ptr render_buffer_init(arena *a, buffer_type t)
+rbuffer_ptr render_buffer_init(arena *a, buffer_type t, void* data, u32 stride, u32 byte_count)
 {
   render_buffer *out = arena_push_struct(a, render_buffer);
-  f32 vertices[18] = 
-  {
-    // position          // color
-    -0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 0.0f,
-     0.0f,  0.5f, 0.5f,  0.0f, 1.0f, 1.0f,
-     0.5f, -0.5f, 0.5f,  1.0f, 0.0f, 1.0f,
-  };
   u32 flags = 0;
   switch (t)
   {
@@ -270,15 +263,15 @@ rbuffer_ptr render_buffer_init(arena *a, buffer_type t)
   ASSERT( (flags != 0), "Failed to set D3D11 flags.");
   D3D11_BUFFER_DESC vbd;
   vbd.Usage = D3D11_USAGE_IMMUTABLE;
-  vbd.ByteWidth = sizeof(vertices);
+  vbd.ByteWidth = byte_count;
   vbd.BindFlags = flags;
   vbd.CPUAccessFlags = 0;
   vbd.MiscFlags = 0;
   D3D11_SUBRESOURCE_DATA vinitData;
-  vinitData.pSysMem = vertices;
+  vinitData.pSysMem = data;
   HRESULT hr = renderer->device->CreateBuffer(&vbd, &vinitData, &out->buffer);
   ASSERT( SUCCEEDED(hr), "Failed to create vertex buffer." );
-  out->stride = sizeof(vertices[0]) * 6;
+  out->stride = stride;
   out->offset = 0;
   return out;
 }

@@ -27,7 +27,7 @@ typedef render_buffer* rbuffer_ptr;
 
 void          render_init(arena *a);
 void          render_resize(i32 width, i32 height);
-rbuffer_ptr   render_buffer_init(arena *a, buffer_type t);
+rbuffer_ptr   render_buffer_init(arena *a, buffer_type t, void* data, u32 stride, u32 byte_count);
 void          render_draw(rbuffer_ptr vertex_buffer, shaders_ptr s);
 void          render_close();
 
