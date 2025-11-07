@@ -64,7 +64,7 @@ int main(int argc, char **argv)
   render_init(&memory);
 
   // Prepare buffers
-  rbuffer_ptr vbuffer = render_buffer_init(&memory);
+  rbuffer_ptr vbuffer = render_buffer_init(&memory, VERTS);
   shaders_ptr tri_prog = shader_init(&memory);
   shader_load(tri_prog, VERTEX, "shaders/tri2.hlsl", "vertex_shader", "vs_5_0");
   shader_load(tri_prog, PIXEL,  "shaders/tri2.hlsl", "pixel_shader" , "ps_5_0");

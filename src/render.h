@@ -11,6 +11,12 @@ enum shader_type
   COMPUTE
 };
 
+enum buffer_type
+{
+  VERTS,
+  ELEMS
+};
+
 
 struct shaders;
 struct render_buffer;
@@ -21,7 +27,7 @@ typedef render_buffer* rbuffer_ptr;
 
 void          render_init(arena *a);
 void          render_resize(i32 width, i32 height);
-rbuffer_ptr   render_buffer_init(arena *a);
+rbuffer_ptr   render_buffer_init(arena *a, buffer_type t);
 void          render_draw(rbuffer_ptr vertex_buffer, shaders_ptr s);
 void          render_close();
 

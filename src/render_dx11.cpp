@@ -250,7 +250,7 @@ void render_init(arena *a)
 }
 
 
-rbuffer_ptr render_buffer_init(arena *a)
+rbuffer_ptr render_buffer_init(arena *a, buffer_type t)
 {
   render_buffer *out = arena_push_struct(a, render_buffer);
   f32 vertices[18] = 
@@ -260,10 +260,18 @@ rbuffer_ptr render_buffer_init(arena *a)
      0.0f,  0.5f, 0.5f,  0.0f, 1.0f, 1.0f,
      0.5f, -0.5f, 0.5f,  1.0f, 0.0f, 1.0f,
   };
+  u32 flags = 0;
+  switch (t)
+  {
+    case (VERTS): flags = D3D11_BIND_VERTEX_BUFFER; break;
+    case (ELEMS): flags = D3D11_BIND_INDEX_BUFFER;  break;
+    default: break;
+  };
+  ASSERT( (flags != 0), "Failed to set D3D11 flags.");
   D3D11_BUFFER_DESC vbd;
   vbd.Usage = D3D11_USAGE_IMMUTABLE;
   vbd.ByteWidth = sizeof(vertices);
-  vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+  vbd.BindFlags = flags;
   vbd.CPUAccessFlags = 0;
   vbd.MiscFlags = 0;
   D3D11_SUBRESOURCE_DATA vinitData;
