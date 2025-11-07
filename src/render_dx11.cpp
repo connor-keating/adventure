@@ -7,6 +7,10 @@
 #include <d3dcompiler.h>
 
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+
 struct shaders
 {
   ID3D11VertexShader *vertex;
@@ -274,6 +278,77 @@ rbuffer_ptr render_buffer_init(arena *a, buffer_type t, void* data, u32 stride, 
   HRESULT hr = renderer->device->CreateBuffer(&vbd, &vinitData, &out->buffer);
   ASSERT( SUCCEEDED(hr), "Failed to create vertex buffer." );
   return out;
+}
+
+
+void render_text_init(arena *a)
+{
+  vert_texture quad[] = {
+    //  clip-space xy for a full-screen-ish quad, z=0
+    { -0.5f,  0.5f, 0.0f, 0.0f, 0.0f }, // TL
+    {  0.5f,  0.5f, 0.0f, 1.0f, 0.0f }, // TR
+    {  0.5f, -0.5f, 0.0f, 1.0f, 1.0f }, // BR
+    { -0.5f, -0.5f, 0.0f, 0.0f, 1.0f }, // BL
+  };
+  u32 idx[] = { 0,1,2, 0,2,3 };
+  ID3D11Buffer *vb=nullptr, *ib=nullptr;
+
+  D3D11_BUFFER_DESC bd = {};
+  bd.Usage = D3D11_USAGE_IMMUTABLE;
+  bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+  bd.ByteWidth = (UINT)sizeof(quad);
+  D3D11_SUBRESOURCE_DATA s = { quad, 0, 0 };
+  renderer->device->CreateBuffer(&bd, &s, &vb);
+
+  bd = {};
+  bd.Usage = D3D11_USAGE_IMMUTABLE;
+  bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+  bd.ByteWidth = (UINT)sizeof(idx);
+  s = { idx, 0, 0 };
+  renderer->device->CreateBuffer(&bd, &s, &ib);
+
+  // Create shaders
+  ID3DBlob* vs_blob = nullptr;
+  ID3DBlob* ps_blob = nullptr;
+  ID3DBlob* erro = nullptr;
+  HRESULT hr = D3DCompileFromFile(
+    L"shaders/text.hlsl",
+    nullptr,
+    nullptr,
+    "VSMain",
+    "vs_5_0",
+    D3DCOMPILE_ENABLE_STRICTNESS,
+    0,
+    &vs_blob,
+    &erro
+  );
+  hr = D3DCompileFromFile(
+    L"shaders/text.hlsl",
+    nullptr,
+    nullptr,
+    "PSMain",
+    "ps_5_0",
+    D3DCOMPILE_ENABLE_STRICTNESS,
+    0,
+    &ps_blob,
+    &erro
+  );
+
+  // Input layout (matches HLSL)
+  D3D11_INPUT_ELEMENT_DESC il[] = {
+      { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+      { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+  };
+  // Create after compiling VS to get vsBlob
+  ID3D11InputLayout* layout=nullptr;
+  renderer->device->CreateInputLayout(
+    il,
+    _countof(il),
+    vs_blob->GetBufferPointer(),
+    vs_blob->GetBufferSize(),
+    &layout
+  );
+
 }
 
 
