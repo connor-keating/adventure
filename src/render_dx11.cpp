@@ -284,68 +284,47 @@ shaders_ptr render_triangle(arena *a)
   // Result store
   HRESULT hr;
 
-  // TODO: Move to describe buffer function.
-  // Describe the buffer
-  
-  // Read the files
-  // D3DReadFileToBlob(L"vertex.cso", &vsBlob);
-  // renderer->device->CreateVertexShader(
-    // vsBlob->GetBufferPointer(),
-    // vsBlob->GetBufferSize(),
-    // nullptr,
-    // &vs
-  // );
-
   // 1) Compile vertex/pixel shaders
   ID3DBlob* vsBlob = nullptr;
   ID3DBlob* psBlob = nullptr;
   ID3DBlob* err    = nullptr;
 
-  D3DCompileFromFile(L"shaders/tri2.hlsl", nullptr, nullptr,
-                    "vertex_shader", "vs_5_0",
-                    D3DCOMPILE_ENABLE_STRICTNESS, 0,
-                    &vsBlob, &err);
+  hr = D3DCompileFromFile(
+    L"shaders/tri2.hlsl",
+    nullptr,
+    nullptr,
+    "vertex_shader",
+    "vs_5_0",
+    D3DCOMPILE_ENABLE_STRICTNESS,
+    0,
+    &vsBlob,
+    &err
+  );
 
-  D3DCompileFromFile(L"shaders/tri2.hlsl", nullptr, nullptr,
-                    "pixel_shader", "ps_5_0",
-                    D3DCOMPILE_ENABLE_STRICTNESS, 0,
-                    &psBlob, &err);
+  hr = D3DCompileFromFile(
+    L"shaders/tri2.hlsl",
+    nullptr,
+    nullptr,
+    "pixel_shader",
+    "ps_5_0",
+    D3DCOMPILE_ENABLE_STRICTNESS,
+    0,
+    &psBlob,
+    &err
+  );
   // 2) Create shader objects
-  // ID3D11VertexShader* vs = nullptr;
-  // ID3D11PixelShader*  ps = nullptr;
   renderer->device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &s->vertex);
   renderer->device->CreatePixelShader (psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &s->pixel);
 
   // 3) Define input layout (pos: float3, color: float3 interleaved)
   s->vertex_in = render_vertex_description(vsBlob);
 
-  // TODO: Move this to draw call. So buffer creation needs a function sep from shader creation.
-  // Set vertex buffer. 
-
-  /* old ways
-  size_t vsSize = 0;
-  size_t psSize = 0;
-  const char *vs_path = "bin/tri_vs.cso";
-  const char *ps_path = "bin/tri_ps.cso";
-  const char *vs_bytes = platform_file_read(vs_path, a, &vsSize);
-  const char *ps_bytes = platform_file_read(ps_path, a, &psSize);
-  // Create the shaders
-  
-  hr = renderer->device->CreateVertexShader(vs_bytes, vsSize, 0, &s->vertex);
-  ASSERT( SUCCEEDED(hr), "Failed to create vertex shader." );
-  hr = renderer->device->CreatePixelShader(ps_bytes, psSize, 0, &s->pixel);
-  ASSERT( SUCCEEDED(hr), "Failed to create pixel shader." );
-  // TODO: Can I free the bytes from the shader?
-  */
-  
   return s;
 }
 
 
 void render_draw(rbuffer_ptr vbuffer, shaders_ptr s)
 {
-  // renderer->context->IASetInputLayout(0);
-  // ID3D11Buffer *nullVB = 0;
   renderer->context->IASetVertexBuffers(0, 1, &vbuffer->buffer, &vbuffer->stride, &vbuffer->offset);
   renderer->context->IASetInputLayout(s->vertex_in);
   renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
