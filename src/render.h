@@ -26,7 +26,7 @@ void          render_draw(rbuffer_ptr vertex_buffer, shaders_ptr s);
 void          render_close();
 
 shaders_ptr   shader_init(arena *a);
-void shader_load(shaders *s, shader_type t, wchar_t *filename, char *entry, char *target);
+void shader_load(shaders *s, shader_type t, const char *file, const char *entry, const char *target);
 
 void          frame_init();
 void          frame_render();

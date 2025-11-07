@@ -284,13 +284,16 @@ shaders_ptr shader_init(arena *a)
 }
 
 
-void shader_load(shaders *s, shader_type t, wchar_t *filename, char *entry, char *target)
+void shader_load(shaders *s, shader_type t, const char *file, const char *entry, const char *target)
 {
+  // Convert file path to UTF-8 char
+  wchar_t filewide[256];
+  MultiByteToWideChar(CP_ACP, 0, file, -1, filewide, 256);
   // Compile shaders
   ID3DBlob* blob = nullptr;
   ID3DBlob* erro = nullptr;
   HRESULT hr = D3DCompileFromFile(
-    filename,
+    filewide,
     nullptr,
     nullptr,
     entry,
