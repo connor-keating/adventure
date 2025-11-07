@@ -324,18 +324,18 @@ void shader_load(shaders *s, shader_type t, const char *file, const char *entry,
 }
 
 
-void render_draw(rbuffer_ptr vbuffer, shaders_ptr s)
+void render_draw(rbuffer_ptr vbuffer, shaders_ptr s, u32 count)
 {
   renderer->context->IASetVertexBuffers(0, 1, &vbuffer->buffer, &vbuffer->stride, &vbuffer->offset);
   renderer->context->IASetInputLayout(s->vertex_in);
   renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
   renderer->context->VSSetShader(s->vertex, 0, 0);
   renderer->context->PSSetShader(s->pixel, 0, 0);
-  renderer->context->Draw(3, 0);
+  renderer->context->Draw(count, 0);
 }
 
 
-void render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, u32 elem_start, u32 vert_start)
+void render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, u32 count, u32 elem_start, u32 vert_start)
 {
   renderer->context->IASetVertexBuffers(0, 1, &vbuffer->buffer, &vbuffer->stride, &vbuffer->offset);
   renderer->context->IASetIndexBuffer(ebuffer->buffer, DXGI_FORMAT_R32_UINT, 0);
@@ -343,7 +343,7 @@ void render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, 
   renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
   renderer->context->VSSetShader(s->vertex, 0, 0);
   renderer->context->PSSetShader(s->pixel, 0, 0);
-  renderer->context->DrawIndexed(6, elem_start, vert_start);
+  renderer->context->DrawIndexed(count, elem_start, vert_start);
 }
 
 

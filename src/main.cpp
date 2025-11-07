@@ -101,8 +101,8 @@ int main(int argc, char **argv)
 
     frame_init();
 
-    // render_draw(vbuffer, tri_prog);
-    render_draw_elems(vbuffer, ebuffer, tri_prog, 0, 0);
+    // render_draw(vbuffer, tri_prog, 3);
+    render_draw_elems(vbuffer, ebuffer, tri_prog, 6, 0, 0);
 
     frame_render();
   }
