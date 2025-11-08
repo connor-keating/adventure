@@ -3,7 +3,8 @@
 #include "platform.h"
 #include "render.h"
 
-
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 // Globals
 global bool is_running;
@@ -18,6 +19,7 @@ global bool is_running;
 // #include "data3d.cpp"
 
 // TODO: Why does app crash when I share it with discord?
+
 
 
 void input_reset(control_state *input_state)
@@ -67,10 +69,10 @@ int main(int argc, char **argv)
   // Prepare buffers
   f32 tri_verts[32] = {
     // position          // color          // Texture
-    -0.5f, -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f,  // low right
+    -0.5f, -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 1.0f,  // low left
     -0.5f,  0.5f, 0.5f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // up  left
-     0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 0.0f, 0.0f, 0.0f, // low left
-     0.5f,  0.5f, 0.5f,  1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // up  right
+     0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 0.0f, 1.0f, 1.0f, // low right
+     0.5f,  0.5f, 0.5f,  1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // up  right
   };
   u32 tri_elems[6] = {
     // D3D11 is counter-clockwise winding order for front.
@@ -85,7 +87,14 @@ int main(int argc, char **argv)
   shader_load(tri_prog, VERTEX, "shaders/tri2.hlsl", "vertex_shader", "vs_5_0");
   shader_load(tri_prog, PIXEL,  "shaders/tri2.hlsl", "pixel_shader" , "ps_5_0");
 
-  // Text init
+  // Read in a texture
+  const char* filename = "G:/pacbird/.assets/checker-gray5.png";
+  i32 test = platform_file_exists(filename);
+  i32 x, y, n;
+  i32 components_per_pixel = 4; // Force RGBA
+  unsigned char *data = stbi_load(filename, &x, &y, &n, components_per_pixel);
+  texture2d_ptr quad_texture = texture2d_init(&memory, data, x, y, components_per_pixel);
+
   // render_text_init(&memory);
 
   // Initialize clock
@@ -105,6 +114,7 @@ int main(int argc, char **argv)
 
     frame_init();
 
+    texture2d_bind(quad_texture, 0);
     // render_draw(vbuffer, tri_prog, 3);
     render_draw_elems(vbuffer, ebuffer, tri_prog, 6, 0, 0);
 

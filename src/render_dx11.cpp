@@ -6,10 +6,9 @@
 #include <dxgi.h>
 #include <d3dcompiler.h>
 
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
+/*
+1. Create array of ID3D11RasterizerState variables. It can be global and made in the init function.
+*/
 
 struct shaders
 {
@@ -18,7 +17,6 @@ struct shaders
   ID3D11PixelShader  *pixel;
 };
 
-
 struct render_buffer
 {
   ID3D11Buffer* buffer;
@@ -26,9 +24,13 @@ struct render_buffer
   u32 offset;
 };
 
-/*
-1. Create array of ID3D11RasterizerState variables. It can be global and made in the init function.
-*/
+struct texture2d
+{
+  ID3D11Texture2D* texture;
+  ID3D11ShaderResourceView* view;
+  ID3D11SamplerState* sampler;
+};
+
 
 // Data types
 struct render_state
@@ -419,6 +421,73 @@ void render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, 
   renderer->context->VSSetShader(s->vertex, 0, 0);
   renderer->context->PSSetShader(s->pixel, 0, 0);
   renderer->context->DrawIndexed(count, elem_start, vert_start);
+}
+
+
+texture2d * texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 channels)
+{
+  texture2d *tex = arena_push_struct(a, texture2d);
+
+  // Create texture description
+  D3D11_TEXTURE2D_DESC desc = {};
+  desc.Width = width;
+  desc.Height = height;
+  desc.MipLevels = 1;
+  desc.ArraySize = 1;
+  desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+  desc.SampleDesc.Count = 1;
+  desc.SampleDesc.Quality = 0;
+  desc.Usage = D3D11_USAGE_IMMUTABLE;
+  desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+  desc.CPUAccessFlags = 0;
+  desc.MiscFlags = 0;
+
+  // Setup subresource data
+  D3D11_SUBRESOURCE_DATA gpu_data = {};
+  gpu_data.pSysMem = pixels;
+  gpu_data.SysMemPitch = width * 4; // 4 bytes per pixel (RGBA)
+
+  // Create texture
+  HRESULT hr = renderer->device->CreateTexture2D(&desc, &gpu_data, &tex->texture);
+  ASSERT(SUCCEEDED(hr), "Failed to create texture2D.");
+
+  // Create shader resource view
+  D3D11_SHADER_RESOURCE_VIEW_DESC gpu_desc = {};
+  gpu_desc.Format = desc.Format;
+  gpu_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+  gpu_desc.Texture2D.MostDetailedMip = 0;
+  gpu_desc.Texture2D.MipLevels = 1;
+
+  hr = renderer->device->CreateShaderResourceView(tex->texture, &gpu_desc, &tex->view);
+  ASSERT(SUCCEEDED(hr), "Failed to create shader resource view.");
+
+  // Create sampler state
+  D3D11_SAMPLER_DESC sampler_desc = {};
+  sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+  sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+  sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+  sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+  sampler_desc.MipLODBias = 0.0f;
+  sampler_desc.MaxAnisotropy = 1;
+  sampler_desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+  sampler_desc.BorderColor[0] = 0.0f;
+  sampler_desc.BorderColor[1] = 0.0f;
+  sampler_desc.BorderColor[2] = 0.0f;
+  sampler_desc.BorderColor[3] = 0.0f;
+  sampler_desc.MinLOD = 0.0f;
+  sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
+
+  hr = renderer->device->CreateSamplerState(&sampler_desc, &tex->sampler);
+  ASSERT(SUCCEEDED(hr), "Failed to create sampler state.");
+
+  return tex;
+}
+
+
+void texture2d_bind(texture2d *tex, u32 slot)
+{
+  renderer->context->PSSetShaderResources(slot, 1, &tex->view);
+  renderer->context->PSSetSamplers(slot, 1, &tex->sampler);
 }
 
 

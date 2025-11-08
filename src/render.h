@@ -4,6 +4,17 @@
 #include "platform.h"
 
 
+// You define these internally.
+struct shaders;
+struct render_buffer;
+struct texture2d;
+
+// Pointer types for the internal structs.
+typedef shaders* shaders_ptr;
+typedef render_buffer* rbuffer_ptr;
+typedef texture2d* texture2d_ptr;
+
+
 enum shader_type
 {
   VERTEX,
@@ -17,19 +28,10 @@ enum buffer_type
   ELEMS
 };
 
-
-struct shaders;
-struct render_buffer;
 struct vert_texture
 {
   f32 x, y, z, u, v;
 };
-
-
-typedef shaders* shaders_ptr;
-typedef render_buffer* rbuffer_ptr;
-
-
 
 void          render_init(arena *a);
 void          render_resize(i32 width, i32 height);
@@ -38,6 +40,9 @@ void          render_text_init(arena *a);
 void          render_draw(rbuffer_ptr vertex_buffer, shaders_ptr s, u32 count);
 void          render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, u32 count, u32 elem_start, u32 vert_start);
 void          render_close();
+
+texture2d *   texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 channels);
+void          texture2d_bind(texture2d *tex, u32 slot);
 
 shaders_ptr   shader_init(arena *a);
 void          shader_load(shaders *s, shader_type t, const char *file, const char *entry, const char *target);

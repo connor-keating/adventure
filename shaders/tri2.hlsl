@@ -13,7 +13,11 @@ struct VSOutput
 {
     float4 pos : SV_POSITION;
     float3 col : COLOR;
+    float2 tex : TEXCOORD;
 };
+
+Texture2D tex_diffuse : register(t0);
+SamplerState tex_sampler : register(s0);
 
 // Vertex Shader
 VSOutput vertex_shader(VSInput input)
@@ -27,12 +31,16 @@ VSOutput vertex_shader(VSInput input)
     // Pass color through
     output.col = input.col;
 
+    // Pass texture coordinates through
+    output.tex = input.tex;
+
     return output;
 }
 
 // Pixel Shader
 float4 pixel_shader(VSOutput input) : SV_TARGET
 {
-    // Just output the vertex color as final pixel color
-    return float4(input.col, 1.0f);
+    // Sample texture and multiply by vertex color
+    float4 tex_color = tex_diffuse.Sample(tex_sampler, input.tex);
+    return tex_color * float4(input.col, 1.0f);
 }
