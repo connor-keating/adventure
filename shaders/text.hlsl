@@ -1,17 +1,20 @@
 struct VSIn {
-  float3 pos : POSITION;
-  float2 uv  : TEXCOORD0;
+  float3 pos   : POSITION;
+  float4 color : COLOR0;
+  float2 uv    : TEXCOORD0;
 };
 
 struct VSOut {
-  float4 pos : SV_POSITION;
-  float2 uv  : TEXCOORD0;
+  float4 pos   : SV_POSITION;
+  float4 color : COLOR0;
+  float2 uv    : TEXCOORD0;
 };
 
 VSOut VSMain(VSIn i)
 {
   VSOut o;
-  o.pos = float4(i.pos, 1.0); // assuming pos already in clip-space for minimalism
+  o.pos = float4(i.pos, 1.0);
+  o.color = i.color;
   o.uv  = i.uv;
   return o;
 }
@@ -21,5 +24,12 @@ SamplerState gSamp : register(s0);
 
 float4 PSMain(VSOut i) : SV_Target
 {
-  return gTex.Sample(gSamp, i.uv);
+  // Sample the grayscale font atlas (1-channel texture)
+  float alpha = gTex.Sample(gSamp, i.uv).r;
+
+  // Discard black/transparent pixels - where font atlas is black
+  if (alpha < 0.5) discard;
+
+  // Return solid vertex color where texture is white
+  return i.color;
 }
