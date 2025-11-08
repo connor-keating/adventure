@@ -84,8 +84,8 @@ int main(int argc, char **argv)
   rbuffer_ptr vbuffer = render_buffer_init(&memory, VERTS, (void*)tri_verts, tri_stride, tri_size);
   rbuffer_ptr ebuffer = render_buffer_init(&memory, ELEMS, (void*)tri_elems, 1, sizeof(tri_elems));
   shaders_ptr tri_prog = shader_init(&memory);
-  shader_load(tri_prog, VERTEX, "shaders/tri2.hlsl", "VSMain", "vs_5_0");
-  shader_load(tri_prog, PIXEL,  "shaders/tri2.hlsl", "PSMain", "ps_5_0");
+  shader_load(tri_prog, VERTEX, "shaders/text.hlsl", "VSMain", "vs_5_0");
+  shader_load(tri_prog, PIXEL,  "shaders/text.hlsl", "PSMain", "ps_5_0");
 
   // Read in a texture
   const char* filename = "G:/pacbird/.assets/checker-gray5.png";
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
   // Initialize Text
   u32 text_vert_count = 6000;
   text_buffer_init(&memory, text_vert_count);
-  const char *font_file = "C:\\WINDOWS\\Fonts\\arial.ttf";
+  const char *font_file = "C:/MyFonts/Source_Code_Pro/static/SourceCodePro-Regular.ttf";
   texture2d_ptr text_texture = text_init( &memory, font_file );
   // render_text_init(&memory);
 
@@ -119,7 +119,7 @@ int main(int argc, char **argv)
 
     frame_init();
 
-    texture2d_bind(tri_texture, 0);
+    texture2d_bind(text_texture, 0);
     // render_draw(vbuffer, tri_prog, 3);
     render_draw_elems(vbuffer, ebuffer, tri_prog, 6, 0, 0);
 
