@@ -1,3 +1,5 @@
+#include "render.h"
+
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <stb_truetype.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -29,6 +31,14 @@ struct char_atlas
 // Globals
 stbtt_packedchar chars_packed[CHAR_COUNT];
 stbtt_aligned_quad quads_aligned[CHAR_COUNT];
+
+
+
+arena text_buffer_init(arena *parent, u32 vertex_count)
+{
+  arena a = subarena_for(parent, vertex_count, char_vertex);
+  return a;
+}
 
 
 char_atlas text_atlas_init(arena *memory, const char * font_file)
@@ -72,7 +82,8 @@ char_atlas text_atlas_init(arena *memory, const char * font_file)
     chars_packed
   );
   stbtt_PackEnd(&ctx);
-  // DEBUGGING: stbi_write_png("assets\\font-atlas.png", atlas.width, atlas.height, 1, atlas.image, atlas.width);
+  // DEBUGGING: 
+  // stbi_write_png("assets\\font-atlas.png", atlas.width, atlas.height, 1, atlas.image, atlas.width);
   // Create 3D API vertices for chars
   for (i32 i = 0; i < CHAR_COUNT; ++i)
   {
@@ -92,21 +103,16 @@ char_atlas text_atlas_init(arena *memory, const char * font_file)
 }
 
 
-u32 text_init(arena *memory, const char * font_file)
+texture2d_ptr text_init(arena *memory, const char * font_file)
 {
   // Create the char atlas bitmap image
   char_atlas atlas = text_atlas_init(memory, font_file);
   // Upload it to GPU texture
-  u32 font_texture_id = texture2d_1channel_init(atlas.image, atlas.width, atlas.height);
-  return font_texture_id;
+  texture2d_ptr font_texture = texture2d_init(memory, atlas.image, atlas.width, atlas.height, 1);
+  return font_texture;
 }
 
-
-arena text_buffer_init(arena *parent, u32 vertex_count)
-{
-  arena a = subarena_for(parent, vertex_count, char_vertex);
-  return a;
-}
+#if 0
 
 
 render_buffer text_gpu_init(u32 vert_count)
@@ -202,3 +208,5 @@ u32 text_count_get(arena *a)
   u32 vertex_count = (u32) a->offset_new / sizeof(char_vertex);
   return vertex_count;
 }
+
+#endif
