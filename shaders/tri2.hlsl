@@ -4,15 +4,15 @@
 struct VSInput
 {
     float3 pos : POSITION;   // 12 bytes offset 0
-    float3 col : COLOR;      // 12 bytes offset 12
-    float2 tex : TEXCOORD;   // 8  bytes offset 24
+    float4 col : COLOR;      // 16 bytes offset 12
+    float2 tex : TEXCOORD;   // 8  bytes offset 28
 };
 
 // Vertex shader output: position goes to SV_POSITION, color passed to pixel shader
 struct VSOutput
 {
     float4 pos : SV_POSITION;
-    float3 col : COLOR;
+    float4 col : COLOR;
     float2 tex : TEXCOORD;
 };
 
@@ -20,7 +20,7 @@ Texture2D tex_diffuse : register(t0);
 SamplerState tex_sampler : register(s0);
 
 // Vertex Shader
-VSOutput vertex_shader(VSInput input)
+VSOutput VSMain(VSInput input)
 {
     VSOutput output;
 
@@ -38,9 +38,9 @@ VSOutput vertex_shader(VSInput input)
 }
 
 // Pixel Shader
-float4 pixel_shader(VSOutput input) : SV_TARGET
+float4 PSMain(VSOutput input) : SV_TARGET
 {
     // Sample texture and multiply by vertex color
     float4 tex_color = tex_diffuse.Sample(tex_sampler, input.tex);
-    return tex_color * float4(input.col, 1.0f);
+    return tex_color * input.col;
 }
