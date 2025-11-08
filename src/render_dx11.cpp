@@ -67,6 +67,21 @@ internal ID3D11InputLayout * render_vertex_description(ID3DBlob *vert_shader)
 }
 
 
+internal DXGI_FORMAT format_select(u32 nchannels)
+{
+  // TODO: Add channel size parameter
+  DXGI_FORMAT selection;
+  switch (nchannels)
+  {
+    case(1): selection = DXGI_FORMAT_R8_UNORM;       break;
+    case(4): selection = DXGI_FORMAT_R8G8B8A8_UNORM; break;
+    default: selection = DXGI_FORMAT_UNKNOWN;        break;
+  }
+  ASSERT( (selection != DXGI_FORMAT_UNKNOWN), "ERROR: Unsupported format selected.");
+  return selection;
+}
+
+
 void render_init(arena *a)
 {
   // Initialize render state data
@@ -387,17 +402,18 @@ void render_close()
 }
 
 
-texture2d * texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 channels)
+texture2d_ptr texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 channels)
 {
   texture2d *tex = arena_push_struct(a, texture2d);
-
+  // Select format
+  DXGI_FORMAT form = format_select(channels);
   // Create texture description
   D3D11_TEXTURE2D_DESC desc = {};
   desc.Width = width;
   desc.Height = height;
   desc.MipLevels = 1;
   desc.ArraySize = 1;
-  desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+  desc.Format = form;
   desc.SampleDesc.Count = 1;
   desc.SampleDesc.Quality = 0;
   desc.Usage = D3D11_USAGE_IMMUTABLE;
@@ -439,12 +455,11 @@ texture2d * texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 ch
   sampler_desc.BorderColor[3] = 0.0f;
   sampler_desc.MinLOD = 0.0f;
   sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
-
   hr = renderer->device->CreateSamplerState(&sampler_desc, &tex->sampler);
   ASSERT(SUCCEEDED(hr), "Failed to create sampler state.");
-
   return tex;
 }
+
 
 
 void texture2d_bind(texture2d *tex, u32 slot)
