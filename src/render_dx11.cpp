@@ -42,6 +42,7 @@ struct render_state
   D3D11_VIEWPORT viewport;
   ID3D11Texture2D* depth_buffer;
   ID3D11DepthStencilView* depth_view;
+  ID3D11BlendState* blend_state;
 };
 
 global render_state *renderer;
@@ -51,9 +52,9 @@ internal ID3D11InputLayout * render_vertex_description(ID3DBlob *vert_shader)
 {
   D3D11_INPUT_ELEMENT_DESC il[] =
   {
-    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "COLOR",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
   };
   ID3D11InputLayout* layout = nullptr;
   renderer->device->CreateInputLayout(
@@ -202,7 +203,7 @@ void render_init(arena *a)
   
 	// Bind the render target view and depth/stencil view to the pipeline.
 	renderer->context->OMSetRenderTargets(1, &renderer->render_target, renderer->depth_view);
-  
+
 	// Set the viewport transform.
 	renderer->viewport.TopLeftX = 0;
 	renderer->viewport.TopLeftY = 0;
@@ -210,8 +211,28 @@ void render_init(arena *a)
 	renderer->viewport.Height   = (float)(height);
 	renderer->viewport.MinDepth = 0.0f;
 	renderer->viewport.MaxDepth = 1.0f;
-  
+
 	renderer->context->RSSetViewports(1, &renderer->viewport);
+
+  // Create blend state for alpha transparency
+  D3D11_BLEND_DESC blend_desc = {};
+  blend_desc.AlphaToCoverageEnable  = false;
+  blend_desc.IndependentBlendEnable = false;
+  blend_desc.RenderTarget[0].BlendEnable = true;
+  blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+  blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+  blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+  blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+  blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+  blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+  blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+  success = renderer->device->CreateBlendState(&blend_desc, &renderer->blend_state);
+  ASSERT(SUCCEEDED(success), "Failed to create blend state.");
+
+  // Enable alpha blending
+  f32 blend_factor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+  renderer->context->OMSetBlendState(renderer->blend_state, blend_factor, 0xffffffff);
 }
 
 
@@ -395,6 +416,7 @@ void render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, 
 
 void render_close()
 {
+  renderer->blend_state->Release();
   renderer->render_target->Release();
   renderer->swapchain->Release();
   renderer->context->Release();
@@ -424,7 +446,7 @@ texture2d_ptr texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 
   // Setup subresource data
   D3D11_SUBRESOURCE_DATA gpu_data = {};
   gpu_data.pSysMem = pixels;
-  gpu_data.SysMemPitch = width * 4; // 4 bytes per pixel (RGBA)
+  gpu_data.SysMemPitch = width * channels; // bytes per row
 
   // Create texture
   HRESULT hr = renderer->device->CreateTexture2D(&desc, &gpu_data, &tex->texture);
@@ -443,9 +465,9 @@ texture2d_ptr texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 
   // Create sampler state
   D3D11_SAMPLER_DESC sampler_desc = {};
   sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-  sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-  sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-  sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+  sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+  sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+  sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
   sampler_desc.MipLODBias = 0.0f;
   sampler_desc.MaxAnisotropy = 1;
   sampler_desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
