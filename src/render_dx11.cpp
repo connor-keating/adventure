@@ -518,16 +518,13 @@ void shader_load(shaders *s, shader_type t, const char *file, const char *entry,
     &blob,
     &erro
   );
-  if (FAILED(hr))
+  if (erro)
   {
-    if (erro)
-    {
-      char* error_msg = (char*)erro->GetBufferPointer();
-      printf("Shader compilation error:\n%s\n", error_msg);
-      erro->Release();
-    }
-    ASSERT(false, "Failed to compile shader from file.");
+    char* error_msg = (char*)erro->GetBufferPointer();
+    printf("Shader compilation error:\n%s\n", error_msg);
+    erro->Release();
   }
+  ASSERT(SUCCEEDED(hr), "Failed to compile shader from file.");
   // Create shader object
   switch (t)
   {
