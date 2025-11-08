@@ -15,7 +15,7 @@ global bool is_running;
 #endif
 
 // Application layers
-// #include "text.cpp"
+#include "text.cpp"
 // #include "data3d.cpp"
 
 // TODO: Why does app crash when I share it with discord?
@@ -67,12 +67,12 @@ int main(int argc, char **argv)
   render_init(&memory);
 
   // Prepare buffers
-  f32 tri_verts[32] = {
-    // position          // color          // Texture
-    -0.5f, -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 1.0f,  // low left
-    -0.5f,  0.5f, 0.5f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // up  left
-     0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 0.0f, 1.0f, 1.0f, // low right
-     0.5f,  0.5f, 0.5f,  1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // up  right
+  f32 tri_verts[36] = {
+    // position          // color (RGBA)              // Texture
+    -0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 1.0f, 1.0f,  0.0f, 1.0f,  // low left
+    -0.5f,  0.5f, 0.5f,  1.0f, 0.0f, 1.0f, 1.0f,  0.0f, 0.0f, // up  left
+     0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 0.0f, 1.0f,  1.0f, 1.0f, // low right
+     0.5f,  0.5f, 0.5f,  1.0f, 1.0f, 1.0f, 1.0f,  1.0f, 0.0f, // up  right
   };
   u32 tri_elems[6] = {
     // D3D11 is counter-clockwise winding order for front.
@@ -80,12 +80,12 @@ int main(int argc, char **argv)
     1, 3, 2, // tri 2
   };
   u32 tri_size = sizeof(tri_verts);
-  u32 tri_stride = sizeof(tri_verts[0]) * 8;
+  u32 tri_stride = sizeof(tri_verts[0]) * 9;
   rbuffer_ptr vbuffer = render_buffer_init(&memory, VERTS, (void*)tri_verts, tri_stride, tri_size);
   rbuffer_ptr ebuffer = render_buffer_init(&memory, ELEMS, (void*)tri_elems, 1, sizeof(tri_elems));
   shaders_ptr tri_prog = shader_init(&memory);
-  shader_load(tri_prog, VERTEX, "shaders/tri2.hlsl", "vertex_shader", "vs_5_0");
-  shader_load(tri_prog, PIXEL,  "shaders/tri2.hlsl", "pixel_shader" , "ps_5_0");
+  shader_load(tri_prog, VERTEX, "shaders/text.hlsl", "VSMain", "vs_5_0");
+  shader_load(tri_prog, PIXEL,  "shaders/text.hlsl", "PSMain", "ps_5_0");
 
   // Read in a texture
   const char* filename = "G:/pacbird/.assets/checker-gray5.png";
@@ -95,6 +95,11 @@ int main(int argc, char **argv)
   unsigned char *data = stbi_load(filename, &x, &y, &n, components_per_pixel);
   texture2d_ptr quad_texture = texture2d_init(&memory, data, x, y, components_per_pixel);
 
+  // Initialize Text
+  u32 text_vert_count = 6000;
+  text_buffer_init(&memory, text_vert_count);
+  const char *font_file = "C:\\WINDOWS\\Fonts\\arial.ttf";
+  texture2d_ptr text_texture = text_init( &memory, font_file );
   // render_text_init(&memory);
 
   // Initialize clock
@@ -114,7 +119,7 @@ int main(int argc, char **argv)
 
     frame_init();
 
-    texture2d_bind(quad_texture, 0);
+    texture2d_bind(text_texture, 0);
     // render_draw(vbuffer, tri_prog, 3);
     render_draw_elems(vbuffer, ebuffer, tri_prog, 6, 0, 0);
 
