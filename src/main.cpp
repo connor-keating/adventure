@@ -69,9 +69,9 @@ int main(int argc, char **argv)
   // Prepare buffers
   f32 tri_verts[36] = {
     // position          // color (RGBA)              // Texture
-    -0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 1.0f, 1.0f,  0.0f, 1.0f,  // low left
+    -0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // low left
     -0.5f,  0.5f, 0.5f,  1.0f, 0.0f, 1.0f, 1.0f,  0.0f, 0.0f, // up  left
-     0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 0.0f, 1.0f,  1.0f, 1.0f, // low right
+     0.5f, -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 1.0f,  1.0f, 1.0f, // low right
      0.5f,  0.5f, 0.5f,  1.0f, 1.0f, 1.0f, 1.0f,  1.0f, 0.0f, // up  right
   };
   u32 tri_elems[6] = {
@@ -84,8 +84,8 @@ int main(int argc, char **argv)
   rbuffer_ptr vbuffer = render_buffer_init(&memory, VERTS, (void*)tri_verts, tri_stride, tri_size);
   rbuffer_ptr ebuffer = render_buffer_init(&memory, ELEMS, (void*)tri_elems, 1, sizeof(tri_elems));
   shaders_ptr tri_prog = shader_init(&memory);
-  shader_load(tri_prog, VERTEX, "shaders/text.hlsl", "VSMain", "vs_5_0");
-  shader_load(tri_prog, PIXEL,  "shaders/text.hlsl", "PSMain", "ps_5_0");
+  shader_load(tri_prog, VERTEX, "shaders/tri2.hlsl", "VSMain", "vs_5_0");
+  shader_load(tri_prog, PIXEL,  "shaders/tri2.hlsl", "PSMain", "ps_5_0");
 
   // Read in a texture
   const char* filename = "G:/pacbird/.assets/checker-gray5.png";
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
   i32 x, y, n;
   i32 components_per_pixel = 4; // Force RGBA
   unsigned char *data = stbi_load(filename, &x, &y, &n, components_per_pixel);
-  texture2d_ptr quad_texture = texture2d_init(&memory, data, x, y, components_per_pixel);
+  texture2d_ptr tri_texture = texture2d_init(&memory, data, x, y, components_per_pixel);
 
   // Initialize Text
   u32 text_vert_count = 6000;
@@ -119,7 +119,7 @@ int main(int argc, char **argv)
 
     frame_init();
 
-    texture2d_bind(text_texture, 0);
+    texture2d_bind(tri_texture, 0);
     // render_draw(vbuffer, tri_prog, 3);
     render_draw_elems(vbuffer, ebuffer, tri_prog, 6, 0, 0);
 
