@@ -102,7 +102,23 @@ int main(int argc, char **argv)
   texture2d_ptr text_texture = text_init( &memory, font_file );
   // render_text_init(&memory);
 
-  rbuffer_ptr tbuffer_gpu = vbuffer;
+  // rbuffer_ptr tbuffer_gpu = vbuffer;
+  rbuffer_ptr tbuffer_gpu = render_buffer_dynamic_init(
+    &memory,
+    VERTS,
+    tbuffer_cpu,
+    sizeof(f32) * 9,
+    tbuffer_cpu.length
+  );
+  f32 a[27] = {
+    // position          // color (RGBA)              // Texture
+     0.0f,  0.5f, 0.5f,  1.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // low left
+    -0.5f, -0.5f, 0.5f,  1.0f, 0.0f, 1.0f, 1.0f,  0.0f, 0.0f, // up  left
+    -0.5f, -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 1.0f,  1.0f, 1.0f, // low right
+  };
+  f32 *b = arena_push_array(tbuffer_cpu, 27, f32);
+  memcpy(tbuffer_cpu.buffer, a, sizeof(a));
+  render_buffer_update(rbuffer_ptr buffer, void* data, u32 byte_count);
 
   shaders_ptr test_shaders = shader_init(&memory);
   shader_load(test_shaders, VERTEX, "shaders/test.hlsl", "VSMain", "vs_5_0");

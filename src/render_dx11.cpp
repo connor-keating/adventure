@@ -320,6 +320,34 @@ rbuffer_ptr render_buffer_init(arena *a, buffer_type t, void* data, u32 stride, 
 }
 
 
+rbuffer_ptr render_buffer_dynamic_init(arena *a, buffer_type t, void *data, u32 stride, u32 byte_count)
+{
+  render_buffer *out = arena_push_struct(a, render_buffer);
+  out->stride = stride;
+  out->offset = 0;
+  D3D11_BUFFER_DESC desc  = {};
+  desc.ByteWidth          = sizeof(PerFrameData);   // for constant buffers: multiple of 16 bytes
+  desc.Usage              = D3D11_USAGE_DYNAMIC;    // we’ll update it frequently
+  desc.BindFlags          = D3D11_BIND_VERTEX_BUFFER;
+  desc.CPUAccessFlags     = D3D11_CPU_ACCESS_WRITE; // CPU can write
+  desc.MiscFlags          = 0;
+  desc.StructureByteStride = 0;
+
+  device->CreateBuffer(&desc, nullptr, &out->buffer);
+  return out;
+}
+
+
+void render_buffer_update(rbuffer_ptr buffer, void* data, u32 byte_count)
+{
+  D3D11_MAPPED_SUBRESOURCE mapped;
+  context->Map(buffer->buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+  // Copy 3 vertices into the buffer
+  memcpy(mapped.pData, verts, byte_count);
+  context->Unmap(out->buffer, 0);
+}
+
+
 void render_text_init(arena *a)
 {
   vert_texture quad[] = {
@@ -412,6 +440,7 @@ void render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, 
   renderer->context->PSSetShader(s->pixel, 0, 0);
   renderer->context->DrawIndexed(count, elem_start, vert_start);
 }
+
 
 
 void render_close()
