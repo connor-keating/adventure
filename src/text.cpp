@@ -22,9 +22,9 @@ struct char_vertex
 struct char_atlas
 {
   u8 *image;
-  u32 width = 512;
-  u32 height = 512;
-  f32 char_size    = 64.0f;
+  u32 width     = 512;
+  u32 height    = 512;
+  f32 char_size = 64.0f;
 };
 
 
@@ -65,7 +65,7 @@ char_atlas text_atlas_init(arena *memory, const char * font_file)
   stbtt_pack_context ctx = {};
   stbtt_PackBegin(
     &ctx,           // Initialize the context
-    atlas.image,  // Font atlas texture data
+    atlas.image,    // Font atlas texture data
     atlas.width,    // Width of atlas texture
     atlas.height,   // Height of atlas texture
     0,              // Stride in bytes
@@ -112,13 +112,21 @@ texture2d_ptr text_init(arena *memory, const char * font_file)
   return font_texture;
 }
 
-#if 0
 
 
-render_buffer text_gpu_init(u32 vert_count)
+rbuffer_ptr text_gpu_init(arena *a, void *cpu_buffer, u32 vert_count)
 {
   // Render stuff
   size_t text_vert_max = vert_count * sizeof(char_vertex); 
+  rbuffer_ptr buffer = render_buffer_dynamic_init(
+    a,
+    VERTS,
+    cpu_buffer,
+    sizeof(f32)*9,
+    text_vert_max
+  );
+  // TODO: Fix OpenGL implementation.
+  /*
   render_buffer buffer = render_buffer_dynamic_init(nullptr, text_vert_max);
   char_vertex example = {};
   u32 text_stride = sizeof(example);
@@ -132,21 +140,8 @@ render_buffer text_gpu_init(u32 vert_count)
   render_buffer_attribute(buffer, 0, pos_elem_count, text_stride, pos_offset);
   render_buffer_attribute(buffer, 1, col_elem_count, text_stride, col_offset);
   render_buffer_attribute(buffer, 2, tex_elem_count, text_stride, tex_offset);
+  */
   return buffer;
-}
-
-
-glm::mat4 text_projection(f32 aspect_ratio)
-{
-  glm::mat4 projectionMat = glm::ortho(-aspect_ratio, aspect_ratio, -1.0f, 1.0f);
-
-  glm::mat4 viewMat = glm::mat4(1.0f);
-  viewMat = glm::translate(viewMat, {0.0f, 0.0f, 0.0f});
-  viewMat = glm::rotate(viewMat, 0.0f, {1, 0, 0});
-  viewMat = glm::rotate(viewMat, 0.0f, {0, 1, 0});
-  viewMat = glm::rotate(viewMat, 0.0f, {0, 0, 1});
-  viewMat = glm::scale(viewMat, {1.0f, 1.0f, 1.0f});
-  return projectionMat;
 }
 
 
@@ -203,10 +198,26 @@ void text_add(arena *a, const char *text, u32 length, i32 window_height, glm::ve
 }
 
 
-u32 text_count_get(arena *a)
+
+u32 text_count(arena *a)
 {
   u32 vertex_count = (u32) a->offset_new / sizeof(char_vertex);
   return vertex_count;
+}
+
+
+#if 0
+
+glm::mat4 text_projection(f32 aspect_ratio)
+{
+  glm::mat4 projectionMat = glm::ortho(-aspect_ratio, aspect_ratio, -1.0f, 1.0f);
+  glm::mat4 viewMat = glm::mat4(1.0f);
+  viewMat = glm::translate(viewMat, {0.0f, 0.0f, 0.0f});
+  viewMat = glm::rotate(viewMat, 0.0f, {1, 0, 0});
+  viewMat = glm::rotate(viewMat, 0.0f, {0, 1, 0});
+  viewMat = glm::rotate(viewMat, 0.0f, {0, 0, 1});
+  viewMat = glm::scale(viewMat, {1.0f, 1.0f, 1.0f});
+  return projectionMat;
 }
 
 #endif
