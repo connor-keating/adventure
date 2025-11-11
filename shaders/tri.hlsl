@@ -1,7 +1,7 @@
 
 struct out_vertex { float4 pos : SV_POSITION; float4 col : COL; };
 
-out_vertex vertex_shader(uint vid : SV_VERTEXID)
+out_vertex VSMain(uint vid : SV_VERTEXID)
 { 
   // vid=0; float4(0.0, 0.0, 1, 1.5)-0.5=(-0.5, -0.5, 0.5, 1.0), red (1,0,0,1)
   // vid=1; float4(0.5, 1.0, 1, 1.5)-0.5=( 0.0,  0.5, 0.5, 1.0), grn (0,1,0,1)
@@ -13,7 +13,7 @@ out_vertex vertex_shader(uint vid : SV_VERTEXID)
   return output;
 }
 
-float4 pixel_shader(out_vertex input) : SV_TARGET 
+float4 PSMain(out_vertex input) : SV_TARGET 
 { 
   return input.col;
 }
