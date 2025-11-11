@@ -97,10 +97,16 @@ int main(int argc, char **argv)
 
   // Initialize Text
   u32 text_vert_count = 6000;
-  text_buffer_init(&memory, text_vert_count);
+  arena tbuffer_cpu = text_buffer_init(&memory, text_vert_count);
   const char *font_file = "C:/MyFonts/Source_Code_Pro/static/SourceCodePro-Regular.ttf";
   texture2d_ptr text_texture = text_init( &memory, font_file );
   // render_text_init(&memory);
+
+  rbuffer_ptr tbuffer_gpu = vbuffer;
+
+  shaders_ptr test_shaders = shader_init(&memory);
+  shader_load(test_shaders, VERTEX, "shaders/test.hlsl", "VSMain", "vs_5_0");
+  shader_load(test_shaders, PIXEL,  "shaders/test.hlsl", "PSMain", "ps_5_0");
 
   // Initialize clock
   f64 fps_target = 60; // The amount of frames presented in a second.
@@ -122,6 +128,9 @@ int main(int argc, char **argv)
     texture2d_bind(text_texture, 0);
     // render_draw(vbuffer, tri_prog, 3);
     render_draw_elems(vbuffer, ebuffer, tri_prog, 6, 0, 0);
+
+    // Draw the triangle
+    render_draw(tbuffer_gpu, test_shaders, 3);
 
     frame_render();
   }
