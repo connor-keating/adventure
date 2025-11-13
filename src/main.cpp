@@ -164,7 +164,8 @@ int main(int argc, char **argv)
     // render_draw_elems(vbuffer, ebuffer, tri_prog, 6, 0, 0);
 
     // Draw the triangle
-    render_draw(tbuffer_gpu, test_shaders, 6);
+    u32 text_vert_count = text_count(&tbuffer_cpu);
+    render_draw(tbuffer_gpu, test_shaders, text_vert_count);
 
     frame_render();
   }
