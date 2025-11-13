@@ -333,7 +333,8 @@ rbuffer_ptr render_buffer_dynamic_init(arena *a, buffer_type t, void *data, u32 
   desc.MiscFlags          = 0;
   desc.StructureByteStride = 0;
 
-  renderer->device->CreateBuffer(&desc, nullptr, &out->buffer);
+  HRESULT hr = renderer->device->CreateBuffer(&desc, nullptr, &out->buffer);
+  ASSERT(SUCCEEDED(hr), "Failed to create dynamic buffer.");
   return out;
 }
 
@@ -341,7 +342,8 @@ rbuffer_ptr render_buffer_dynamic_init(arena *a, buffer_type t, void *data, u32 
 void render_buffer_update(rbuffer_ptr b, void* data, u32 byte_count)
 {
   D3D11_MAPPED_SUBRESOURCE mapped;
-  renderer->context->Map(b->buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+  HRESULT hr = renderer->context->Map(b->buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+  ASSERT(SUCCEEDED(hr), "Failed to map buffer");
   // Copy 3 vertices into the buffer
   memcpy(mapped.pData, data, byte_count);
   renderer->context->Unmap(b->buffer, 0);
