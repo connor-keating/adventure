@@ -139,7 +139,7 @@ int main(int argc, char **argv)
     text_scale = 1.0f; // screen space
   }
   glm::vec3 tpos = glm::vec3(0.0f, 0.0f, 0.0f);
-  text_add(&tbuffer_cpu, "A", 1, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
+  text_add(&tbuffer_cpu, "TEXT!", 5, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
   render_buffer_update(tbuffer_gpu, tbuffer_cpu.buffer, tbuffer_cpu.offset_new);
 
   // Initialize clock
