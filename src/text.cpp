@@ -147,7 +147,10 @@ rbuffer_ptr text_gpu_init(arena *a, void *cpu_buffer, u32 vert_count)
 
 void text_add(arena *a, const char *text, u32 length, i32 window_height, glm::vec3 position, f32 size, glm::vec4 color, f32 pixel_scale)
 {
-  i32 order[6] = {0, 1, 2, 0, 2, 3};
+  // If OpenGL Counterclockwise
+  // i32 order[6] = {0, 1, 2, 0, 2, 3};
+  // If D3D11 Clockwise
+  i32 order[6] = {0, 2, 1, 0, 3, 2};
   glm::vec3 pos_local = position;
   for (i32 i = 0; i < length; ++i)
   {

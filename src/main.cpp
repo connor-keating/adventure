@@ -102,7 +102,6 @@ int main(int argc, char **argv)
   texture2d_ptr text_texture = text_init( &memory, font_file );
   // render_text_init(&memory);
 
-  // rbuffer_ptr tbuffer_gpu = vbuffer;
   rbuffer_ptr tbuffer_gpu = render_buffer_dynamic_init(
     &memory,
     VERTS,
@@ -110,19 +109,38 @@ int main(int argc, char **argv)
     sizeof(f32) * 9,
     tbuffer_cpu.length
   );
+
+  /*
   f32 a[27] = {
     // position          // color (RGBA)              // Texture
-    -0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // low left
-     0.0f,  0.5f, 0.5f,  1.0f, 0.0f, 1.0f, 1.0f,  0.0f, 0.0f, // up  left
-     0.5f, -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 1.0f,  1.0f, 1.0f, // low right
+     0.11175f,  0.13102f, 0.5f,  1.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // low left
+     0.00385f, -0.00000f, 0.5f,  0.0f, 1.0f, 1.0f, 1.0f,  1.0f, 1.0f, // low right
+     0.00385f,  0.13102f, 0.5f,  1.0f, 0.0f, 1.0f, 1.0f,  0.0f, 0.0f, // up  left
   };
-  f32 *b = arena_push_array(&tbuffer_cpu, 27, f32);
+  f32 *b = arena_push_array(&tbuffer_cpu, 9*3, f32);
   memcpy(tbuffer_cpu.buffer, a, sizeof(a));
   render_buffer_update(tbuffer_gpu, tbuffer_cpu.buffer, tbuffer_cpu.offset_new);
+  */
 
   shaders_ptr test_shaders = shader_init(&memory);
   shader_load(test_shaders, VERTEX, "shaders/test.hlsl", "VSMain", "vs_5_0");
   shader_load(test_shaders, PIXEL,  "shaders/test.hlsl", "PSMain", "ps_5_0");
+
+  // Adding text.
+  bool use_ndc = true;
+  f32 text_scale = 0.0f;
+  // Are the coordinates in screen space of NDC
+  if (use_ndc)
+  {
+    text_scale = 2.0f / window.height; // NDC
+  }
+  else
+  {
+    text_scale = 1.0f; // screen space
+  }
+  glm::vec3 tpos = glm::vec3(0.0f, 0.0f, 0.0f);
+  text_add(&tbuffer_cpu, "A", 1, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
+  render_buffer_update(tbuffer_gpu, tbuffer_cpu.buffer, tbuffer_cpu.offset_new);
 
   // Initialize clock
   f64 fps_target = 60; // The amount of frames presented in a second.
@@ -143,10 +161,10 @@ int main(int argc, char **argv)
 
     texture2d_bind(text_texture, 0);
     // render_draw(vbuffer, tri_prog, 3);
-    render_draw_elems(vbuffer, ebuffer, tri_prog, 6, 0, 0);
+    // render_draw_elems(vbuffer, ebuffer, tri_prog, 6, 0, 0);
 
     // Draw the triangle
-    render_draw(tbuffer_gpu, test_shaders, 3);
+    render_draw(tbuffer_gpu, test_shaders, 6);
 
     frame_render();
   }
