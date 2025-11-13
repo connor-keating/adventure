@@ -326,25 +326,25 @@ rbuffer_ptr render_buffer_dynamic_init(arena *a, buffer_type t, void *data, u32 
   out->stride = stride;
   out->offset = 0;
   D3D11_BUFFER_DESC desc  = {};
-  desc.ByteWidth          = sizeof(PerFrameData);   // for constant buffers: multiple of 16 bytes
+  desc.ByteWidth          = byte_count;   // for constant buffers: multiple of 16 bytes
   desc.Usage              = D3D11_USAGE_DYNAMIC;    // we’ll update it frequently
   desc.BindFlags          = D3D11_BIND_VERTEX_BUFFER;
   desc.CPUAccessFlags     = D3D11_CPU_ACCESS_WRITE; // CPU can write
   desc.MiscFlags          = 0;
   desc.StructureByteStride = 0;
 
-  device->CreateBuffer(&desc, nullptr, &out->buffer);
+  renderer->device->CreateBuffer(&desc, nullptr, &out->buffer);
   return out;
 }
 
 
-void render_buffer_update(rbuffer_ptr buffer, void* data, u32 byte_count)
+void render_buffer_update(rbuffer_ptr b, void* data, u32 byte_count)
 {
   D3D11_MAPPED_SUBRESOURCE mapped;
-  context->Map(buffer->buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+  renderer->context->Map(b->buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
   // Copy 3 vertices into the buffer
-  memcpy(mapped.pData, verts, byte_count);
-  context->Unmap(out->buffer, 0);
+  memcpy(mapped.pData, data, byte_count);
+  renderer->context->Unmap(b->buffer, 0);
 }
 
 

@@ -88,12 +88,12 @@ int main(int argc, char **argv)
   shader_load(tri_prog, PIXEL,  "shaders/text.hlsl", "PSMain", "ps_5_0");
 
   // Read in a texture
-  const char* filename = "G:/pacbird/.assets/checker-gray5.png";
-  i32 test = platform_file_exists(filename);
-  i32 x, y, n;
-  i32 components_per_pixel = 4; // Force RGBA
-  unsigned char *data = stbi_load(filename, &x, &y, &n, components_per_pixel);
-  texture2d_ptr tri_texture = texture2d_init(&memory, data, x, y, components_per_pixel);
+  // const char* filename = "G:/pacbird/.assets/checker-gray5.png";
+  // i32 test = platform_file_exists(filename);
+  // i32 x, y, n;
+  // i32 components_per_pixel = 4; // Force RGBA
+  // unsigned char *data = stbi_load(filename, &x, &y, &n, components_per_pixel);
+  // texture2d_ptr tri_texture = texture2d_init(&memory, data, x, y, components_per_pixel);
 
   // Initialize Text
   u32 text_vert_count = 6000;
@@ -106,7 +106,7 @@ int main(int argc, char **argv)
   rbuffer_ptr tbuffer_gpu = render_buffer_dynamic_init(
     &memory,
     VERTS,
-    tbuffer_cpu,
+    tbuffer_cpu.buffer,
     sizeof(f32) * 9,
     tbuffer_cpu.length
   );
@@ -116,9 +116,9 @@ int main(int argc, char **argv)
     -0.5f, -0.5f, 0.5f,  1.0f, 0.0f, 1.0f, 1.0f,  0.0f, 0.0f, // up  left
     -0.5f, -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 1.0f,  1.0f, 1.0f, // low right
   };
-  f32 *b = arena_push_array(tbuffer_cpu, 27, f32);
+  f32 *b = arena_push_array(&tbuffer_cpu, 27, f32);
   memcpy(tbuffer_cpu.buffer, a, sizeof(a));
-  render_buffer_update(rbuffer_ptr buffer, void* data, u32 byte_count);
+  render_buffer_update(tbuffer_gpu, tbuffer_cpu.buffer, tbuffer_cpu.length);
 
   shaders_ptr test_shaders = shader_init(&memory);
   shader_load(test_shaders, VERTEX, "shaders/test.hlsl", "VSMain", "vs_5_0");
