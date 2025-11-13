@@ -112,9 +112,9 @@ int main(int argc, char **argv)
   );
   f32 a[27] = {
     // position          // color (RGBA)              // Texture
-     0.0f,  0.5f, 0.5f,  1.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // low left
-    -0.5f, -0.5f, 0.5f,  1.0f, 0.0f, 1.0f, 1.0f,  0.0f, 0.0f, // up  left
-    -0.5f, -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 1.0f,  1.0f, 1.0f, // low right
+    -0.5f, -0.5f, 0.5f,  1.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // low left
+     0.0f,  0.5f, 0.5f,  1.0f, 0.0f, 1.0f, 1.0f,  0.0f, 0.0f, // up  left
+     0.5f, -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 1.0f,  1.0f, 1.0f, // low right
   };
   f32 *b = arena_push_array(&tbuffer_cpu, 27, f32);
   memcpy(tbuffer_cpu.buffer, a, sizeof(a));
