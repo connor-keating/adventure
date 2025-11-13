@@ -118,7 +118,7 @@ int main(int argc, char **argv)
   };
   f32 *b = arena_push_array(&tbuffer_cpu, 27, f32);
   memcpy(tbuffer_cpu.buffer, a, sizeof(a));
-  render_buffer_update(tbuffer_gpu, tbuffer_cpu.buffer, tbuffer_cpu.length);
+  render_buffer_update(tbuffer_gpu, tbuffer_cpu.buffer, tbuffer_cpu.offset_new);
 
   shaders_ptr test_shaders = shader_init(&memory);
   shader_load(test_shaders, VERTEX, "shaders/test.hlsl", "VSMain", "vs_5_0");
