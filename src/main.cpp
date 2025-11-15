@@ -162,7 +162,7 @@ int main(int argc, char **argv)
 
     texture2d_bind(text_texture, 0);
     // render_draw(vbuffer, tri_prog, 3);
-    // render_draw_elems(vbuffer, ebuffer, tri_prog, 6, 0, 0);
+    render_draw_elems(vbuffer, ebuffer, tri_prog, 6, 0, 0);
 
     // Draw the triangle
     u32 text_vert_count = text_count(&tbuffer_cpu);
