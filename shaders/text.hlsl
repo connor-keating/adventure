@@ -1,3 +1,7 @@
+
+Texture2D    gTex  : register(t0);
+SamplerState gSamp : register(s0);
+
 struct VSIn {
   float3 pos   : POSITION;
   float4 color : COLOR0;
@@ -18,9 +22,6 @@ VSOut VSMain(VSIn i)
   o.uv  = i.uv;
   return o;
 }
-
-Texture2D    gTex  : register(t0);
-SamplerState gSamp : register(s0);
 
 float4 PSMain(VSOut i) : SV_Target
 {
