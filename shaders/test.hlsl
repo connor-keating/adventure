@@ -26,6 +26,5 @@ VSOut VSMain(VSIn i)
 
 float4 PSMain(VSOut i) : SV_Target
 {
-  float alpha = fontTexture.Sample(fontSampler, i.uv).r;
-  return float4(i.color.rgb, i.color.a * alpha);
+  return float4(i.color.rgb, i.color.a);
 }

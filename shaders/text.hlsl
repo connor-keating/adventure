@@ -28,9 +28,7 @@ float4 PSMain(VSOut i) : SV_Target
   // Sample the grayscale font atlas (1-channel texture)
   float alpha = gTex.Sample(gSamp, i.uv).r;
 
-  // Discard black/transparent pixels - where font atlas is black
-  if (alpha < 0.5) discard;
-
-  // Return solid vertex color where texture is white
-  return i.color;
+  // Return solid vertex color where texture is solid
+  float4 final = float4(i.color.rgb, i.color.a * alpha);
+  return final;
 }
