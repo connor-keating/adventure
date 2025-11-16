@@ -87,6 +87,20 @@ int main(int argc, char **argv)
   shader_load(tri_prog, VERTEX, "shaders/test.hlsl", "VSMain", "vs_5_0");
   shader_load(tri_prog, PIXEL,  "shaders/test.hlsl", "PSMain", "ps_5_0");
 
+  // Create view projection matrix
+  f32 znear = 0.1f;
+  f32 zfar = 100.0f;
+  f32 aspect  = window.width / (window.height + 0.000001); // keep updated on resize
+  // glm::mat4 view_projection = glm::perspective( 0.0f, aspect, znear, zfar );
+  // glm::mat4 view_projection = glm::ortho( 0.0f, window.width, 0.0f, window.height, znear, zfar );
+  glm::mat4 view_projection = glm::ortho( 0.0f, 5.0f, 0.0f, 5.0f, znear, zfar );
+  // glm::mat4 view_projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, znear, zfar);
+  // glm::mat4 view_projection = glm::orthoLH_ZO(-1.0f, 1.0f, -1.0f, 1.0f, znear, zfar);
+  // glm::mat4 view_projection = glm::mat4(1.0f);
+  rbuffer_ptr viewproj_mat = render_buffer_constant_init( &memory, sizeof(view_projection) );
+  render_buffer_update( viewproj_mat, &view_projection, sizeof(view_projection) );
+  render_constant_set( viewproj_mat );
+
   // Read in a texture
   // const char* filename = "G:/pacbird/.assets/checker-gray5.png";
   // i32 test = platform_file_exists(filename);
