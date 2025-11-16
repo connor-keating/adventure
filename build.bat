@@ -37,7 +37,7 @@ if %mode% == _PRODUCTION (
 pushd "src"
 
 set assembly=application
-set app_flags=-D_DX11 -D%mode%
+set app_flags=-D_D3D -D%mode%
 set compiler_flags=-g -std=c++20 -Wvarargs -Wall -Werror -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-deprecated
 set includes=-I\src\ -I..\external\
 set linker_flags=-luser32 -lgdi32 -lwinmm -ld3d11 -ldxgi -lopengl32 -ld3dcompiler
