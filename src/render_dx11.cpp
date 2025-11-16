@@ -322,9 +322,11 @@ rbuffer_ptr render_buffer_init(arena *a, buffer_type t, void* data, u32 stride, 
 
 rbuffer_ptr render_buffer_dynamic_init(arena *a, buffer_type t, void *data, u32 stride, u32 byte_count)
 {
+  // Initialize output in arena
   render_buffer *out = arena_push_struct(a, render_buffer);
   out->stride = stride;
   out->offset = 0;
+  // Describe the buffer
   D3D11_BUFFER_DESC desc  = {};
   desc.ByteWidth          = byte_count;   // for constant buffers: multiple of 16 bytes
   desc.Usage              = D3D11_USAGE_DYNAMIC;    // we’ll update it frequently
@@ -332,10 +334,37 @@ rbuffer_ptr render_buffer_dynamic_init(arena *a, buffer_type t, void *data, u32 
   desc.CPUAccessFlags     = D3D11_CPU_ACCESS_WRITE; // CPU can write
   desc.MiscFlags          = 0;
   desc.StructureByteStride = 0;
-
+  // Create the buffer
   HRESULT hr = renderer->device->CreateBuffer(&desc, nullptr, &out->buffer);
   ASSERT(SUCCEEDED(hr), "Failed to create dynamic buffer.");
   return out;
+}
+
+
+rbuffer_ptr render_buffer_constant_init( arena *a, size_t byte_count )
+{
+  // Create buffer in memory arena
+  render_buffer *out = arena_push_struct(a, render_buffer);
+  out->stride = 0;
+  out->offset = 0;
+  // Describe the constant buffer
+  D3D11_BUFFER_DESC description;
+  description.Usage = D3D11_USAGE_DYNAMIC;
+  description.ByteWidth = byte_count;
+  description.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+  description.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+  description.MiscFlags = 0;
+  description.StructureByteStride = 0;
+  // Create the buffer
+  HRESULT hr = renderer->device->CreateBuffer( &description, 0, &out->buffer);
+  ASSERT(SUCCEEDED(hr), "Failed to create camera constant buffer.");
+  return out;
+}
+
+
+void render_constant_set( rbuffer_ptr b )
+{
+  renderer->context->VSSetConstantBuffers( 0, 1, &b->buffer );
 }
 
 
