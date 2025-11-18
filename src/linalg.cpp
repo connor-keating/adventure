@@ -56,6 +56,15 @@ union ivec3
 };
 
 
+union fvec4
+{
+  struct 
+  {
+    f32 x, y, z, w;
+  };
+  f32 array[4];
+};
+
 typedef f32 fmat4[4][4];
 
 typedef struct model_view_projection model_view_projection;
