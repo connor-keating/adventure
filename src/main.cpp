@@ -16,11 +16,22 @@ global bool is_running;
 
 // Application layers
 #include "text.cpp"
+#include "primitives.cpp"
 // #include "data3d.cpp"
 
 // TODO: Why does app crash when I share it with discord?
 
 
+union vertex1
+{
+  struct
+  {
+    fvec3 pos;
+    fvec4 col;
+    fvec2 tex;
+  };
+  f32 data[9];
+};
 
 void input_reset(control_state *input_state)
 {
@@ -67,22 +78,29 @@ int main(int argc, char **argv)
   render_init(&memory);
 
   // Prepare buffers
-  f32 tri_verts[36] = {
-    // position          // color (RGBA)              // Texture
-    -1.0f, -1.0f, 0.5f,  1.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // low left
-    -1.0f,  1.0f, 0.5f,  1.0f, 0.0f, 1.0f, 1.0f,  0.0f, 0.0f, // up  left
-     1.0f, -1.0f, 0.5f,  0.0f, 1.0f, 1.0f, 1.0f,  1.0f, 1.0f, // low right
-     1.0f,  1.0f, 0.5f,  1.0f, 1.0f, 1.0f, 1.0f,  1.0f, 0.0f, // up  right
-  };
-  u32 tri_elems[6] = {
-    // D3D11 is counter-clockwise winding order for front.
-    0, 1, 2, // tri 1
-    1, 3, 2, // tri 2
-  };
-  u32 tri_size = sizeof(tri_verts);
-  u32 tri_stride = sizeof(tri_verts[0]) * 9;
-  rbuffer_ptr vbuffer = render_buffer_init(&memory, VERTS, (void*)tri_verts, tri_stride, tri_size);
-  rbuffer_ptr ebuffer = render_buffer_init(&memory, ELEMS, (void*)tri_elems, 1, sizeof(tri_elems));
+  u32 VERTEX_MAX = 100000;
+  arena vbuffer_cpu = subarena_init( &memory, sizeof(vertex1)*VERTEX_MAX );
+  arena ebuffer_cpu = subarena_init( &memory, sizeof(u32)*VERTEX_MAX );
+  size_t x = sizeof(f32) * 9;
+  size_t y = sizeof(vertex1);
+  rbuffer_ptr vbuffer_gpu = render_buffer_dynamic_init(
+    &memory,
+    VERTS,
+    vbuffer_cpu.buffer,
+    sizeof(vertex1),
+    vbuffer_cpu.length
+  );
+  rbuffer_ptr ebuffer_gpu = render_buffer_dynamic_init(
+    &memory,
+    VERTS,
+    ebuffer_cpu.buffer,
+    sizeof(u32),
+    ebuffer_cpu.length
+  );
+  primitive_box2d( &vbuffer_cpu, &ebuffer_cpu );
+  render_buffer_update( vbuffer_gpu, vbuffer_cpu.buffer, vbuffer_cpu.length );
+  render_buffer_update( ebuffer_gpu, ebuffer_cpu.buffer, ebuffer_cpu.length );
+  // Load shaders
   shaders_ptr tri_prog = shader_init(&memory);
   shader_load(tri_prog, VERTEX, "shaders/test.hlsl", "VSMain", "vs_5_0");
   shader_load(tri_prog, PIXEL,  "shaders/test.hlsl", "PSMain", "ps_5_0");
@@ -176,7 +194,7 @@ int main(int argc, char **argv)
 
     texture2d_bind(text_texture, 0);
     // render_draw(vbuffer, tri_prog, 3);
-    render_draw_elems(vbuffer, ebuffer, tri_prog, 6, 0, 0);
+    render_draw_elems( vbuffer_gpu, ebuffer_gpu, tri_prog, 6, 0, 0);
 
     // Draw the triangle
     u32 text_vert_count = text_count(&tbuffer_cpu);
