@@ -81,8 +81,6 @@ int main(int argc, char **argv)
   u32 VERTEX_MAX = 100000;
   arena vbuffer_cpu = subarena_init( &memory, sizeof(vertex1)*VERTEX_MAX );
   arena ebuffer_cpu = subarena_init( &memory, sizeof(u32)*VERTEX_MAX );
-  size_t x = sizeof(f32) * 9;
-  size_t y = sizeof(vertex1);
   rbuffer_ptr vbuffer_gpu = render_buffer_dynamic_init(
     &memory,
     VERTS,
@@ -97,7 +95,7 @@ int main(int argc, char **argv)
     sizeof(u32),
     ebuffer_cpu.length
   );
-  primitive_box2d( &vbuffer_cpu, &ebuffer_cpu );
+  primitive_box3d( &vbuffer_cpu, &ebuffer_cpu );
   render_buffer_update( vbuffer_gpu, vbuffer_cpu.buffer, vbuffer_cpu.length );
   render_buffer_update( ebuffer_gpu, ebuffer_cpu.buffer, ebuffer_cpu.length );
   // Load shaders
@@ -111,7 +109,7 @@ int main(int argc, char **argv)
   f32 aspect  = window.width / (window.height + 0.000001); // keep updated on resize
   // glm::mat4 view_projection = glm::perspective( 0.0f, aspect, znear, zfar );
   // glm::mat4 view_projection = glm::ortho( 0.0f, window.width, 0.0f, window.height, znear, zfar );
-  glm::mat4 view_projection = glm::ortho( 0.0f, 5.0f, 0.0f, 5.0f, znear, zfar );
+  glm::mat4 view_projection = glm::ortho(-5.0f, 5.0f,-5.0f, 5.0f, znear, zfar );
   // glm::mat4 view_projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, znear, zfar);
   // glm::mat4 view_projection = glm::orthoLH_ZO(-1.0f, 1.0f, -1.0f, 1.0f, znear, zfar);
   // glm::mat4 view_projection = glm::mat4(1.0f);
@@ -142,18 +140,6 @@ int main(int argc, char **argv)
     tbuffer_cpu.length
   );
 
-  /*
-  f32 a[27] = {
-    // position          // color (RGBA)              // Texture
-     0.11175f,  0.13102f, 0.5f,  1.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // low left
-     0.00385f, -0.00000f, 0.5f,  0.0f, 1.0f, 1.0f, 1.0f,  1.0f, 1.0f, // low right
-     0.00385f,  0.13102f, 0.5f,  1.0f, 0.0f, 1.0f, 1.0f,  0.0f, 0.0f, // up  left
-  };
-  f32 *b = arena_push_array(&tbuffer_cpu, 9*3, f32);
-  memcpy(tbuffer_cpu.buffer, a, sizeof(a));
-  render_buffer_update(tbuffer_gpu, tbuffer_cpu.buffer, tbuffer_cpu.offset_new);
-  */
-
   shaders_ptr text_shaders = shader_init(&memory);
   shader_load(text_shaders, VERTEX, "shaders/text.hlsl", "VSMain", "vs_5_0");
   shader_load(text_shaders, PIXEL,  "shaders/text.hlsl", "PSMain", "ps_5_0");
@@ -175,6 +161,10 @@ int main(int argc, char **argv)
   text_add(&tbuffer_cpu, "TEXT!", 5, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale, is_ccw);
   render_buffer_update(tbuffer_gpu, tbuffer_cpu.buffer, tbuffer_cpu.offset_new);
 
+  // Rotation 
+  f32 angle = 0.0f;
+  f32 angle_velocity = PI/4.0f;
+
   // Initialize clock
   f64 fps_target = 60; // The amount of frames presented in a second.
   clock timer = platform_clock_init(fps_target);
@@ -192,9 +182,22 @@ int main(int argc, char **argv)
 
     frame_init();
 
+    // Update transforms
+    angle += angle_velocity * timer.delta; // rad += (rad/s)*s
+    // wrap angle so it doesn't explode
+    if (angle > 2.0*PI) angle -= 2.0*PI;
+    glm::mat4 world = glm::mat4(1.0f);
+    glm::vec3 rotation_axis_norm = glm::vec3(0,1,0);
+    world = glm::rotate(world, angle, rotation_axis_norm);
+
+    // I only have 1 object atm.
+    glm::mat4 temp = view_projection * world;
+    render_buffer_update( viewproj_mat, &temp, sizeof(temp) );
+
     texture2d_bind(text_texture, 0);
     // render_draw(vbuffer, tri_prog, 3);
-    render_draw_elems( vbuffer_gpu, ebuffer_gpu, tri_prog, 6, 0, 0);
+    u32 vert_count = vbuffer_cpu.offset_new / sizeof(vertex1);
+    render_draw_elems( vbuffer_gpu, ebuffer_gpu, tri_prog, vert_count, 0, 0);
 
     // Draw the triangle
     u32 text_vert_count = text_count(&tbuffer_cpu);
