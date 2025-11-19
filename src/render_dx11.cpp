@@ -43,6 +43,7 @@ struct render_state
   ID3D11Texture2D* depth_buffer;
   ID3D11DepthStencilView* depth_view;
   ID3D11BlendState* blend_state;
+  ID3D11RasterizerState* rasterizer_default;
 };
 
 global render_state *renderer;
@@ -80,6 +81,22 @@ internal DXGI_FORMAT format_select(u32 nchannels)
   }
   ASSERT( (selection != DXGI_FORMAT_UNKNOWN), "ERROR: Unsupported format selected.");
   return selection;
+}
+
+
+// TODO: Call this in render_init() Also disable clockwise ordering since who cares.
+internal void rasterizer_init()
+{
+  // Check out Frank Luna's RenderStates.cpp
+  D3D11_RASTERIZER_DESC rasterDesc = {};
+  rasterDesc.FillMode              = D3D11_FILL_SOLID;
+  rasterDesc.CullMode              = D3D11_CULL_BACK;  // Disable backface culling
+  // rasterDesc.CullMode              = D3D11_CULL_NONE;  // Disable backface culling
+  rasterDesc.FrontCounterClockwise = true;
+  rasterDesc.DepthClipEnable       = true;
+  renderer->device->CreateRasterizerState(&rasterDesc, &renderer->rasterizer_default);
+  // Call this before you draw whatever you want
+  renderer->context->RSSetState(renderer->rasterizer_default);
 }
 
 
@@ -233,6 +250,9 @@ void render_init(arena *a)
   // Enable alpha blending
   f32 blend_factor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
   renderer->context->OMSetBlendState(renderer->blend_state, blend_factor, 0xffffffff);
+
+  // Set default rasterizer and create every kind you need
+  rasterizer_init();
 }
 
 
@@ -457,6 +477,7 @@ void render_draw(rbuffer_ptr vbuffer, shaders_ptr s, u32 count)
   renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
   renderer->context->VSSetShader(s->vertex, 0, 0);
   renderer->context->PSSetShader(s->pixel, 0, 0);
+  // renderer->context->RSSetState(renderer->rasterizer_default);
   renderer->context->Draw(count, 0);
 }
 
@@ -466,9 +487,10 @@ void render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, 
   renderer->context->IASetVertexBuffers(0, 1, &vbuffer->buffer, &vbuffer->stride, &vbuffer->offset);
   renderer->context->IASetIndexBuffer(ebuffer->buffer, DXGI_FORMAT_R32_UINT, 0);
   renderer->context->IASetInputLayout(s->vertex_in);
-  renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
   renderer->context->VSSetShader(s->vertex, 0, 0);
   renderer->context->PSSetShader(s->pixel, 0, 0);
+  // renderer->context->RSSetState(renderer->rasterizer_default);
   renderer->context->DrawIndexed(count, elem_start, vert_start);
 }
 
