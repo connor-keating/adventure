@@ -158,7 +158,7 @@ int main(int argc, char **argv)
   }
   glm::vec3 tpos = glm::vec3(0.0f, 0.0f, 0.0f);
   bool is_ccw = false;
-  text_add(&tbuffer_cpu, "TEXT!", 5, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale, is_ccw);
+  text_add(&tbuffer_cpu, "TEXT!", 5, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
   render_buffer_update(tbuffer_gpu, tbuffer_cpu.buffer, tbuffer_cpu.offset_new);
 
   // Rotation 
