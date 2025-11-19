@@ -145,33 +145,18 @@ rbuffer_ptr text_gpu_init(arena *a, void *cpu_buffer, u32 vert_count)
 }
 
 
-void text_add(arena *a, const char *text, u32 length, i32 window_height, glm::vec3 position, f32 size, glm::vec4 color, f32 pixel_scale, bool is_ccw)
+void text_add(arena *a, const char *text, u32 length, i32 window_height, glm::vec3 position, f32 size, glm::vec4 color, f32 pixel_scale)
 {
   i32 order[6];
-  if (is_ccw)
-  {
-    // If OpenGL Counterclockwise
-    // Tri 1
-    order[0] = 0;
-    order[1] = 1;
-    order[2] = 2;
-    // Tri 2
-    order[3] = 0;
-    order[4] = 2;
-    order[5] = 3;
-  }
-  else
-  {
-    // If D3D11 Clockwise
-    // Tri 1
-    order[0] = 0;
-    order[1] = 1;
-    order[2] = 2;
-    // Tri 2
-    order[3] = 2;
-    order[4] = 1;
-    order[5] = 3;
-  }
+  // If Counterclockwise (OpenGL default, D3D11 must set in rasterizer)
+  // Tri 1
+  order[0] = 0;
+  order[1] = 1;
+  order[2] = 2;
+  // Tri 2
+  order[3] = 0;
+  order[4] = 2;
+  order[5] = 3;
   glm::vec3 pos_local = position;
   for (i32 i = 0; i < length; ++i)
   {
@@ -192,32 +177,16 @@ void text_add(arena *a, const char *text, u32 length, i32 window_height, glm::ve
     // The order of vertices of a quad goes top-left, top-right, bottom-left, bottom-right
     glm::vec2 glyph_vertices[4]; 
     glm::vec2 glyph_texture[4];
-    if (is_ccw)
-    {
-      // Verts
-      glyph_vertices[0] = { glyph_bounds_sw.x + glyph_size.x, glyph_bounds_sw.y + glyph_size.y };
-      glyph_vertices[1] = { glyph_bounds_sw.x, glyph_bounds_sw.y + glyph_size.y };
-      glyph_vertices[2] = { glyph_bounds_sw.x, glyph_bounds_sw.y };
-      glyph_vertices[3] = { glyph_bounds_sw.x + glyph_size.x, glyph_bounds_sw.y };
-      // Texture 
-      glyph_texture[0] = { quad.s1, quad.t0 };
-      glyph_texture[1] = { quad.s0, quad.t0 };
-      glyph_texture[2] = { quad.s0, quad.t1 };
-      glyph_texture[3] = { quad.s1, quad.t1 };
-    }
-    else
-    {
-      // Verts
-      glyph_vertices[0] = { glyph_bounds_sw.x, glyph_bounds_sw.y + glyph_size.y };
-      glyph_vertices[1] = { glyph_bounds_sw.x + glyph_size.x, glyph_bounds_sw.y + glyph_size.y };
-      glyph_vertices[2] = { glyph_bounds_sw.x, glyph_bounds_sw.y };
-      glyph_vertices[3] = { glyph_bounds_sw.x + glyph_size.x, glyph_bounds_sw.y };
-      // Texture
-      glyph_texture[0] = { quad.s0, quad.t0 };
-      glyph_texture[1] = { quad.s1, quad.t0 };
-      glyph_texture[2] = { quad.s0, quad.t1 };
-      glyph_texture[3] = { quad.s1, quad.t1 };
-    }
+    // Verts
+    glyph_vertices[0] = { glyph_bounds_sw.x + glyph_size.x, glyph_bounds_sw.y + glyph_size.y };
+    glyph_vertices[1] = { glyph_bounds_sw.x, glyph_bounds_sw.y + glyph_size.y };
+    glyph_vertices[2] = { glyph_bounds_sw.x, glyph_bounds_sw.y };
+    glyph_vertices[3] = { glyph_bounds_sw.x + glyph_size.x, glyph_bounds_sw.y };
+    // Texture 
+    glyph_texture[0] = { quad.s1, quad.t0 };
+    glyph_texture[1] = { quad.s0, quad.t0 };
+    glyph_texture[2] = { quad.s0, quad.t1 };
+    glyph_texture[3] = { quad.s1, quad.t1 };
     // We need to fill the vertex buffer by 6 vertices to render a quad as we are rendering a quad as 2 triangles
     // The order used is in the 'order' array
     // order = [0, 1, 2, 0, 2, 3] is meant to represent 2 triangles: 
