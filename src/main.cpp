@@ -117,7 +117,7 @@ int main(int argc, char **argv)
     sizeof(u32),
     ebuffer_cpu.length
   );
-  primitive_box3d( &vbuffer_cpu, &ebuffer_cpu );
+  primitive_box2d( &vbuffer_cpu, &ebuffer_cpu );
   // TODO: Update whole buffer or just what you need with offset_new?
   render_buffer_update( vbuffer_gpu, vbuffer_cpu.buffer, vbuffer_cpu.length );
   render_buffer_update( ebuffer_gpu, ebuffer_cpu.buffer, ebuffer_cpu.length );
@@ -214,17 +214,20 @@ int main(int argc, char **argv)
 
     frame_init();
 
+    // This adds rotation to the view/proj matrix
+    /*
     // Update transforms
     angle += angle_velocity * timer.delta; // rad += (rad/s)*s
     // wrap angle so it doesn't explode
     if (angle > 2.0*PI) angle -= 2.0*PI;
     glm::mat4 world = glm::mat4(1.0f);
     glm::vec3 rotation_axis_norm = glm::vec3(0,1,0);
-    world = glm::rotate(world, angle, rotation_axis_norm);
+    // world = glm::rotate(world, angle, rotation_axis_norm);
 
     // I only have 1 object atm.
     glm::mat4 temp = view_projection * world;
     render_buffer_update( viewproj_mat, &temp, sizeof(temp) );
+    */
 
     // Bind 3D texture for raytracer
     texture3d_bind(voxel_texture, 0);
