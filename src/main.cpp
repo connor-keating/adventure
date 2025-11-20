@@ -2,6 +2,7 @@
 #include "linalg.cpp"
 #include "platform.h"
 #include "render.h"
+#include "app_data.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -22,16 +23,6 @@ global bool is_running;
 // TODO: Why does app crash when I share it with discord?
 
 
-union vertex1
-{
-  struct
-  {
-    fvec3 pos;
-    fvec4 col;
-    fvec2 tex;
-  };
-  f32 data[9];
-};
 
 void input_reset(control_state *input_state)
 {
@@ -96,6 +87,7 @@ int main(int argc, char **argv)
     ebuffer_cpu.length
   );
   primitive_box3d( &vbuffer_cpu, &ebuffer_cpu );
+  // TODO: Update whole buffer or just what you need with offset_new?
   render_buffer_update( vbuffer_gpu, vbuffer_cpu.buffer, vbuffer_cpu.length );
   render_buffer_update( ebuffer_gpu, ebuffer_cpu.buffer, ebuffer_cpu.length );
   // Load shaders
@@ -107,12 +99,13 @@ int main(int argc, char **argv)
   f32 znear = 0.1f;
   f32 zfar = 100.0f;
   f32 aspect  = window.width / (window.height + 0.000001); // keep updated on resize
-  // glm::mat4 view_projection = glm::perspective( 0.0f, aspect, znear, zfar );
   // glm::mat4 view_projection = glm::ortho( 0.0f, window.width, 0.0f, window.height, znear, zfar );
-  glm::mat4 view_projection = glm::ortho(-5.0f, 5.0f,-5.0f, 5.0f, znear, zfar );
-  // glm::mat4 view_projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, znear, zfar);
-  // glm::mat4 view_projection = glm::orthoLH_ZO(-1.0f, 1.0f, -1.0f, 1.0f, znear, zfar);
-  // glm::mat4 view_projection = glm::mat4(1.0f);
+  // glm::mat4 view_projection = glm::ortho(-5.0f, 5.0f,-5.0f, 5.0f, znear, zfar );
+
+  glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, znear, zfar);
+  glm::mat4 view = glm::lookAt(glm::vec3(0,0,-5), glm::vec3(0,0,0), glm::vec3(0,1,0));
+  glm::mat4 view_projection = projection * view;
+
   rbuffer_ptr viewproj_mat = render_buffer_constant_init( &memory, sizeof(view_projection) );
   render_buffer_update( viewproj_mat, &view_projection, sizeof(view_projection) );
   render_constant_set( viewproj_mat );
@@ -196,8 +189,8 @@ int main(int argc, char **argv)
 
     texture2d_bind(text_texture, 0);
     // render_draw(vbuffer, tri_prog, 3);
-    u32 vert_count = vbuffer_cpu.offset_new / sizeof(vertex1);
-    render_draw_elems( vbuffer_gpu, ebuffer_gpu, tri_prog, vert_count, 0, 0);
+    u32 elem_count = ebuffer_cpu.offset_new / sizeof(u32);
+    render_draw_elems( vbuffer_gpu, ebuffer_gpu, tri_prog, elem_count, 0, 0);
 
     // Draw the triangle
     u32 text_vert_count = text_count(&tbuffer_cpu);
