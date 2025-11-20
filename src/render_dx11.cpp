@@ -494,7 +494,7 @@ void render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, 
   renderer->context->IASetVertexBuffers(0, 1, &vbuffer->buffer, &vbuffer->stride, &vbuffer->offset);
   renderer->context->IASetIndexBuffer(ebuffer->buffer, DXGI_FORMAT_R32_UINT, 0);
   renderer->context->IASetInputLayout(s->vertex_in);
-  renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+  renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
   renderer->context->VSSetShader(s->vertex, 0, 0);
   renderer->context->PSSetShader(s->pixel, 0, 0);
   // renderer->context->RSSetState(renderer->rasterizer_default);
