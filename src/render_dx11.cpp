@@ -31,6 +31,13 @@ struct texture2d
   ID3D11SamplerState* sampler;
 };
 
+struct texture3d
+{
+  ID3D11Texture3D* texture;
+  ID3D11ShaderResourceView* view;
+  ID3D11SamplerState* sampler;
+};
+
 
 // Data types
 struct render_state
@@ -567,6 +574,68 @@ texture2d_ptr texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 
 
 
 void texture2d_bind(texture2d *tex, u32 slot)
+{
+  renderer->context->PSSetShaderResources(slot, 1, &tex->view);
+  renderer->context->PSSetSamplers(slot, 1, &tex->sampler);
+}
+
+
+texture3d* texture3d_init(arena *a, void* data, i32 width, i32 height, i32 depth)
+{
+  texture3d *tex = arena_push_struct(a, texture3d);
+
+  // Create texture description for R8 format (single channel, 8-bit)
+  D3D11_TEXTURE3D_DESC desc = {};
+  desc.Width = width;
+  desc.Height = height;
+  desc.Depth = depth;
+  desc.MipLevels = 1;
+  desc.Format = DXGI_FORMAT_R8_UNORM;  // Single channel, normalized 0-1
+  desc.Usage = D3D11_USAGE_IMMUTABLE;
+  desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+  desc.CPUAccessFlags = 0;
+  desc.MiscFlags = 0;
+
+  // Setup subresource data
+  D3D11_SUBRESOURCE_DATA gpu_data = {};
+  gpu_data.pSysMem = data;
+  gpu_data.SysMemPitch = width;           // bytes per row
+  gpu_data.SysMemSlicePitch = width * height;  // bytes per 2D slice
+
+  // Create texture
+  HRESULT hr = renderer->device->CreateTexture3D(&desc, &gpu_data, &tex->texture);
+  ASSERT(SUCCEEDED(hr), "Failed to create texture3D.");
+
+  // Create shader resource view
+  D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc = {};
+  srv_desc.Format = desc.Format;
+  srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
+  srv_desc.Texture3D.MostDetailedMip = 0;
+  srv_desc.Texture3D.MipLevels = 1;
+
+  hr = renderer->device->CreateShaderResourceView(tex->texture, &srv_desc, &tex->view);
+  ASSERT(SUCCEEDED(hr), "Failed to create 3D texture shader resource view.");
+
+  // Create sampler state with NEAREST filtering (for voxel-like data)
+  D3D11_SAMPLER_DESC sampler_desc = {};
+  sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;  // NEAREST
+  sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+  sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+  sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+  sampler_desc.MipLODBias = 0.0f;
+  sampler_desc.MaxAnisotropy = 1;
+  sampler_desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+  sampler_desc.MinLOD = 0.0f;
+  sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
+
+  hr = renderer->device->CreateSamplerState(&sampler_desc, &tex->sampler);
+  ASSERT(SUCCEEDED(hr), "Failed to create 3D texture sampler state.");
+
+  return tex;
+}
+
+
+void texture3d_bind(texture3d *tex, u32 slot)
 {
   renderer->context->PSSetShaderResources(slot, 1, &tex->view);
   renderer->context->PSSetSamplers(slot, 1, &tex->sampler);
