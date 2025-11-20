@@ -43,6 +43,37 @@ void input_reset(control_state *input_state)
 }
 
 
+inline u32 index3d( u32 x, u32 y, u32 z, u32 width, u32 height )
+{
+  return x + y * width + z * width * height;
+}
+
+texture3d_ptr image3d_create( arena *a )
+{
+  u8 voxel_data[27] = {0};  // 3*3*3 = 27 voxels, all initialized to 0
+
+  // Set the 8 corners to 1 (255 in normalized u8)
+  // Corner indices in a 3x3x3 grid:
+  // Bottom layer (z=0): corners at (0,0,0), (2,0,0), (0,2,0), (2,2,0)
+  // Top layer (z=2):    corners at (0,0,2), (2,0,2), (0,2,2), (2,2,2)
+
+  voxel_data[index3d(0,0,0, 3,3)] = 255;  // corner 0
+  voxel_data[index3d(2,0,0, 3,3)] = 255;  // corner 1
+  voxel_data[index3d(0,2,0, 3,3)] = 255;  // corner 2
+  voxel_data[index3d(2,2,0, 3,3)] = 255;  // corner 3
+  voxel_data[index3d(0,0,2, 3,3)] = 255;  // corner 4
+  voxel_data[index3d(2,0,2, 3,3)] = 255;  // corner 5
+  voxel_data[index3d(0,2,2, 3,3)] = 255;  // corner 6
+  voxel_data[index3d(2,2,2, 3,3)] = 255;  // corner 7
+
+  // Upload to GPU
+  texture3d_ptr voxel_texture = texture3d_init( a, voxel_data, 3, 3, 3 );
+
+  // In your render loop, bind it before drawing:
+  return voxel_texture;
+}
+
+
 int main(int argc, char **argv)
 {
   // Allocate all program memory upfront.
@@ -109,6 +140,14 @@ int main(int argc, char **argv)
   rbuffer_ptr viewproj_mat = render_buffer_constant_init( &memory, sizeof(view_projection) );
   render_buffer_update( viewproj_mat, &view_projection, sizeof(view_projection) );
   render_constant_set( viewproj_mat );
+
+  // Create a 3D texture
+  texture3d_ptr voxel_texture = image3d_create( &memory );
+  texture3d_bind(voxel_texture, 1);  // slot 1 (slot 0 is used by text_texture)
+  // Load raytracer shaders
+  shaders_ptr raytrace_prog = shader_init(&memory);
+  shader_load(raytrace_prog, VERTEX, "shaders/raytracer.hlsl", "VSMain", "vs_5_0");
+  shader_load(raytrace_prog, PIXEL,  "shaders/raytracer.hlsl", "PSMain", "ps_5_0");
 
   // Read in a texture
   // const char* filename = "G:/pacbird/.assets/checker-gray5.png";
@@ -187,12 +226,14 @@ int main(int argc, char **argv)
     glm::mat4 temp = view_projection * world;
     render_buffer_update( viewproj_mat, &temp, sizeof(temp) );
 
-    texture2d_bind(text_texture, 0);
-    // render_draw(vbuffer, tri_prog, 3);
+    // Bind 3D texture for raytracer
+    texture3d_bind(voxel_texture, 0);
     u32 elem_count = ebuffer_cpu.offset_new / sizeof(u32);
-    render_draw_elems( vbuffer_gpu, ebuffer_gpu, tri_prog, elem_count, 0, 0);
+    // render_draw_elems( vbuffer_gpu, ebuffer_gpu, tri_prog, elem_count, 0, 0);
+    render_draw_elems( vbuffer_gpu, ebuffer_gpu, raytrace_prog, elem_count, 0, 0);
 
-    // Draw the triangle
+    // Draw text
+    texture2d_bind(text_texture, 0);
     u32 text_vert_count = text_count(&tbuffer_cpu);
     render_draw(tbuffer_gpu, text_shaders, text_vert_count);
 
