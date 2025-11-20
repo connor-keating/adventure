@@ -30,5 +30,5 @@ VSOut VSMain(VSIn i)
 
 float4 PSMain(VSOut i) : SV_Target
 {
-  return float4(i.color.rgb, i.color.a);
+  return float4(i.uv, 0, 1);
 }
