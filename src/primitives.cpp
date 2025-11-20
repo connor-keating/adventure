@@ -6,10 +6,10 @@ void primitive_box2d( arena *vbuffer, arena *ebuffer )
   // Vertices
   f32 verts[36] = {
     // position          // color (RGBA)              // Texture
-    -1.0f, -1.0f, 0.0f,  1.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // low left
-     1.0f, -1.0f, 0.0f,  1.0f, 0.0f, 1.0f, 1.0f,  0.0f, 0.0f, // up  left
-     1.0f,  1.0f, 0.0f,  0.0f, 1.0f, 1.0f, 1.0f,  1.0f, 1.0f, // low right
-    -1.0f,  1.0f, 0.0f,  1.0f, 1.0f, 1.0f, 1.0f,  1.0f, 0.0f, // up  right
+    -1.0f, -1.0f, 0.0f,  1.0f, 1.0f, 0.0f, 1.0f,  0.0f, 0.0f, // low left
+     1.0f, -1.0f, 0.0f,  1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 0.0f, // low right
+     1.0f,  1.0f, 0.0f,  0.0f, 1.0f, 1.0f, 1.0f,  1.0f, 1.0f, // top right
+    -1.0f,  1.0f, 0.0f,  1.0f, 1.0f, 1.0f, 1.0f,  0.0f, 1.0f, // top left
   };
   // Elements
   u32 elems[6] = {
