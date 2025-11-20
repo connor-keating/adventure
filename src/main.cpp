@@ -127,15 +127,20 @@ int main(int argc, char **argv)
   shader_load(tri_prog, PIXEL,  "shaders/test.hlsl", "PSMain", "ps_5_0");
 
   // Create view projection matrix
+  // No projection (identity) 
+  glm::mat4 view_projection = glm::mat4(1.0f);
+  // Orthographic projection
+  // glm::mat4 view_projection = glm::ortho( 0.0f, window.width, 0.0f, window.height, znear, zfar );
+  // glm::mat4 view_projection = glm::ortho(-5.0f, 5.0f,-5.0f, 5.0f, znear, zfar );
+  // Perspective projection
+  /*
   f32 znear = 0.1f;
   f32 zfar = 100.0f;
   f32 aspect  = window.width / (window.height + 0.000001); // keep updated on resize
-  // glm::mat4 view_projection = glm::ortho( 0.0f, window.width, 0.0f, window.height, znear, zfar );
-  // glm::mat4 view_projection = glm::ortho(-5.0f, 5.0f,-5.0f, 5.0f, znear, zfar );
-
   glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, znear, zfar);
   glm::mat4 view = glm::lookAt(glm::vec3(0,0,-5), glm::vec3(0,0,0), glm::vec3(0,1,0));
   glm::mat4 view_projection = projection * view;
+  */
 
   rbuffer_ptr viewproj_mat = render_buffer_constant_init( &memory, sizeof(view_projection) );
   render_buffer_update( viewproj_mat, &view_projection, sizeof(view_projection) );
@@ -144,10 +149,10 @@ int main(int argc, char **argv)
   // Create a 3D texture
   texture3d_ptr voxel_texture = image3d_create( &memory );
   texture3d_bind(voxel_texture, 1);  // slot 1 (slot 0 is used by text_texture)
-  // Load raytracer shaders
+  // Load raymarching shaders
   shaders_ptr raytrace_prog = shader_init(&memory);
-  shader_load(raytrace_prog, VERTEX, "shaders/raytracer.hlsl", "VSMain", "vs_5_0");
-  shader_load(raytrace_prog, PIXEL,  "shaders/raytracer.hlsl", "PSMain", "ps_5_0");
+  shader_load(raytrace_prog, VERTEX, "shaders/raymarching.hlsl", "VSMain", "vs_5_0");
+  shader_load(raytrace_prog, PIXEL,  "shaders/raymarching.hlsl", "PSMain", "ps_5_0");
 
   // Read in a texture
   // const char* filename = "G:/pacbird/.assets/checker-gray5.png";
@@ -229,7 +234,7 @@ int main(int argc, char **argv)
     render_buffer_update( viewproj_mat, &temp, sizeof(temp) );
     */
 
-    // Bind 3D texture for raytracer
+    // Bind 3D texture for raymarching
     texture3d_bind(voxel_texture, 0);
     u32 elem_count = ebuffer_cpu.offset_new / sizeof(u32);
     // render_draw_elems( vbuffer_gpu, ebuffer_gpu, tri_prog, elem_count, 0, 0);
