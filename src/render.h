@@ -8,11 +8,13 @@
 struct shaders;
 struct render_buffer;
 struct texture2d;
+struct texture3d;
 
 // Pointer types for the internal structs.
 typedef shaders* shaders_ptr;
 typedef render_buffer* rbuffer_ptr;
 typedef texture2d* texture2d_ptr;
+typedef texture3d* texture3d_ptr;
 
 
 enum shader_type
@@ -50,6 +52,9 @@ void          render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shader
 
 texture2d_ptr texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 channels);
 void          texture2d_bind(texture2d *tex, u32 slot);
+
+texture3d_ptr texture3d_init(arena *a, void* data, i32 width, i32 height, i32 depth);
+void          texture3d_bind(texture3d *tex, u32 slot);
 
 shaders_ptr   shader_init(arena *a);
 void          shader_load(shaders *s, shader_type t, const char *file, const char *entry, const char *target);
