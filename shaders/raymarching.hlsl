@@ -127,7 +127,7 @@ float4 PSMain(VSOut i) : SV_Target
     if (found_voxel)
     {
       // Normalize accumulated density to visible range
-      float brightness = saturate(accumulated_density);
+      float brightness = saturate(accumulated_density); // Clamp to (0,1)
       color = float3(brightness, brightness, brightness);
     }
     else
