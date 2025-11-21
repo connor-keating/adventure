@@ -30,9 +30,23 @@ VSOut VSMain(VSIn i)
 
 float4 PSMain(VSOut i) : SV_Target
 {
-  // Get NDC (-1,1) from UV (0,1) coords 
+  // Step 1: Convert UV (0,1) to NDC (-1,1)
   float2 uv = i.uv;              // 0..1
   float2 ndc = uv * 2.0f - 1.0f; //-1..1
-  float4 final_color = float4(uv, 0.0f, 1.0f);
-  return final_color;
+
+  // Step 2: Set up camera
+  // Camera is at z=-2, looking at origin (0,0,0) down the +Z axis
+  float3 camera_pos = float3(0.0f, 0.0f, -2.0f);
+
+  // Step 3: Calculate ray direction
+  // Since we have no projection, we map NDC directly to a plane at z=0
+  // The ray goes from camera through this point on the view plane
+  float3 point_on_viewplane = float3(ndc.x, ndc.y, 0.0f);
+  float3 ray_dir = normalize(point_on_viewplane - camera_pos);
+
+  // Step 4: Visualize ray direction as color
+  // Map direction components from (-1,1) to (0,1) for RGB visualization
+  float3 color = ray_dir * 0.5f + 0.5f;
+
+  return float4(color, 1.0f);
 }
