@@ -82,14 +82,59 @@ float4 PSMain(VSOut i) : SV_Target
   float t_near, t_far;
   bool hit = ray_box_intersection(camera_pos, ray_dir, box_min, box_max, t_near, t_far);
 
-  // Step 6: Visualize intersection
+  // Step 6: Raymarch through the volume
   float3 color;
   if (hit)
   {
-    // Ray hits the volume - visualize the distance to entry point
-    // Normalize t_near to a visible range (0-3 units -> 0-1 color)
-    float normalized_dist = saturate(t_near / 3.0f);
-    color = float3(normalized_dist, normalized_dist, normalized_dist);
+    // Ensure we start in front of the camera
+    t_near = max(t_near, 0.0f);
+
+    // Raymarching parameters
+    float step_size = 0.01f;  // Small steps for quality (1/100th of a unit)
+    int max_steps = 300;      // Safety limit to prevent infinite loops
+
+    // Initialize color accumulator
+    float accumulated_density = 0.0f;
+    bool found_voxel = false;
+
+    // March along the ray
+    float t = t_near;
+    for (int step = 0; step < max_steps && t < t_far; ++step)
+    {
+      // Calculate current world position
+      float3 world_pos = camera_pos + t * ray_dir;
+
+      // Convert world space [-0.5, 0.5] to texture space [0, 1]
+      float3 tex_coord = world_pos + 0.5f;
+
+      // Sample the 3D texture
+      // Use SampleLevel to avoid gradient instruction warning in loops
+      // Level 0 = highest resolution mipmap
+      float density = voxelTexture.SampleLevel(voxelSampler, tex_coord, 0);
+
+      // If we hit a non-zero voxel, accumulate it
+      if (density > 0.0f)
+      {
+        accumulated_density += density;
+        found_voxel = true;
+      }
+
+      // Step forward along the ray
+      t += step_size;
+    }
+
+    // Visualize the result
+    if (found_voxel)
+    {
+      // Normalize accumulated density to visible range
+      float brightness = saturate(accumulated_density);
+      color = float3(brightness, brightness, brightness);
+    }
+    else
+    {
+      // Ray passed through volume but found no voxels
+      color = float3(0.2f, 0.2f, 0.2f); // Dark gray
+    }
   }
   else
   {
