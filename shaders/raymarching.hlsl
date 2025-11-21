@@ -93,14 +93,22 @@ float4 PSMain(VSOut i) : SV_Target
     float step_size = 0.01f;  // Small steps for quality (1/100th of a unit)
     int max_steps = 300;      // Safety limit to prevent infinite loops
 
-    // Initialize color accumulator
-    float accumulated_density = 0.0f;
-    bool found_voxel = false;
+    // Opacity control: how opaque each sample is
+    // What percentage opacity does each sample contribute? (5% = .05)
+    float opacity_factor = 0.05f;  // Lower = more transparent, higher = more opaque
 
-    // March along the ray
+    // Initialize accumulators for front-to-back compositing
+    float3 color_accum = float3(0.0f, 0.0f, 0.0f);  // Accumulated color
+    float alpha_accum = 0.0f;                        // Accumulated opacity
+
+    // March along the ray (front-to-back)
     float t = t_near;
     for (int step = 0; step < max_steps && t < t_far; ++step)
     {
+      // Early termination: stop if ray is fully opaque
+      if (alpha_accum > 0.99f)
+        break;
+
       // Calculate current world position
       float3 world_pos = camera_pos + t * ray_dir;
 
@@ -112,29 +120,27 @@ float4 PSMain(VSOut i) : SV_Target
       // Level 0 = highest resolution mipmap
       float density = voxelTexture.SampleLevel(voxelSampler, tex_coord, 0);
 
-      // If we hit a non-zero voxel, accumulate it
+      // If we hit a non-zero voxel, composite it
       if (density > 0.0f)
       {
-        accumulated_density += density;
-        found_voxel = true;
+        // Calculate opacity for this sample
+        float alpha = density * opacity_factor;
+
+        // For now, use white color (we'll add transfer functions later)
+        float3 sample_color = float3(1.0f, 1.0f, 1.0f);
+
+        // Front-to-back compositing
+        float weight = (1.0f - alpha_accum) * alpha;
+        color_accum += weight * sample_color;
+        alpha_accum += weight;
       }
 
       // Step forward along the ray
       t += step_size;
     }
 
-    // Visualize the result
-    if (found_voxel)
-    {
-      // Normalize accumulated density to visible range
-      float brightness = saturate(accumulated_density); // Clamp to (0,1)
-      color = float3(brightness, brightness, brightness);
-    }
-    else
-    {
-      // Ray passed through volume but found no voxels
-      color = float3(0.2f, 0.2f, 0.2f); // Dark gray
-    }
+    // Final color with background blending
+    color = color_accum;
   }
   else
   {
