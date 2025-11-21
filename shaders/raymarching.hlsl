@@ -18,6 +18,34 @@ cbuffer camera : register(b0)
   float4x4 view_projection;
 };
 
+// Ray-AABB (Axis-Aligned Bounding Box) intersection
+// Returns true if ray intersects box, and outputs t_near and t_far
+bool ray_box_intersection(
+  float3 ray_origin,
+  float3 ray_dir,
+  float3 box_min,
+  float3 box_max,
+  out float t_near,
+  out float t_far)
+{
+  // Calculate intersection distances for each axis
+  float3 t1 = (box_min - ray_origin) / ray_dir;
+  float3 t2 = (box_max - ray_origin) / ray_dir;
+
+  // Find the near and far intersection points for each slab
+  float3 t_min = min(t1, t2);
+  float3 t_max = max(t1, t2);
+
+  // The ray enters the box at the latest entry point
+  t_near = max(max(t_min.x, t_min.y), t_min.z);
+
+  // The ray exits the box at the earliest exit point
+  t_far = min(min(t_max.x, t_max.y), t_max.z);
+
+  // Ray intersects if t_near < t_far and t_far > 0
+  return t_near < t_far && t_far > 0.0f;
+}
+
 VSOut VSMain(VSIn i)
 {
   VSOut output = {
@@ -44,9 +72,30 @@ float4 PSMain(VSOut i) : SV_Target
   float3 point_on_viewplane = float3(ndc.x, ndc.y, 0.0f);
   float3 ray_dir = normalize(point_on_viewplane - camera_pos);
 
-  // Step 4: Visualize ray direction as color
-  // Map direction components from (-1,1) to (0,1) for RGB visualization
-  float3 color = ray_dir * 0.5f + 0.5f;
+  // Step 4: Define volume bounding box
+  // Our 3x3x3 voxel grid occupies a 1x1x1 cube centered at origin
+  // float3 color = ray_dir * 0.5f + 0.5f;
+  float3 box_min = float3(-0.5f, -0.5f, -0.5f);
+  float3 box_max = float3( 0.5f,  0.5f,  0.5f);
+
+  // Step 5: Test ray-box intersection
+  float t_near, t_far;
+  bool hit = ray_box_intersection(camera_pos, ray_dir, box_min, box_max, t_near, t_far);
+
+  // Step 6: Visualize intersection
+  float3 color;
+  if (hit)
+  {
+    // Ray hits the volume - visualize the distance to entry point
+    // Normalize t_near to a visible range (0-3 units -> 0-1 color)
+    float normalized_dist = saturate(t_near / 3.0f);
+    color = float3(normalized_dist, normalized_dist, normalized_dist);
+  }
+  else
+  {
+    // Ray misses the volume - show background color
+    color = float3(0.1f, 0.1f, 0.2f); // Dark blue background
+  }
 
   return float4(color, 1.0f);
 }
