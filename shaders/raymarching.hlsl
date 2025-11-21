@@ -30,5 +30,9 @@ VSOut VSMain(VSIn i)
 
 float4 PSMain(VSOut i) : SV_Target
 {
-  return float4(i.uv, 0, 1);
+  // Get NDC (-1,1) from UV (0,1) coords 
+  float2 uv = i.uv;              // 0..1
+  float2 ndc = uv * 2.0f - 1.0f; //-1..1
+  float4 final_color = float4(uv, 0.0f, 1.0f);
+  return final_color;
 }
