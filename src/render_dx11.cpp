@@ -389,9 +389,11 @@ rbuffer_ptr render_buffer_constant_init( arena *a, size_t byte_count )
 }
 
 
-void render_constant_set( rbuffer_ptr b )
+void render_constant_set( rbuffer_ptr b, u32 slot )
 {
-  renderer->context->VSSetConstantBuffers( 0, 1, &b->buffer );
+  // Shared buffer for both shaders
+  renderer->context->VSSetConstantBuffers( slot, 1, &b->buffer );
+  renderer->context->PSSetConstantBuffers( slot, 1, &b->buffer );
 }
 
 
