@@ -24,8 +24,10 @@ global bool is_running;
 
 struct camera
 {
-  glm::vec3 pos;
-  f32 _padding; // D3D11 constant buffers must be multiple of 16 bytes
+  glm::mat4 view_inv; // 64 bytes
+  glm::mat4 proj_inv; // 64 bytes
+  glm::vec3 pos;      // 12 bytes
+  f32 _padding;       // 4 bytes → pad to 16-byte multiple
 };
 
 

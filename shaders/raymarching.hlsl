@@ -22,6 +22,8 @@ cbuffer camera : register(b0)
 
 cbuffer camera : register(b0)
 {
+  float4x4 view_inv;
+  float4x4 proj_inv;
   float3 camera_pos;
   float _padding;
 };
