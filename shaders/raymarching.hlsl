@@ -13,6 +13,9 @@ struct VSOut {
 Texture3D<float> voxelTexture : register(t0);
 SamplerState voxelSampler : register(s0);
 
+Texture1D<float4> transferFunction : register(t1);
+SamplerState transferSampler : register(s1);
+
 cbuffer camera : register(b0)
 {
   float4x4 view_inv;            // 64 bytes
@@ -138,11 +141,13 @@ float4 PSMain(VSOut i) : SV_Target
       // If we hit a non-zero voxel, composite it
       if (density > 0.0f)
       {
-        // Calculate opacity for this sample
-        float alpha = density * opacity_factor;
+        // Look up color from transfer function
+        float4 tf_sample = transferFunction.SampleLevel(transferSampler, density, 0);
+        float3 sample_color = tf_sample.rgb;
+        float sample_alpha = tf_sample.a;
 
-        // For now, use white color (we'll add transfer functions later)
-        float3 sample_color = float3(1.0f, 1.0f, 1.0f);
+        // Apply opacity factor
+        float alpha = sample_alpha * opacity_factor;
 
         // Front-to-back compositing
         float weight = (1.0f - alpha_accum) * alpha;
