@@ -43,7 +43,7 @@ rbuffer_ptr   render_buffer_init(arena *a, buffer_type t, void* data, u32 stride
 rbuffer_ptr   render_buffer_dynamic_init(arena *a, buffer_type t, void *data, u32 stride, u32 byte_count);
 void          render_buffer_update(rbuffer_ptr buffer, void* data, u32 byte_count);
 rbuffer_ptr   render_buffer_constant_init( arena *a, size_t byte_count );
-void          render_constant_set( rbuffer_ptr b );
+void          render_constant_set( rbuffer_ptr b, u32 slot );
 
 void          render_text_init(arena *a);
 
