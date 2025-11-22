@@ -13,19 +13,12 @@ struct VSOut {
 Texture3D<float> voxelTexture : register(t0);
 SamplerState voxelSampler : register(s0);
 
-/*
 cbuffer camera : register(b0)
 {
-  float4x4 view_projection;
-};
-*/
-
-cbuffer camera : register(b0)
-{
-  float4x4 view_inv;
-  float4x4 proj_inv;
-  float3 camera_pos;
-  float _padding;
+  float4x4 view_inv;           // 64 bytes
+  float4x4 proj_inv;           // 64 bytes
+  float3 camera_pos;           // 12 bytes
+  float _padding;              // 4 bytes
 };
 
 // Ray-AABB (Axis-Aligned Bounding Box) intersection
@@ -73,15 +66,19 @@ float4 PSMain(VSOut i) : SV_Target
   float2 uv = i.uv;              // 0..1
   float2 ndc = uv * 2.0f - 1.0f; //-1..1
 
-  // Step 2: Set up camera
-  // Camera is at z=-2, looking at origin (0,0,0) down the +Z axis
-  // float3 camera_pos = float3(0.0f, 0.0f, -2.0f);
+  // Step 2: Generate world-space ray using inverse view-projection
+  // Create a point on the far plane in clip space (z=1 for D3D depth range [0,1])
+  float4 clip_space = float4(ndc.x, ndc.y, 1.0f, 1.0f);
 
-  // Step 3: Calculate ray direction
-  // Since we have no projection, we map NDC directly to a plane at z=0
-  // The ray goes from camera through this point on the view plane
-  float3 point_on_viewplane = float3(ndc.x, ndc.y, 0.0f);
-  float3 ray_dir = normalize(point_on_viewplane - camera_pos);
+  // Transform to view space using inverse projection
+  float4 view_space = mul(proj_inv, clip_space);
+  view_space /= view_space.w;  // Perspective divide
+
+  // Transform to world space using inverse view
+  float3 world_pos = mul(view_inv, float4(view_space.xyz, 1.0f)).xyz;
+
+  // Ray direction from camera to world position
+  float3 ray_dir = normalize(world_pos - camera_pos);
 
   // Step 4: Define volume bounding box
   // Our 3x3x3 voxel grid occupies a 1x1x1 cube centered at origin

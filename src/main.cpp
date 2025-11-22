@@ -136,6 +136,23 @@ int main(int argc, char **argv)
   // Camera stuff
   camera cam = {};
   cam.pos = glm::vec3(0.0f, 0.0f, -2.0f);
+
+  // Create view matrix (lookAt camera)
+  glm::vec3 camera_target = glm::vec3(0.0f, 0.0f, 0.0f);  // Looking at origin
+  glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);      // Y-up
+  glm::mat4 view = glm::lookAt(cam.pos, camera_target, camera_up);
+
+  // Create projection matrix (perspective)
+  f32 fov_deg = glm::radians( 45.0f );
+  f32 aspect = (f32)window.width / (f32)window.height;
+  f32 znear = 0.1f;
+  f32 zfar = 100.0f;
+  glm::mat4 projection = glm::perspective(fov_deg, aspect, znear, zfar);
+
+  // Compute inverses for raymarching shader
+  cam.view_inv = glm::inverse(view);
+  cam.proj_inv = glm::inverse(projection);
+
   // Upload to GPU
   rbuffer_ptr camera_gpu = render_buffer_constant_init( &memory, sizeof(camera) );
   render_buffer_update( camera_gpu, &cam, sizeof(camera) );
