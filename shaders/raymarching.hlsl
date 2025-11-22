@@ -15,10 +15,11 @@ SamplerState voxelSampler : register(s0);
 
 cbuffer camera : register(b0)
 {
-  float4x4 view_inv;           // 64 bytes
-  float4x4 proj_inv;           // 64 bytes
-  float3 camera_pos;           // 12 bytes
-  float _padding;              // 4 bytes
+  float4x4 view_inv;            // 64 bytes
+  float4x4 proj_inv;            // 64 bytes
+  float4x4 wrld_inv; // 64 bytes - inverse rotation for volume
+  float3 camera_pos;            // 12 bytes
+  float _padding;               // 4 bytes
 };
 
 // Ray-AABB (Axis-Aligned Bounding Box) intersection
@@ -80,15 +81,21 @@ float4 PSMain(VSOut i) : SV_Target
   // Ray direction from camera to world position
   float3 ray_dir = normalize(world_pos - camera_pos);
 
+  // Step 3: Transform ray to volume's local space (apply inverse rotation)
+  // This allows us to rotate the volume while keeping AABB intersection simple
+  float3 ray_origin_local = mul(wrld_inv, float4(camera_pos, 1.0f)).xyz;
+  float3 ray_dir_local = mul(wrld_inv, float4(ray_dir, 0.0f)).xyz;
+  ray_dir_local = normalize(ray_dir_local);
+
   // Step 4: Define volume bounding box
   // Our 3x3x3 voxel grid occupies a 1x1x1 cube centered at origin
   // float3 color = ray_dir * 0.5f + 0.5f;
   float3 box_min = float3(-0.5f, -0.5f, -0.5f);
   float3 box_max = float3( 0.5f,  0.5f,  0.5f);
 
-  // Step 5: Test ray-box intersection
+  // Step 5: Test ray-box intersection (using local-space ray)
   float t_near, t_far;
-  bool hit = ray_box_intersection(camera_pos, ray_dir, box_min, box_max, t_near, t_far);
+  bool hit = ray_box_intersection(ray_origin_local, ray_dir_local, box_min, box_max, t_near, t_far);
 
   // Step 6: Raymarch through the volume
   float3 color;
@@ -117,11 +124,11 @@ float4 PSMain(VSOut i) : SV_Target
       if (alpha_accum > 0.99f)
         break;
 
-      // Calculate current world position
-      float3 world_pos = camera_pos + t * ray_dir;
+      // Calculate current position in volume's local space
+      float3 local_pos = ray_origin_local + t * ray_dir_local;
 
-      // Convert world space [-0.5, 0.5] to texture space [0, 1]
-      float3 tex_coord = world_pos + 0.5f;
+      // Convert local space [-0.5, 0.5] to texture space [0, 1]
+      float3 tex_coord = local_pos + 0.5f;
 
       // Sample the 3D texture
       // Use SampleLevel to avoid gradient instruction warning in loops

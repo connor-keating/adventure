@@ -24,10 +24,11 @@ global bool is_running;
 
 struct camera
 {
-  glm::mat4 view_inv; // 64 bytes
-  glm::mat4 proj_inv; // 64 bytes
-  glm::vec3 pos;      // 12 bytes
-  f32 _padding;       // 4 bytes → pad to 16-byte multiple
+  glm::mat4 view_inv;            // 64 bytes
+  glm::mat4 proj_inv;            // 64 bytes
+  glm::mat4 wrld_inv;            // 64 bytes - inverse rotation for volume
+  glm::vec3 pos;                 // 12 bytes
+  f32 _padding;                  // 4 bytes → pad to 16-byte multiple
 };
 
 
@@ -153,6 +154,9 @@ int main(int argc, char **argv)
   cam.view_inv = glm::inverse(view);
   cam.proj_inv = glm::inverse(projection);
 
+  // Initialize volume rotation (will be updated in render loop)
+  cam.wrld_inv = glm::mat4(1.0f); // Identity for now
+
   // Upload to GPU
   rbuffer_ptr camera_gpu = render_buffer_constant_init( &memory, sizeof(camera) );
   render_buffer_update( camera_gpu, &cam, sizeof(camera) );
@@ -251,6 +255,18 @@ int main(int argc, char **argv)
     arena_free_all( &scratch );
 
     frame_init();
+
+    // Update volume rotation
+    angle += angle_velocity * timer.delta; // rad += (rad/s)*s
+    // wrap angle so it doesn't explode
+    if (angle > 2.0*PI) angle -= 2.0*PI;
+
+    glm::vec3 rotation_axis = glm::vec3(0.0f, 1.0f, 0.0f); // Y-axis
+    glm::mat4 volume_rotation = glm::rotate(glm::mat4(1.0f), angle, rotation_axis);
+    cam.wrld_inv = glm::inverse(volume_rotation);
+
+    // Update camera constant buffer with new rotation
+    render_buffer_update(camera_gpu, &cam, sizeof(camera));
 
     // This adds rotation to the view/proj matrix
     /*
