@@ -22,6 +22,11 @@ global bool is_running;
 
 // TODO: Why does app crash when I share it with discord?
 
+struct camera
+{
+  glm::vec3 pos;
+  f32 _padding; // D3D11 constant buffers must be multiple of 16 bytes
+};
 
 
 void input_reset(control_state *input_state)
@@ -126,9 +131,18 @@ int main(int argc, char **argv)
   shader_load(tri_prog, VERTEX, "shaders/test.hlsl", "VSMain", "vs_5_0");
   shader_load(tri_prog, PIXEL,  "shaders/test.hlsl", "PSMain", "ps_5_0");
 
+  // Camera stuff
+  camera cam = {};
+  cam.pos = glm::vec3(0.0f, 0.0f, -2.0f);
+  // Upload to GPU
+  rbuffer_ptr camera_gpu = render_buffer_constant_init( &memory, sizeof(camera) );
+  render_buffer_update( camera_gpu, &cam, sizeof(camera) );
+  // Bind camera constant buffer to pixel shader
+  render_constant_set( camera_gpu, 0 );
+
   // Create view projection matrix
   // No projection (identity) 
-  glm::mat4 view_projection = glm::mat4(1.0f);
+  // glm::mat4 view_projection = glm::mat4(1.0f);
   // Orthographic projection
   // glm::mat4 view_projection = glm::ortho( 0.0f, window.width, 0.0f, window.height, znear, zfar );
   // glm::mat4 view_projection = glm::ortho(-5.0f, 5.0f,-5.0f, 5.0f, znear, zfar );
@@ -142,9 +156,9 @@ int main(int argc, char **argv)
   glm::mat4 view_projection = projection * view;
   */
 
-  rbuffer_ptr viewproj_mat = render_buffer_constant_init( &memory, sizeof(view_projection) );
-  render_buffer_update( viewproj_mat, &view_projection, sizeof(view_projection) );
-  render_constant_set( viewproj_mat );
+  // rbuffer_ptr viewproj_mat = render_buffer_constant_init( &memory, sizeof(view_projection) );
+  // render_buffer_update( viewproj_mat, &view_projection, sizeof(view_projection) );
+  // render_constant_set( viewproj_mat, 1 );
 
   // Create a 3D texture
   texture3d_ptr voxel_texture = image3d_create( &memory );

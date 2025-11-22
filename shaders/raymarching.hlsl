@@ -13,9 +13,17 @@ struct VSOut {
 Texture3D<float> voxelTexture : register(t0);
 SamplerState voxelSampler : register(s0);
 
+/*
 cbuffer camera : register(b0)
 {
   float4x4 view_projection;
+};
+*/
+
+cbuffer camera : register(b0)
+{
+  float3 camera_pos;
+  float _padding;
 };
 
 // Ray-AABB (Axis-Aligned Bounding Box) intersection
@@ -49,7 +57,8 @@ bool ray_box_intersection(
 VSOut VSMain(VSIn i)
 {
   VSOut output = {
-    mul(view_projection, float4(i.pos, 1.0f)),
+    // mul(view_projection, float4(i.pos, 1.0f)),
+    float4(i.pos, 1.0f),
     i.color,
     i.uv
   };
@@ -64,7 +73,7 @@ float4 PSMain(VSOut i) : SV_Target
 
   // Step 2: Set up camera
   // Camera is at z=-2, looking at origin (0,0,0) down the +Z axis
-  float3 camera_pos = float3(0.0f, 0.0f, -2.0f);
+  // float3 camera_pos = float3(0.0f, 0.0f, -2.0f);
 
   // Step 3: Calculate ray direction
   // Since we have no projection, we map NDC directly to a plane at z=0
