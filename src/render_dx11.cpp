@@ -24,6 +24,13 @@ struct render_buffer
   u32 offset;
 };
 
+struct texture1d
+{
+  ID3D11Texture1D* texture;
+  ID3D11ShaderResourceView* view;
+  ID3D11SamplerState* sampler;
+};
+
 struct texture2d
 {
   ID3D11Texture2D* texture;
@@ -515,6 +522,66 @@ void render_close()
 }
 
 
+texture1d_ptr texture1d_init(arena *a, void* data, i32 width)
+{
+  texture1d *tex = arena_push_struct(a, texture1d);
+
+  // Transfer functions are RGBA (4 channels)
+  DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+  // Create texture description
+  D3D11_TEXTURE1D_DESC desc = {};
+  desc.Width = width;
+  desc.MipLevels = 1;
+  desc.ArraySize = 1;
+  desc.Format = format;
+  desc.Usage = D3D11_USAGE_IMMUTABLE;
+  desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+  desc.CPUAccessFlags = 0;
+  desc.MiscFlags = 0;
+
+  // Setup subresource data
+  D3D11_SUBRESOURCE_DATA gpu_data = {};
+  gpu_data.pSysMem = data;
+  gpu_data.SysMemPitch = width * 4; // RGBA = 4 bytes per pixel
+
+  // Create texture
+  HRESULT hr = renderer->device->CreateTexture1D(&desc, &gpu_data, &tex->texture);
+  ASSERT(SUCCEEDED(hr), "Failed to create texture1D.");
+
+  // Create shader resource view
+  D3D11_SHADER_RESOURCE_VIEW_DESC view_desc = {};
+  view_desc.Format = desc.Format;
+  view_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE1D;
+  view_desc.Texture1D.MostDetailedMip = 0;
+  view_desc.Texture1D.MipLevels = 1;
+
+  hr = renderer->device->CreateShaderResourceView(tex->texture, &view_desc, &tex->view);
+  ASSERT(SUCCEEDED(hr), "Failed to create shader resource view for texture1D.");
+
+  // Create sampler state (linear filtering for smooth gradients)
+  D3D11_SAMPLER_DESC sampler_desc = {};
+  sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+  sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+  sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+  sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+  sampler_desc.MipLODBias = 0.0f;
+  sampler_desc.MaxAnisotropy = 1;
+  sampler_desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+  sampler_desc.BorderColor[0] = 0.0f;
+  sampler_desc.BorderColor[1] = 0.0f;
+  sampler_desc.BorderColor[2] = 0.0f;
+  sampler_desc.BorderColor[3] = 0.0f;
+  sampler_desc.MinLOD = 0.0f;
+  sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
+
+  hr = renderer->device->CreateSamplerState(&sampler_desc, &tex->sampler);
+  ASSERT(SUCCEEDED(hr), "Failed to create sampler state for texture1D.");
+
+  return tex;
+}
+
+
 texture2d_ptr texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 channels)
 {
   texture2d *tex = arena_push_struct(a, texture2d);
@@ -573,6 +640,13 @@ texture2d_ptr texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 
   return tex;
 }
 
+
+
+void texture1d_bind(texture1d *tex, u32 slot)
+{
+  renderer->context->PSSetShaderResources(slot, 1, &tex->view);
+  renderer->context->PSSetSamplers(slot, 1, &tex->sampler);
+}
 
 
 void texture2d_bind(texture2d *tex, u32 slot)
