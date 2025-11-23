@@ -429,6 +429,12 @@ rbuffer_ptr render_buffer_init(arena *a, buffer_type t, void* data, u32 stride, 
 }
 
 
+void render_buffer_close( rbuffer_ptr b)
+{
+  b->buffer->Release();
+}
+
+
 rbuffer_ptr render_buffer_dynamic_init(arena *a, buffer_type t, void *data, u32 stride, u32 byte_count)
 {
   // Initialize output in arena

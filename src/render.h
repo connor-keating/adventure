@@ -45,6 +45,7 @@ void          render_resize(i32 width, i32 height);
 void          render_close();
 
 rbuffer_ptr   render_buffer_init(arena *a, buffer_type t, void* data, u32 stride, u32 byte_count);
+void          render_buffer_close( rbuffer_ptr b );
 rbuffer_ptr   render_buffer_dynamic_init(arena *a, buffer_type t, void *data, u32 stride, u32 byte_count);
 void          render_buffer_update(rbuffer_ptr buffer, void* data, u32 byte_count);
 rbuffer_ptr   render_buffer_constant_init( arena *a, size_t byte_count );

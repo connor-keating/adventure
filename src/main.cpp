@@ -423,6 +423,10 @@ int main(int argc, char **argv)
 
     frame_render();
   }
+  render_buffer_close( vbuffer_gpu );
+  render_buffer_close( ebuffer_gpu );
+  render_buffer_close( camera_gpu );
+  render_buffer_close( tbuffer_gpu );
   texture_close( transfer_function );
   texture_close( voxel_texture );
   texture_close( text_texture );
