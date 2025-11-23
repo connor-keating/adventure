@@ -423,6 +423,7 @@ int main(int argc, char **argv)
 
     frame_render();
   }
+  texture1d_close( transfer_function );
   render_close();
   return 0;
 }

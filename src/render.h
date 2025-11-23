@@ -54,6 +54,7 @@ void          render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shader
 
 texture1d_ptr texture1d_init(arena *a, void* data, i32 width);
 void          texture1d_bind(texture1d *tex, u32 slot);
+void          texture1d_close(texture1d *tex);
 
 texture2d_ptr texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 channels);
 void          texture2d_bind(texture2d *tex, u32 slot);
