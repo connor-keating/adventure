@@ -64,6 +64,7 @@ void          texture_close(texture *tex);
 
 shaders_ptr   shader_init(arena *a);
 void          shader_load(shaders *s, shader_type t, const char *file, const char *entry, const char *target);
+void          shader_close(shaders *s);
 
 void          frame_init();
 void          frame_render();

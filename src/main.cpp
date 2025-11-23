@@ -426,6 +426,9 @@ int main(int argc, char **argv)
   texture_close( transfer_function );
   texture_close( voxel_texture );
   texture_close( text_texture );
+  shader_close( tri_prog );
+  shader_close( raytrace_prog );
+  shader_close( text_shaders );
   render_close();
   return 0;
 }

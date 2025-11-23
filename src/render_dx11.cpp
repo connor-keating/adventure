@@ -886,6 +886,13 @@ void shader_load(shaders *s, shader_type t, const char *file, const char *entry,
 }
 
 
+void shader_close( shaders *s )
+{
+  s->vertex->Release();
+  s->vertex_in->Release();
+  s->pixel->Release();
+}
+
 void frame_init()
 {
   f32 color[4] = {0.0f, 0.325f, 0.282f, 1.0f};
