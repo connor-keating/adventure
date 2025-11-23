@@ -237,7 +237,7 @@ int main(int argc, char **argv)
   cam.wrld_inv = glm::mat4(1.0f); // Identity for now
 
   // Upload to GPU
-  rbuffer_ptr camera_gpu = render_buffer_constant_init( &memory, sizeof(camera) );
+  rbuffer_ptr camera_gpu = render_buffer_dynamic_init( &memory, BUFF_CONST, &cam, 0, sizeof(camera) );
   render_buffer_update( camera_gpu, &cam, sizeof(camera) );
   // Bind camera constant buffer to pixel shader
   render_constant_set( camera_gpu, 0 );
@@ -258,7 +258,7 @@ int main(int argc, char **argv)
   glm::mat4 view_projection = projection * view;
   */
 
-  // rbuffer_ptr viewproj_mat = render_buffer_constant_init( &memory, sizeof(view_projection) );
+  // rbuffer_ptr viewproj_mat = render_buffer_dynamic_init( &memory, sizeof(view_projection) );
   // render_buffer_update( viewproj_mat, &view_projection, sizeof(view_projection) );
   // render_constant_set( viewproj_mat, 1 );
 

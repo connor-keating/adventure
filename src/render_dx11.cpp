@@ -467,29 +467,6 @@ rbuffer_ptr render_buffer_dynamic_init(arena *a, buffer_type t, void *data, u32 
 }
 
 
-rbuffer_ptr render_buffer_constant_init( arena *a, size_t byte_count )
-{
-  // Create buffer in memory arena
-  render_buffer *out = arena_push_struct(a, render_buffer);
-  out->stride = 0;
-  out->offset = 0;
-  // Determine bind flags based on buffer type
-  u32 flags = buffer_type_get(BUFF_CONST);
-  // Describe the constant buffer
-  D3D11_BUFFER_DESC description;
-  description.Usage = D3D11_USAGE_DYNAMIC;
-  description.ByteWidth = byte_count;
-  description.BindFlags = flags;
-  description.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-  description.MiscFlags = 0;
-  description.StructureByteStride = 0;
-  // Create the buffer
-  HRESULT hr = renderer->device->CreateBuffer( &description, 0, &out->buffer);
-  ASSERT(SUCCEEDED(hr), "Failed to create constant buffer.");
-  return out;
-}
-
-
 void render_constant_set( rbuffer_ptr b, u32 slot )
 {
   // Shared buffer for both shaders
