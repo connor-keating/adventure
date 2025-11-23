@@ -56,7 +56,7 @@ inline u32 index3d( u32 x, u32 y, u32 z, u32 width, u32 height )
   return x + y * width + z * width * height;
 }
 
-texture3d_ptr image3d_create( arena *a )
+texture_ptr image3d_create( arena *a )
 {
   // Create a higher resolution volume with gradient density
   i32 resolution = 32;  // 32x32x32 = 32768 voxels
@@ -156,7 +156,7 @@ texture3d_ptr image3d_create( arena *a )
   }
 
   // Upload to GPU
-  texture3d_ptr voxel_texture = texture3d_init( a, voxel_data, resolution, resolution, resolution );
+  texture_ptr voxel_texture = texture3d_init( a, voxel_data, resolution, resolution, resolution );
   return voxel_texture;
 }
 
@@ -263,7 +263,7 @@ int main(int argc, char **argv)
   // render_constant_set( viewproj_mat, 1 );
 
   // Create a 3D texture
-  texture3d_ptr voxel_texture = image3d_create( &memory );
+  texture_ptr voxel_texture = image3d_create( &memory );
 
   // Create transfer function (1D texture for color mapping)
   // Heat map: Black → Blue → Cyan → Green → Yellow → Red → White
@@ -310,7 +310,7 @@ int main(int argc, char **argv)
     tf_data[i * 4 + 3] = a;
   }
 
-  texture1d_ptr transfer_function = texture1d_init(&memory, tf_data, tf_size);
+  texture_ptr transfer_function = texture1d_init(&memory, tf_data, tf_size);
 
   // Load raymarching shaders
   shaders_ptr raytrace_prog = shader_init(&memory);
@@ -323,13 +323,13 @@ int main(int argc, char **argv)
   // i32 x, y, n;
   // i32 components_per_pixel = 4; // Force RGBA
   // unsigned char *data = stbi_load(filename, &x, &y, &n, components_per_pixel);
-  // texture2d_ptr tri_texture = texture2d_init(&memory, data, x, y, components_per_pixel);
+  // texture_ptr tri_texture = texture2d_init(&memory, data, x, y, components_per_pixel);
 
   // Initialize Text
   u32 text_vert_count = 6000;
   arena tbuffer_cpu = text_buffer_init(&memory, text_vert_count);
   const char *font_file = "C:/MyFonts/Source_Code_Pro/static/SourceCodePro-Regular.ttf";
-  texture2d_ptr text_texture = text_init( &memory, font_file );
+  texture_ptr text_texture = text_init( &memory, font_file );
   // render_text_init(&memory);
 
   rbuffer_ptr tbuffer_gpu = render_buffer_dynamic_init(
@@ -410,20 +410,20 @@ int main(int argc, char **argv)
     */
 
     // Bind textures for raymarching
-    texture3d_bind(voxel_texture, 0);
-    texture1d_bind(transfer_function, 1);
+    texture_bind(voxel_texture, 0);
+    texture_bind(transfer_function, 1);
     u32 elem_count = ebuffer_cpu.offset_new / sizeof(u32);
     // render_draw_elems( vbuffer_gpu, ebuffer_gpu, tri_prog, elem_count, 0, 0);
     render_draw_elems( vbuffer_gpu, ebuffer_gpu, raytrace_prog, elem_count, 0, 0);
 
     // Draw text
-    texture2d_bind(text_texture, 0);
+    texture_bind(text_texture, 0);
     u32 text_vert_count = text_count(&tbuffer_cpu);
     render_draw(tbuffer_gpu, text_shaders, text_vert_count);
 
     frame_render();
   }
-  texture1d_close( transfer_function );
+  texture_close( transfer_function );
   render_close();
   return 0;
 }

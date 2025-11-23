@@ -29,23 +29,10 @@ struct render_buffer
   u32 offset;
 };
 
-struct texture1d
+struct texture
 {
-  ID3D11Texture1D* texture;
-  ID3D11ShaderResourceView* view;
-  ID3D11SamplerState* sampler;
-};
-
-struct texture2d
-{
-  ID3D11Texture2D* texture;
-  ID3D11ShaderResourceView* view;
-  ID3D11SamplerState* sampler;
-};
-
-struct texture3d
-{
-  ID3D11Texture3D* texture;
+  texture_dimension dim;
+  void* texture;
   ID3D11ShaderResourceView* view;
   ID3D11SamplerState* sampler;
 };
@@ -180,6 +167,9 @@ internal void rasterizer_init()
 
 void render_init(arena *a)
 {
+  size_t x = sizeof(ID3D11Texture1D);
+  size_t y = sizeof(ID3D11Texture2D);
+  size_t z = sizeof(ID3D11Texture3D);
   // Initialize render state data
   renderer = arena_push_struct(a, render_state);
   HWND *window = (HWND*) platform_window_handle();
@@ -628,9 +618,11 @@ void render_close()
 }
 
 
-texture1d_ptr texture1d_init(arena *a, void* data, i32 width)
+texture_ptr texture1d_init(arena *a, void* data, i32 width)
 {
-  texture1d *tex = arena_push_struct(a, texture1d);
+  texture *tex = arena_push_struct(a, texture);
+  tex->dim = ONE;
+  ID3D11Texture1D **actual = (ID3D11Texture1D**) &tex->texture;
 
   // Transfer functions are RGBA (4 channels)
   DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -652,7 +644,7 @@ texture1d_ptr texture1d_init(arena *a, void* data, i32 width)
   gpu_data.SysMemPitch = width * 4; // RGBA = 4 bytes per pixel
 
   // Create texture
-  HRESULT hr = renderer->device->CreateTexture1D(&desc, &gpu_data, &tex->texture);
+  HRESULT hr = renderer->device->CreateTexture1D(&desc, &gpu_data, actual);
   ASSERT(SUCCEEDED(hr), "Failed to create texture1D.");
 
   // Create shader resource view
@@ -662,7 +654,7 @@ texture1d_ptr texture1d_init(arena *a, void* data, i32 width)
   view_desc.Texture1D.MostDetailedMip = 0;
   view_desc.Texture1D.MipLevels = 1;
 
-  hr = renderer->device->CreateShaderResourceView(tex->texture, &view_desc, &tex->view);
+  hr = renderer->device->CreateShaderResourceView( *actual, &view_desc, &tex->view );
   ASSERT(SUCCEEDED(hr), "Failed to create shader resource view for texture1D.");
 
   // Create sampler state (linear filtering for smooth gradients)
@@ -688,9 +680,11 @@ texture1d_ptr texture1d_init(arena *a, void* data, i32 width)
 }
 
 
-texture2d_ptr texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 channels)
+texture_ptr texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 channels)
 {
-  texture2d *tex = arena_push_struct(a, texture2d);
+  texture *tex = arena_push_struct(a, texture);
+  tex->dim = TWO;
+  ID3D11Texture2D **actual = (ID3D11Texture2D**) &tex->texture;
   // Select format
   DXGI_FORMAT form = format_select(channels);
   // Create texture description
@@ -713,7 +707,7 @@ texture2d_ptr texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 
   gpu_data.SysMemPitch = width * channels; // bytes per row
 
   // Create texture
-  HRESULT hr = renderer->device->CreateTexture2D(&desc, &gpu_data, &tex->texture);
+  HRESULT hr = renderer->device->CreateTexture2D(&desc, &gpu_data, actual );
   ASSERT(SUCCEEDED(hr), "Failed to create texture2D.");
 
   // Create shader resource view
@@ -723,7 +717,7 @@ texture2d_ptr texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 
   gpu_desc.Texture2D.MostDetailedMip = 0;
   gpu_desc.Texture2D.MipLevels = 1;
 
-  hr = renderer->device->CreateShaderResourceView(tex->texture, &gpu_desc, &tex->view);
+  hr = renderer->device->CreateShaderResourceView( *actual, &gpu_desc, &tex->view );
   ASSERT(SUCCEEDED(hr), "Failed to create shader resource view.");
 
   // Create sampler state
@@ -747,30 +741,40 @@ texture2d_ptr texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 
 }
 
 
-void texture1d_bind(texture1d *tex, u32 slot)
+void texture_close( texture *tex )
 {
-  renderer->context->PSSetShaderResources(slot, 1, &tex->view);
-  renderer->context->PSSetSamplers(slot, 1, &tex->sampler);
-}
-
-
-void texture1d_close( texture1d *tex )
-{
-  tex->texture->Release();  
+  switch (tex->dim)
+  {
+    case (ONE):
+    {
+      ID3D11Texture1D *temp = (ID3D11Texture1D*) tex->texture;
+      temp->Release();
+      break;
+    }
+    case (TWO):
+    {
+      ID3D11Texture2D *temp = (ID3D11Texture2D*) tex->texture;
+      temp->Release();
+      break;
+    }
+    case (THREE):
+    {
+      ID3D11Texture3D *temp = (ID3D11Texture3D*) tex->texture;
+      temp->Release();
+      break;
+    }
+    default: ASSERT(false, "Unrecognized texture shape.\n"); break;
+  };
   tex->view->Release();
   tex->sampler->Release();
 }
 
-void texture2d_bind(texture2d *tex, u32 slot)
-{
-  renderer->context->PSSetShaderResources(slot, 1, &tex->view);
-  renderer->context->PSSetSamplers(slot, 1, &tex->sampler);
-}
 
-
-texture3d* texture3d_init(arena *a, void* data, i32 width, i32 height, i32 depth)
+texture_ptr texture3d_init(arena *a, void* data, i32 width, i32 height, i32 depth)
 {
-  texture3d *tex = arena_push_struct(a, texture3d);
+  texture *tex = arena_push_struct(a, texture);
+  tex->dim = THREE;
+  ID3D11Texture3D **actual = (ID3D11Texture3D**) &tex->texture;
 
   // Create texture description for R8 format (single channel, 8-bit)
   D3D11_TEXTURE3D_DESC desc = {};
@@ -791,7 +795,7 @@ texture3d* texture3d_init(arena *a, void* data, i32 width, i32 height, i32 depth
   gpu_data.SysMemSlicePitch = width * height;  // bytes per 2D slice
 
   // Create texture
-  HRESULT hr = renderer->device->CreateTexture3D(&desc, &gpu_data, &tex->texture);
+  HRESULT hr = renderer->device->CreateTexture3D( &desc, &gpu_data, actual );
   ASSERT(SUCCEEDED(hr), "Failed to create texture3D.");
 
   // Create shader resource view
@@ -801,7 +805,7 @@ texture3d* texture3d_init(arena *a, void* data, i32 width, i32 height, i32 depth
   srv_desc.Texture3D.MostDetailedMip = 0;
   srv_desc.Texture3D.MipLevels = 1;
 
-  hr = renderer->device->CreateShaderResourceView(tex->texture, &srv_desc, &tex->view);
+  hr = renderer->device->CreateShaderResourceView( *actual, &srv_desc, &tex->view);
   ASSERT(SUCCEEDED(hr), "Failed to create 3D texture shader resource view.");
 
   // Create sampler state with NEAREST filtering (for voxel-like data)
@@ -823,7 +827,7 @@ texture3d* texture3d_init(arena *a, void* data, i32 width, i32 height, i32 depth
 }
 
 
-void texture3d_bind(texture3d *tex, u32 slot)
+void texture_bind(texture *tex, u32 slot)
 {
   renderer->context->PSSetShaderResources(slot, 1, &tex->view);
   renderer->context->PSSetSamplers(slot, 1, &tex->sampler);

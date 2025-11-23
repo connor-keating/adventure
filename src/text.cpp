@@ -103,12 +103,12 @@ char_atlas text_atlas_init(arena *memory, const char * font_file)
 }
 
 
-texture2d_ptr text_init(arena *memory, const char * font_file)
+texture_ptr text_init(arena *memory, const char * font_file)
 {
   // Create the char atlas bitmap image
   char_atlas atlas = text_atlas_init(memory, font_file);
   // Upload it to GPU texture
-  texture2d_ptr font_texture = texture2d_init(memory, atlas.image, atlas.width, atlas.height, 1);
+  texture_ptr font_texture = texture2d_init(memory, atlas.image, atlas.width, atlas.height, 1);
   return font_texture;
 }
 
