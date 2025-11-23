@@ -199,7 +199,7 @@ int main(int argc, char **argv)
   );
   rbuffer_ptr ebuffer_gpu = render_buffer_dynamic_init(
     &memory,
-    VERTS,
+    ELEMS,
     ebuffer_cpu.buffer,
     sizeof(u32),
     ebuffer_cpu.length
