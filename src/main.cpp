@@ -68,7 +68,7 @@ texture3d_ptr image3d_create( arena *a )
   f32 center = resolution / 2.0f;
   f32 max_radius = resolution / 2.0f;
 
-  for (i32 z = 0; z < resolution; ++z)
+  for (i32 z = max_radius; z < resolution; ++z)
   {
     for (i32 y = 0; y < resolution; ++y)
     {
