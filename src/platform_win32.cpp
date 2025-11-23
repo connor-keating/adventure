@@ -30,6 +30,7 @@ internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT messag
   {
     case WM_CLOSE:
     {
+      ShowWindow(state->handle, SW_HIDE);  // Hide window immediately
       state->is_running = false;
       PostQuitMessage(0);
       break;
