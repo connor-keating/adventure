@@ -419,7 +419,7 @@ int main(int argc, char **argv)
     // Draw text
     texture_bind(text_texture, 0);
     u32 text_vert_count = text_count(&tbuffer_cpu);
-    render_draw(tbuffer_gpu, text_shaders, text_vert_count);
+    render_draw_ui(tbuffer_gpu, text_shaders, text_vert_count);
 
     frame_render();
   }

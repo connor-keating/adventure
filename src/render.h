@@ -54,6 +54,7 @@ void          render_constant_set( rbuffer_ptr b, u32 slot );
 void          render_text_init(arena *a);
 
 void          render_draw(rbuffer_ptr vertex_buffer, shaders_ptr s, u32 count);
+void          render_draw_ui(rbuffer_ptr vertex_buffer, shaders_ptr s, u32 count);
 void          render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, u32 count, u32 elem_start, u32 vert_start);
 
 texture_ptr   texture1d_init(arena *a, void* data, i32 width);

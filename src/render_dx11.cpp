@@ -573,7 +573,6 @@ void render_text_init(arena *a)
 
 void render_draw(rbuffer_ptr vbuffer, shaders_ptr s, u32 count)
 {
-  renderer->context->OMSetDepthStencilState(renderer->depth_stencil_disabled, 0);
   renderer->context->IASetVertexBuffers(0, 1, &vbuffer->buffer, &vbuffer->stride, &vbuffer->offset);
   renderer->context->IASetInputLayout(s->vertex_in);
   renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -581,6 +580,13 @@ void render_draw(rbuffer_ptr vbuffer, shaders_ptr s, u32 count)
   renderer->context->PSSetShader(s->pixel, 0, 0);
   // renderer->context->RSSetState(renderer->rasterizer_default);
   renderer->context->Draw(count, 0);
+}
+
+
+void render_draw_ui( rbuffer_ptr vbuffer, shaders_ptr s, u32 count )
+{
+  renderer->context->OMSetDepthStencilState(renderer->depth_stencil_disabled, 0);
+  render_draw( vbuffer, s, count);
   renderer->context->OMSetDepthStencilState(renderer->depth_stencil_enabled, 0);
 }
 
