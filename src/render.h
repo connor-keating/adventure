@@ -31,8 +31,9 @@ enum shader_type
 
 enum buffer_type
 {
-  VERTS,
-  ELEMS
+  BUFF_VERTS,
+  BUFF_ELEMS, 
+  BUFF_CONST
 };
 
 struct vert_texture
