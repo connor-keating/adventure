@@ -4,7 +4,12 @@
 // External code
 #include <d3d11.h>
 #include <dxgi.h>
+#include <dxgidebug.h>
 #include <d3dcompiler.h>
+
+#if defined(_DEBUG)
+#pragma comment(lib, "dxguid.lib")
+#endif
 
 /*
 1. Create array of ID3D11RasterizerState variables. It can be global and made in the init function.
@@ -61,6 +66,65 @@ struct render_state
 };
 
 global render_state *renderer;
+
+
+#if defined(_DEBUG)
+// Info queue that stores debug messages
+global ID3D11InfoQueue* info_queue;
+
+// Print all D3D11 debug messages from the info queue
+internal void debug_print()
+{
+  if (!info_queue) return;
+  u64 num_messages = info_queue->GetNumStoredMessages();
+  for (u64 i = 0; i < num_messages; i++)
+  {
+    SIZE_T message_length = 0;
+    info_queue->GetMessage(i, nullptr, &message_length);
+    D3D11_MESSAGE* message = (D3D11_MESSAGE*)malloc(message_length);
+    info_queue->GetMessage(i, message, &message_length);
+    const char* severity_str = "UNKNOWN";
+    switch (message->Severity)
+    {
+      case D3D11_MESSAGE_SEVERITY_CORRUPTION: severity_str = "CORRUPTION"; break;
+      case D3D11_MESSAGE_SEVERITY_ERROR:      severity_str = "ERROR";      break;
+      case D3D11_MESSAGE_SEVERITY_WARNING:    severity_str = "WARNING";    break;
+      case D3D11_MESSAGE_SEVERITY_INFO:       severity_str = "INFO";       break;
+      case D3D11_MESSAGE_SEVERITY_MESSAGE:    severity_str = "MESSAGE";    break;
+    }
+    char msg[256];
+    snprintf( msg, 256, "[D3D11 %s] %s\n", severity_str, message->pDescription );
+    printf( "%s", msg );
+    free(message);
+  }
+  info_queue->ClearStoredMessages();
+}
+
+// Report live DXGI/D3D11 objects (resource leaks)
+internal void debug_objects()
+{
+  IDXGIDebug* dxgi_debug = nullptr;
+  typedef HRESULT(WINAPI* DXGIGetDebugInterfaceFunc)(REFIID, void**);
+  HMODULE dxgi_debug_dll = LoadLibraryA("dxgidebug.dll");
+  if (dxgi_debug_dll)
+  {
+    DXGIGetDebugInterfaceFunc DXGIGetDebugInterface_func =
+      (DXGIGetDebugInterfaceFunc)GetProcAddress(dxgi_debug_dll, "DXGIGetDebugInterface");
+
+    if (DXGIGetDebugInterface_func)
+    {
+      HRESULT hr = DXGIGetDebugInterface_func(__uuidof(IDXGIDebug), (void**)&dxgi_debug);
+      if (SUCCEEDED(hr) && dxgi_debug)
+      {
+        printf("\n=== DXGI Live Objects Report ===\n");
+        dxgi_debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
+        dxgi_debug->Release();
+      }
+    }
+    FreeLibrary(dxgi_debug_dll);
+  }
+}
+#endif
 
 
 internal ID3D11InputLayout * render_vertex_description(ID3DBlob *vert_shader)
@@ -143,6 +207,30 @@ void render_init(arena *a)
   );
   ASSERT(SUCCEEDED(result), "ERROR: Failed to create the device.");
   ASSERT(feature_level == D3D_FEATURE_LEVEL_11_0, "ERROR: Failed to init d3d11.");
+
+  #if defined(_DEBUG)
+  {
+    result = renderer->device->QueryInterface(__uuidof(ID3D11InfoQueue), (void**)&info_queue);
+    ASSERT( SUCCEEDED(result), "Failed to create info queue for debugging." );
+
+    // Break on D3D11 errors (will trigger debugger breakpoint)
+    // Comment these out to just print errors without crashing
+    // info_queue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_CORRUPTION, TRUE);
+    // info_queue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_ERROR, TRUE);
+    // OPTIONAL: break on warnings (noisy)
+    // info_queue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_WARNING, TRUE);
+
+    // Filter spammy messages (optional)
+    D3D11_MESSAGE_ID hide[] = {
+        D3D11_MESSAGE_ID_SETPRIVATEDATA_CHANGINGPARAMS,
+        D3D11_MESSAGE_ID_DEVICE_DRAW_RENDERTARGETVIEW_NOT_SET
+    };
+    D3D11_INFO_QUEUE_FILTER filter = {};
+    filter.DenyList.NumIDs = _countof(hide);
+    filter.DenyList.pIDList = hide;
+    info_queue->AddStorageFilterEntries(&filter);
+  }
+  #endif
   
   // Check 4X MSAA quality support
   u32 msaa_quality;
@@ -360,11 +448,20 @@ rbuffer_ptr render_buffer_dynamic_init(arena *a, buffer_type t, void *data, u32 
   render_buffer *out = arena_push_struct(a, render_buffer);
   out->stride = stride;
   out->offset = 0;
+  // Determine bind flags based on buffer type
+  u32 flags = 0;
+  switch (t)
+  {
+    case (VERTS): flags = D3D11_BIND_VERTEX_BUFFER; break;
+    case (ELEMS): flags = D3D11_BIND_INDEX_BUFFER;  break;
+    default: break;
+  };
+  ASSERT( (flags != 0), "Failed to set D3D11 flags.");
   // Describe the buffer
   D3D11_BUFFER_DESC desc  = {};
   desc.ByteWidth          = byte_count;   // for constant buffers: multiple of 16 bytes
-  desc.Usage              = D3D11_USAGE_DYNAMIC;    // we’ll update it frequently
-  desc.BindFlags          = D3D11_BIND_VERTEX_BUFFER;
+  desc.Usage              = D3D11_USAGE_DYNAMIC;    // we'll update it frequently
+  desc.BindFlags          = flags;
   desc.CPUAccessFlags     = D3D11_CPU_ACCESS_WRITE; // CPU can write
   desc.MiscFlags          = 0;
   desc.StructureByteStride = 0;
@@ -511,14 +608,23 @@ void render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, 
 }
 
 
-
 void render_close()
 {
+  renderer->context->ClearState();
+  renderer->rasterizer_default->Release();
   renderer->blend_state->Release();
   renderer->render_target->Release();
   renderer->swapchain->Release();
   renderer->context->Release();
+  #if defined(_DEBUG)
+    if (info_queue) info_queue->Release();
+  #endif
   renderer->device->Release();
+
+  #if defined(_DEBUG)
+    debug_objects();
+    debug_print();
+  #endif
 }
 
 
@@ -641,13 +747,19 @@ texture2d_ptr texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 
 }
 
 
-
 void texture1d_bind(texture1d *tex, u32 slot)
 {
   renderer->context->PSSetShaderResources(slot, 1, &tex->view);
   renderer->context->PSSetSamplers(slot, 1, &tex->sampler);
 }
 
+
+void texture1d_close( texture1d *tex )
+{
+  tex->texture->Release();  
+  tex->view->Release();
+  tex->sampler->Release();
+}
 
 void texture2d_bind(texture2d *tex, u32 slot)
 {
@@ -781,6 +893,9 @@ void frame_init()
 
 void frame_render()
 {
+  #if defined(_DEBUG)
+  debug_print();
+  #endif
   renderer->swapchain->Present(1, 0); // vsync on
 }
 
