@@ -167,9 +167,6 @@ internal void rasterizer_init()
 
 void render_init(arena *a)
 {
-  size_t x = sizeof(ID3D11Texture1D);
-  size_t y = sizeof(ID3D11Texture2D);
-  size_t z = sizeof(ID3D11Texture3D);
   // Initialize render state data
   renderer = arena_push_struct(a, render_state);
   HWND *window = (HWND*) platform_window_handle();
