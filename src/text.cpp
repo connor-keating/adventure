@@ -120,7 +120,7 @@ rbuffer_ptr text_gpu_init(arena *a, void *cpu_buffer, u32 vert_count)
   size_t text_vert_max = vert_count * sizeof(char_vertex); 
   rbuffer_ptr buffer = render_buffer_dynamic_init(
     a,
-    VERTS,
+    BUFF_VERTS,
     cpu_buffer,
     sizeof(f32)*9,
     text_vert_max

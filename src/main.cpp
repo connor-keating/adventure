@@ -192,14 +192,14 @@ int main(int argc, char **argv)
   arena ebuffer_cpu = subarena_init( &memory, sizeof(u32)*VERTEX_MAX );
   rbuffer_ptr vbuffer_gpu = render_buffer_dynamic_init(
     &memory,
-    VERTS,
+    BUFF_VERTS,
     vbuffer_cpu.buffer,
     sizeof(vertex1),
     vbuffer_cpu.length
   );
   rbuffer_ptr ebuffer_gpu = render_buffer_dynamic_init(
     &memory,
-    ELEMS,
+    BUFF_ELEMS,
     ebuffer_cpu.buffer,
     sizeof(u32),
     ebuffer_cpu.length
@@ -334,7 +334,7 @@ int main(int argc, char **argv)
 
   rbuffer_ptr tbuffer_gpu = render_buffer_dynamic_init(
     &memory,
-    VERTS,
+    BUFF_VERTS,
     tbuffer_cpu.buffer,
     sizeof(f32) * 9,
     tbuffer_cpu.length

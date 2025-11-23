@@ -149,6 +149,21 @@ internal DXGI_FORMAT format_select(u32 nchannels)
 }
 
 
+internal u32 buffer_type_get( buffer_type t )
+{
+  u32 flags = 0;
+  switch (t)
+  {
+    case (BUFF_VERTS): flags = D3D11_BIND_VERTEX_BUFFER;    break;
+    case (BUFF_ELEMS): flags = D3D11_BIND_INDEX_BUFFER;     break;
+    case (BUFF_CONST): flags = D3D11_BIND_CONSTANT_BUFFER;  break;
+    default: break;
+  };
+  ASSERT( (flags != 0), "Failed to set D3D11 flags.");
+  return flags;
+}
+
+
 // TODO: Call this in render_init() Also disable clockwise ordering since who cares.
 internal void rasterizer_init()
 {
@@ -407,14 +422,8 @@ rbuffer_ptr render_buffer_init(arena *a, buffer_type t, void* data, u32 stride, 
   render_buffer *out = arena_push_struct(a, render_buffer);
   out->stride = stride;
   out->offset = 0;
-  u32 flags = 0;
-  switch (t)
-  {
-    case (VERTS): flags = D3D11_BIND_VERTEX_BUFFER; break;
-    case (ELEMS): flags = D3D11_BIND_INDEX_BUFFER;  break;
-    default: break;
-  };
-  ASSERT( (flags != 0), "Failed to set D3D11 flags.");
+  // Determine bind flags based on buffer type
+  u32 flags = buffer_type_get(t);
   D3D11_BUFFER_DESC vbd;
   vbd.Usage = D3D11_USAGE_IMMUTABLE;
   vbd.ByteWidth = byte_count;
@@ -424,7 +433,7 @@ rbuffer_ptr render_buffer_init(arena *a, buffer_type t, void* data, u32 stride, 
   D3D11_SUBRESOURCE_DATA vinitData;
   vinitData.pSysMem = data;
   HRESULT hr = renderer->device->CreateBuffer(&vbd, &vinitData, &out->buffer);
-  ASSERT( SUCCEEDED(hr), "Failed to create vertex buffer." );
+  ASSERT( SUCCEEDED(hr), "Failed to create buffer." );
   return out;
 }
 
@@ -442,14 +451,7 @@ rbuffer_ptr render_buffer_dynamic_init(arena *a, buffer_type t, void *data, u32 
   out->stride = stride;
   out->offset = 0;
   // Determine bind flags based on buffer type
-  u32 flags = 0;
-  switch (t)
-  {
-    case (VERTS): flags = D3D11_BIND_VERTEX_BUFFER; break;
-    case (ELEMS): flags = D3D11_BIND_INDEX_BUFFER;  break;
-    default: break;
-  };
-  ASSERT( (flags != 0), "Failed to set D3D11 flags.");
+  u32 flags = buffer_type_get(t);
   // Describe the buffer
   D3D11_BUFFER_DESC desc  = {};
   desc.ByteWidth          = byte_count;   // for constant buffers: multiple of 16 bytes
@@ -471,17 +473,19 @@ rbuffer_ptr render_buffer_constant_init( arena *a, size_t byte_count )
   render_buffer *out = arena_push_struct(a, render_buffer);
   out->stride = 0;
   out->offset = 0;
+  // Determine bind flags based on buffer type
+  u32 flags = buffer_type_get(BUFF_CONST);
   // Describe the constant buffer
   D3D11_BUFFER_DESC description;
   description.Usage = D3D11_USAGE_DYNAMIC;
   description.ByteWidth = byte_count;
-  description.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+  description.BindFlags = flags;
   description.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
   description.MiscFlags = 0;
   description.StructureByteStride = 0;
   // Create the buffer
   HRESULT hr = renderer->device->CreateBuffer( &description, 0, &out->buffer);
-  ASSERT(SUCCEEDED(hr), "Failed to create camera constant buffer.");
+  ASSERT(SUCCEEDED(hr), "Failed to create constant buffer.");
   return out;
 }
 
