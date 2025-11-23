@@ -598,11 +598,13 @@ void render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, 
 void render_close()
 {
   renderer->context->ClearState();
-  renderer->rasterizer_default->Release();
-  renderer->blend_state->Release();
   renderer->render_target->Release();
-  renderer->swapchain->Release();
+  renderer->depth_view->Release();
+  renderer->depth_buffer->Release();
+  renderer->blend_state->Release();
+  renderer->rasterizer_default->Release();
   renderer->context->Release();
+  renderer->swapchain->Release();
   #if defined(_DEBUG)
     if (info_queue) info_queue->Release();
   #endif
