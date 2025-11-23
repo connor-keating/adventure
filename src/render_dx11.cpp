@@ -50,6 +50,8 @@ struct render_state
   ID3D11DepthStencilView* depth_view;
   ID3D11BlendState* blend_state;
   ID3D11RasterizerState* rasterizer_default;
+  ID3D11DepthStencilState* depth_stencil_enabled;
+  ID3D11DepthStencilState* depth_stencil_disabled;
 };
 
 global render_state *renderer;
@@ -164,18 +166,17 @@ internal u32 buffer_type_get( buffer_type t )
 }
 
 
-// TODO: Call this in render_init() Also disable clockwise ordering since who cares.
 internal void rasterizer_init()
 {
   // Check out Frank Luna's RenderStates.cpp
+  // Default rasterizer state
   D3D11_RASTERIZER_DESC rasterDesc = {};
   rasterDesc.FillMode              = D3D11_FILL_SOLID;
-  rasterDesc.CullMode              = D3D11_CULL_BACK;  // Disable backface culling
+  rasterDesc.CullMode              = D3D11_CULL_BACK;
   // rasterDesc.CullMode              = D3D11_CULL_NONE;  // Disable backface culling
   rasterDesc.FrontCounterClockwise = true;
   rasterDesc.DepthClipEnable       = true;
   renderer->device->CreateRasterizerState(&rasterDesc, &renderer->rasterizer_default);
-  // Call this before you draw whatever you want
   renderer->context->RSSetState(renderer->rasterizer_default);
 }
 
@@ -286,6 +287,19 @@ void render_init(arena *a)
   GetClientRect(*window, &size);
   i32 width = size.right;
   i32 height = size.bottom;
+  // Create all depth stencil states
+  // Depth stencil state with depth testing enabled
+  D3D11_DEPTH_STENCIL_DESC depthDesc = {};
+  depthDesc.DepthEnable    = TRUE;
+  depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+  depthDesc.DepthFunc      = D3D11_COMPARISON_LESS;
+  depthDesc.StencilEnable  = FALSE;
+  renderer->device->CreateDepthStencilState(&depthDesc, &renderer->depth_stencil_enabled);
+  renderer->context->OMSetDepthStencilState(renderer->depth_stencil_enabled, 0);
+  // Depth stencil state with depth testing disabled (for UI)
+  depthDesc.DepthEnable = FALSE;
+  renderer->device->CreateDepthStencilState(&depthDesc, &renderer->depth_stencil_disabled);
+
   // TODO: All code below is duplicated in render_resize, but at this time there's nothing to release.
   // It feels wasteful to include an if(x) then release everytime we call resize...
   
@@ -559,6 +573,7 @@ void render_text_init(arena *a)
 
 void render_draw(rbuffer_ptr vbuffer, shaders_ptr s, u32 count)
 {
+  renderer->context->OMSetDepthStencilState(renderer->depth_stencil_disabled, 0);
   renderer->context->IASetVertexBuffers(0, 1, &vbuffer->buffer, &vbuffer->stride, &vbuffer->offset);
   renderer->context->IASetInputLayout(s->vertex_in);
   renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -566,6 +581,7 @@ void render_draw(rbuffer_ptr vbuffer, shaders_ptr s, u32 count)
   renderer->context->PSSetShader(s->pixel, 0, 0);
   // renderer->context->RSSetState(renderer->rasterizer_default);
   renderer->context->Draw(count, 0);
+  renderer->context->OMSetDepthStencilState(renderer->depth_stencil_enabled, 0);
 }
 
 
@@ -590,6 +606,8 @@ void render_close()
   renderer->depth_buffer->Release();
   renderer->blend_state->Release();
   renderer->rasterizer_default->Release();
+  renderer->depth_stencil_enabled->Release();
+  renderer->depth_stencil_disabled->Release();
   renderer->context->Release();
   renderer->swapchain->Release();
   #if defined(_DEBUG)
