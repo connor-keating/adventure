@@ -424,6 +424,8 @@ int main(int argc, char **argv)
     frame_render();
   }
   texture_close( transfer_function );
+  texture_close( voxel_texture );
+  texture_close( text_texture );
   render_close();
   return 0;
 }
