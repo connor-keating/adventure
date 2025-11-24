@@ -74,6 +74,18 @@ internal char* file_mmap(size_t* len, const char* filename) {
 }
 
 
+internal input_key platform_input_translate( u32 id )
+{
+  input_key output;
+  switch (id)
+  {
+    case (VK_ESCAPE): output = KEY_ESCAPE;  break;
+    default:          output = KEY_UNKNOWN; break; 
+  };
+  return output;
+}
+
+
 void platform_file_data(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len)
 {
   // NOTE: If you allocate the buffer with malloc(),
@@ -207,7 +219,7 @@ bool platform_is_running()
 }
 
 
-void platform_message_process(platform_window *window)
+void platform_message_process( platform_window *window, input_state *inputs )
 {
   MSG message = {};
   // This has to be in condition otherwise you'll process the message twice.
@@ -215,12 +227,14 @@ void platform_message_process(platform_window *window)
   {
     u32 vkcode = (u32) message.wParam;
     u32 message_id = message.message;
-    // const char* name = msg_name(message.message);
     switch (message_id)
     {
       case(WM_KEYDOWN):
       case(WM_KEYUP):
       {
+        input_key app_key = platform_input_translate( vkcode );
+        inputs[app_key] = INPUT_DOWN;
+        // const char* name = msg_name(message.message);
         // bit 30: The previous key state. The value is 1 if the key is down before the message is sent, or it is zero if the key is up.
         // bool32 was_down = (message.lParam & (1 << 30));
         // bit 31: The transition state. The value is always 0 for a WM_KEYDOWN message.
@@ -230,10 +244,6 @@ void platform_message_process(platform_window *window)
         // control_state state;
         // down_state = was_down ? CONTROL_HELD : CONTROL_DOWN;
         // state = is_down ?  down_state : CONTROL_RELEASED;
-        if (vkcode == VK_ESCAPE)
-        {
-          SendMessageA(state->handle, WM_CLOSE, 0, 0);
-        }
         break;
       };
     };
@@ -534,8 +544,10 @@ void * platform_memory_alloc(void *mem_base, size_t mem_size)
 }
 
 
-
-
+void platform_window_close()
+{
+  SendMessageA(state->handle, WM_CLOSE, 0, 0);
+}
 
 
 // TODO: Delete?
