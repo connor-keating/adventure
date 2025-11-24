@@ -370,11 +370,17 @@ int main(int argc, char **argv)
   clock timer = platform_clock_init(fps_target);
 
   // Application start
+  input_state inputs[KEY_COUNT];
   platform_window_show();
   platform_clock_reset(&timer);
   while (platform_is_running())
   {
-    platform_message_process(&window);
+    platform_message_process( &window, inputs );
+
+    if (inputs[KEY_ESCAPE] == INPUT_DOWN)
+    {
+      platform_window_close();
+    }
     platform_clock_update(&timer);
     // printf("Delta: %.8f\n", timer.delta);
 
