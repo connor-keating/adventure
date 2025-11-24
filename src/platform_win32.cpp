@@ -213,6 +213,30 @@ void platform_message_process(platform_window *window)
   // This has to be in condition otherwise you'll process the message twice.
   while (PeekMessageA(&message, state->handle, 0, 0, PM_REMOVE))
   {
+    u32 vkcode = (u32) message.wParam;
+    u32 message_id = message.message;
+    // const char* name = msg_name(message.message);
+    switch (message_id)
+    {
+      case(WM_KEYDOWN):
+      case(WM_KEYUP):
+      {
+        // bit 30: The previous key state. The value is 1 if the key is down before the message is sent, or it is zero if the key is up.
+        // bool32 was_down = (message.lParam & (1 << 30));
+        // bit 31: The transition state. The value is always 0 for a WM_KEYDOWN message.
+        // bool32 is_down = ((message.lParam & (1 << 31)) == 0);
+        // Previous input handling stuff
+        // control_state down_state;
+        // control_state state;
+        // down_state = was_down ? CONTROL_HELD : CONTROL_DOWN;
+        // state = is_down ?  down_state : CONTROL_RELEASED;
+        if (vkcode == VK_ESCAPE)
+        {
+          SendMessageA(state->handle, WM_CLOSE, 0, 0);
+        }
+        break;
+      };
+    };
     // This section basically sends the message to the loop we setup with our window. (win32_message_procedure_ansi)
     TranslateMessage(&message); // turn keystrokes into characters
     DispatchMessageA(&message); // tell OS to call window procedure
