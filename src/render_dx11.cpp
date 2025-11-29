@@ -583,14 +583,6 @@ void render_draw(rbuffer_ptr vbuffer, shaders_ptr s, u32 count)
 }
 
 
-void render_draw_ui( rbuffer_ptr vbuffer, shaders_ptr s, u32 count )
-{
-  renderer->context->OMSetDepthStencilState(renderer->depth_stencil_disabled, 0);
-  render_draw( vbuffer, s, count);
-  renderer->context->OMSetDepthStencilState(renderer->depth_stencil_enabled, 0);
-}
-
-
 void render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, u32 count, u32 elem_start, u32 vert_start)
 {
   renderer->context->IASetVertexBuffers(0, 1, &vbuffer->buffer, &vbuffer->stride, &vbuffer->offset);
@@ -601,6 +593,22 @@ void render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, 
   renderer->context->PSSetShader(s->pixel, 0, 0);
   // renderer->context->RSSetState(renderer->rasterizer_default);
   renderer->context->DrawIndexed(count, elem_start, vert_start);
+}
+
+
+void render_draw_ui( rbuffer_ptr vbuffer, shaders_ptr s, u32 count )
+{
+  renderer->context->OMSetDepthStencilState(renderer->depth_stencil_disabled, 0);
+  render_draw( vbuffer, s, count);
+  renderer->context->OMSetDepthStencilState(renderer->depth_stencil_enabled, 0);
+}
+
+
+void render_draw_ui_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, u32 count, u32 elem_start, u32 vert_start)
+{
+  renderer->context->OMSetDepthStencilState(renderer->depth_stencil_disabled, 0);
+  render_draw_elems( vbuffer, ebuffer, s, count, elem_start, vert_start );
+  renderer->context->OMSetDepthStencilState(renderer->depth_stencil_enabled, 0);
 }
 
 
