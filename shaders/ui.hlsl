@@ -15,16 +15,19 @@ Texture2D fontTexture : register(t0);
 SamplerState fontSampler : register(s0);
 
 
-cbuffer camera : register(b0)
+cbuffer camera : register(b1)
 {
-  float4x4 view_projection;
+  row_major float4x4 view_projection;
 };
 
 
 VSOut VSMain(VSIn i)
 {
+  float4 pos_local = float4(i.pos, 1.0f);
+  float4 pos_global = mul(view_projection, pos_local);
+  // float4 pos_global = mul(pos_local, view_projection);
   VSOut output = {
-    float4(i.pos, 1.0f),
+    pos_global,
     i.color,
     i.uv
   };

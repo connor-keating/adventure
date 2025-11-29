@@ -258,7 +258,6 @@ int main(int argc, char **argv)
   // glm::mat4 view_projection = glm::mat4(1.0f);
   // Orthographic projection
   // glm::mat4 view_projection = glm::ortho( 0.0f, window.width, 0.0f, window.height, znear, zfar );
-  // glm::mat4 view_projection = glm::ortho(-5.0f, 5.0f,-5.0f, 5.0f, znear, zfar );
   // Perspective projection
   /*
   f32 znear = 0.1f;
@@ -356,6 +355,10 @@ int main(int argc, char **argv)
   shaders_ptr ui_shaders = shader_init(&memory);
   shader_load(ui_shaders, VERTEX, "shaders/ui.hlsl", "VSMain", "vs_5_0");
   shader_load(ui_shaders, PIXEL,  "shaders/ui.hlsl", "PSMain", "ps_5_0");
+  // UI ViewProjection
+  glm::mat4 ui_view_projection = glm::ortho(-5.0f, 5.0f,-5.0f, 5.0f, znear, zfar );
+  rbuffer_ptr ui_view_proj_gpu = render_buffer_dynamic_init( &memory, BUFF_CONST, &ui_view_projection, 0, sizeof(ui_view_projection) );
+  render_buffer_update( ui_view_proj_gpu, &ui_view_projection, sizeof(ui_view_projection) );
 
   // Initialize Text
   u32 text_vert_count = 6000;
@@ -428,6 +431,7 @@ int main(int argc, char **argv)
     cam.wrld_inv = glm::inverse(volume_rotation);
 
     // Update camera constant buffer with new rotation
+    render_constant_set( camera_gpu, 0 );
     render_buffer_update(camera_gpu, &cam, sizeof(camera));
 
     // This adds rotation to the view/proj matrix
@@ -449,13 +453,15 @@ int main(int argc, char **argv)
     texture_bind(voxel_texture, 0);
     texture_bind(transfer_function, 1);
     u32 elem_count = ebuffer_cpu.offset_new / sizeof(u32);
-    // render_draw_elems( vbuffer_gpu, ebuffer_gpu, tri_prog, elem_count, 0, 0);
-    render_draw_elems( vbuffer_gpu, ebuffer_gpu, raytrace_prog, elem_count, 0, 0);
+    render_draw_elems( vbuffer_gpu, ebuffer_gpu, tri_prog, elem_count, 0, 0);
+    // render_draw_elems( vbuffer_gpu, ebuffer_gpu, raytrace_prog, elem_count, 0, 0);
     
     
     // Draw UI background stuff
-    u32 ui_elem_count = ui_vbuffer_cpu.offset_new / sizeof(u32);
-    render_draw_ui_elems( ui_vbuffer_gpu, ui_ebuffer_gpu, ui_shaders, elem_count, 0, 0);
+    render_constant_set( ui_view_proj_gpu, 1 );
+    render_buffer_update( ui_view_proj_gpu, &ui_view_projection, sizeof(ui_view_projection));
+    u32 ui_elem_count = ui_ebuffer_cpu.offset_new / sizeof(u32);
+    render_draw_ui_elems( ui_vbuffer_gpu, ui_ebuffer_gpu, ui_shaders, ui_elem_count, 0, 0);
 
     // Draw text
     texture_bind(text_texture, 0);
@@ -468,6 +474,7 @@ int main(int argc, char **argv)
   render_buffer_close( ebuffer_gpu );
   render_buffer_close( ui_vbuffer_gpu );
   render_buffer_close( ui_ebuffer_gpu );
+  render_buffer_close( ui_view_proj_gpu );
   render_buffer_close( camera_gpu );
   render_buffer_close( tbuffer_gpu );
   texture_close( transfer_function );
