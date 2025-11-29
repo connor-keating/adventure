@@ -56,6 +56,17 @@ inline u32 index3d( u32 x, u32 y, u32 z, u32 width, u32 height )
   return x + y * width + z * width * height;
 }
 
+texture_ptr texture_read(const char *filename, arena *a)
+{
+  i32 test = platform_file_exists(filename);
+  i32 x, y, n;
+  i32 components_per_pixel = 4; // Force RGBA
+  unsigned char *data = stbi_load(filename, &x, &y, &n, components_per_pixel);
+  texture_ptr tex = texture2d_init( a, data, x, y, components_per_pixel);
+  return tex;
+}
+
+
 texture_ptr image3d_create( arena *a )
 {
   // Create a higher resolution volume with gradient density
@@ -318,12 +329,33 @@ int main(int argc, char **argv)
   shader_load(raytrace_prog, PIXEL,  "shaders/raymarching.hlsl", "PSMain", "ps_5_0");
 
   // Read in a texture
-  // const char* filename = "G:/pacbird/.assets/checker-gray5.png";
-  // i32 test = platform_file_exists(filename);
-  // i32 x, y, n;
-  // i32 components_per_pixel = 4; // Force RGBA
-  // unsigned char *data = stbi_load(filename, &x, &y, &n, components_per_pixel);
-  // texture_ptr tri_texture = texture2d_init(&memory, data, x, y, components_per_pixel);
+  // const char* texture_checkers = "G:/pacbird/.assets/checker-gray5.png";
+  // texture_read( texture_checkers, &memory );
+
+  // Initialize UI
+  arena ui_vbuffer_cpu = subarena_init( &memory, sizeof(vertex1)*VERTEX_MAX );
+  arena ui_ebuffer_cpu = subarena_init( &memory, sizeof(u32)*VERTEX_MAX );
+  rbuffer_ptr ui_vbuffer_gpu = render_buffer_dynamic_init(
+    &memory,
+    BUFF_VERTS,
+    ui_vbuffer_cpu.buffer,
+    sizeof(vertex1),
+    ui_vbuffer_cpu.length
+  );
+  rbuffer_ptr ui_ebuffer_gpu = render_buffer_dynamic_init(
+    &memory,
+    BUFF_ELEMS,
+    ui_ebuffer_cpu.buffer,
+    sizeof(u32),
+    ui_ebuffer_cpu.length
+  );
+  primitive_box2d( &ui_vbuffer_cpu, &ui_ebuffer_cpu );
+  render_buffer_update( ui_vbuffer_gpu, ui_vbuffer_cpu.buffer, ui_vbuffer_cpu.length );
+  render_buffer_update( ui_ebuffer_gpu, ui_ebuffer_cpu.buffer, ui_ebuffer_cpu.length );
+  // UI Shaders
+  shaders_ptr ui_shaders = shader_init(&memory);
+  shader_load(ui_shaders, VERTEX, "shaders/ui.hlsl", "VSMain", "vs_5_0");
+  shader_load(ui_shaders, PIXEL,  "shaders/ui.hlsl", "PSMain", "ps_5_0");
 
   // Initialize Text
   u32 text_vert_count = 6000;
@@ -331,7 +363,6 @@ int main(int argc, char **argv)
   const char *font_file = "C:/MyFonts/Source_Code_Pro/static/SourceCodePro-Regular.ttf";
   texture_ptr text_texture = text_init( &memory, font_file );
   // render_text_init(&memory);
-
   rbuffer_ptr tbuffer_gpu = render_buffer_dynamic_init(
     &memory,
     BUFF_VERTS,
@@ -339,7 +370,6 @@ int main(int argc, char **argv)
     sizeof(f32) * 9,
     tbuffer_cpu.length
   );
-
   shaders_ptr text_shaders = shader_init(&memory);
   shader_load(text_shaders, VERTEX, "shaders/text.hlsl", "VSMain", "vs_5_0");
   shader_load(text_shaders, PIXEL,  "shaders/text.hlsl", "PSMain", "ps_5_0");
@@ -421,6 +451,11 @@ int main(int argc, char **argv)
     u32 elem_count = ebuffer_cpu.offset_new / sizeof(u32);
     // render_draw_elems( vbuffer_gpu, ebuffer_gpu, tri_prog, elem_count, 0, 0);
     render_draw_elems( vbuffer_gpu, ebuffer_gpu, raytrace_prog, elem_count, 0, 0);
+    
+    
+    // Draw UI background stuff
+    u32 ui_elem_count = ui_vbuffer_cpu.offset_new / sizeof(u32);
+    render_draw_ui_elems( ui_vbuffer_gpu, ui_ebuffer_gpu, ui_shaders, elem_count, 0, 0);
 
     // Draw text
     texture_bind(text_texture, 0);
@@ -431,12 +466,15 @@ int main(int argc, char **argv)
   }
   render_buffer_close( vbuffer_gpu );
   render_buffer_close( ebuffer_gpu );
+  render_buffer_close( ui_vbuffer_gpu );
+  render_buffer_close( ui_ebuffer_gpu );
   render_buffer_close( camera_gpu );
   render_buffer_close( tbuffer_gpu );
   texture_close( transfer_function );
   texture_close( voxel_texture );
   texture_close( text_texture );
   shader_close( tri_prog );
+  shader_close( ui_shaders );
   shader_close( raytrace_prog );
   shader_close( text_shaders );
   render_close();
