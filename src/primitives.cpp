@@ -17,6 +17,11 @@ void primitive_box2d( arena *vbuffer, arena *ebuffer )
     0, 1, 2, // tri 1
     0, 2, 3, // tri 2
   };
+  u32 vertex_count = vbuffer->offset_new / sizeof(vertex1);
+  for (i32 i = 0; i < ARRAY_COUNT(elems); i++)
+  { 
+    elems[i] += vertex_count;
+  }
   f32 *vtemp = arena_push_array( vbuffer, 36, f32 );
   u32 *etemp = arena_push_array( ebuffer,  6, u32 );
   memcpy( vtemp, verts, sizeof(verts) );
