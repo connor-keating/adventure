@@ -174,6 +174,92 @@ texture_ptr image3d_create( arena *a )
 
 int main(int argc, char **argv)
 {
+// Allocate all program memory upfront.
+  #if _DEBUG
+    void *memory_base = (void*)Terabytes(2);
+  #else
+    void *memory_base = 0;
+  #endif
+  size_t memory_size = (size_t) Gigabytes(5);
+  void *raw_memory = platform_memory_alloc(memory_base, memory_size);
+  arena memory = arena_init(raw_memory, memory_size);
+
+  // Init CPU buffers
+  // Scratch arena that can be freed frequently.
+  u32 scratch_max = Gigabytes(3);
+  arena scratch = subarena_init(&memory, scratch_max);
+  // Start the platform layer
+  platform_init(&memory);
+
+  // Create a window for the application
+  platform_window window = platform_window_init();
+
+  // Initialize renderer
+  render_init(&memory);
+
+  // Vertices
+  f32 verts[36] = {
+    // position          // color (RGBA)              // Texture
+    -1.0f, -1.0f, 0.0f,  1.0f, 1.0f, 0.0f, 1.0f,  0.0f, 0.0f, // low left
+     1.0f, -1.0f, 0.0f,  1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 0.0f, // low right
+     1.0f,  1.0f, 0.0f,  0.0f, 1.0f, 1.0f, 1.0f,  1.0f, 1.0f, // top right
+  };
+  // Elements
+  u32 elems[3] = {
+    // D3D11 is counter-clockwise winding order for front.
+    0, 1, 2 // tri 1
+  };
+  float plane1 = -5.0f;
+  float plane2 =  5.0f;
+  glm::mat4 projection = glm::ortho(
+    -5.0f, 5.0f,  // X
+    -5.0f, 5.0f,  // Y
+    -1.0f, 1.0f   // Z
+  );
+  rbuffer_ptr v = render_buffer_init( &memory, BUFF_VERTS, verts, sizeof(vertex1), sizeof(verts) ); 
+  rbuffer_ptr e = render_buffer_init( &memory, BUFF_ELEMS, elems, sizeof(u32), sizeof(elems) ); 
+  shaders_ptr shaders = shader_init(&memory);
+  shader_load(shaders, VERTEX, "shaders/minimal.hlsl", "VSMain", "vs_5_0");
+  shader_load(shaders, PIXEL,  "shaders/minimal.hlsl", "PSMain", "ps_5_0");
+  rbuffer_ptr rbuffer1 = render_buffer_dynamic_init( 
+    &memory,
+    BUFF_CONST,
+    &projection,
+    0,
+    sizeof(projection) 
+  );
+  render_constant_set( rbuffer1, 0 );
+  render_buffer_update( rbuffer1, &projection, sizeof(projection) );
+
+  // Open app
+  input_state inputs[KEY_COUNT];
+  platform_window_show();
+  while (platform_is_running())
+  {
+    platform_message_process( &window, inputs );
+
+    if (inputs[KEY_ESCAPE] == INPUT_DOWN)
+    {
+      platform_window_close();
+    }
+
+    frame_init();
+    render_draw_elems(
+      v,
+      e,
+      shaders,
+      3,
+      0,
+      0
+    );
+    frame_render();
+  }
+}
+
+
+#if 0
+int main(int argc, char **argv)
+{
   // Allocate all program memory upfront.
   #if _DEBUG
     void *memory_base = (void*)Terabytes(2);
@@ -488,7 +574,6 @@ int main(int argc, char **argv)
   return 0;
 }
 
-#if 0
 int main(int argc, char **argv)
 {
   // Allocate all program memory upfront.
