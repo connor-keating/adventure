@@ -172,6 +172,7 @@ texture_ptr image3d_create( arena *a )
 }
 
 
+#if 0
 int main(int argc, char **argv)
 {
 // Allocate all program memory upfront.
@@ -255,9 +256,8 @@ int main(int argc, char **argv)
     frame_render();
   }
 }
+#endif
 
-
-#if 0
 int main(int argc, char **argv)
 {
   // Allocate all program memory upfront.
@@ -574,6 +574,7 @@ int main(int argc, char **argv)
   return 0;
 }
 
+#if 0
 int main(int argc, char **argv)
 {
   // Allocate all program memory upfront.
