@@ -48,9 +48,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   swapchain->GetDesc(&swapchaindesc);
   swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&rendertarget);
   device->CreateRenderTargetView(rendertarget, 0, &rendertargetview);
-  D3DCompileFromFile(L"shaders/minimal.hlsl", 0, 0, "vertex_shader", "vs_5_0", 0, 0, &cso, 0);
+  D3DCompileFromFile(L"shaders/minimal.hlsl", 0, 0, "VSMain", "vs_5_0", 0, 0, &cso, 0);
   device->CreateVertexShader(cso->GetBufferPointer(), cso->GetBufferSize(), 0, &vertexshader);
-  D3DCompileFromFile(L"shaders/minimal.hlsl", 0, 0, "pixel_shader", "ps_5_0", 0, 0, &cso, 0);
+  D3DCompileFromFile(L"shaders/minimal.hlsl", 0, 0, "PSMain", "ps_5_0", 0, 0, &cso, 0);
   device->CreatePixelShader(cso->GetBufferPointer(), cso->GetBufferSize(), 0, &pixelshader);
   D3D11_VIEWPORT viewport = { 0, 0, (float)swapchaindesc.BufferDesc.Width, (float)swapchaindesc.BufferDesc.Height, 0, 1 };
   // Projection matrix creation
@@ -58,9 +58,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   float plane2 =  5.0f;
   // glm::mat4 projection = glm::mat4(1.0f);
   glm::mat4 projection = glm::ortho(
-    plane1, plane2, // X
-    plane1, plane2, // Y
-    -0.1f, 100.f  // Z
+    -5.0f, 5.0f,  // X
+    -5.0f, 5.0f,  // Y
+    -1.0f, 1.0f   // Z
   );
   ID3D11Buffer* buffer;
   D3D11_BUFFER_DESC desc   = {};
