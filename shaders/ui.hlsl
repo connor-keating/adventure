@@ -17,7 +17,7 @@ SamplerState fontSampler : register(s0);
 
 cbuffer camera : register(b1)
 {
-  row_major float4x4 view_projection;
+  float4x4 view_projection;
 };
 
 

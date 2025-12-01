@@ -442,7 +442,8 @@ int main(int argc, char **argv)
   shader_load(ui_shaders, VERTEX, "shaders/ui.hlsl", "VSMain", "vs_5_0");
   shader_load(ui_shaders, PIXEL,  "shaders/ui.hlsl", "PSMain", "ps_5_0");
   // UI ViewProjection
-  glm::mat4 ui_view_projection = glm::ortho(-5.0f, 5.0f,-5.0f, 5.0f, znear, zfar );
+  // glm::mat4 ui_view_projection = glm::ortho(-5.0f, 5.0f,-5.0f, 5.0f, znear, zfar );
+  glm::mat4 ui_view_projection = glm::ortho(-5.0f, 5.0f,-5.0f, 5.0f, -1.0f,  1.0f );
   rbuffer_ptr ui_view_proj_gpu = render_buffer_dynamic_init( &memory, BUFF_CONST, &ui_view_projection, 0, sizeof(ui_view_projection) );
   render_buffer_update( ui_view_proj_gpu, &ui_view_projection, sizeof(ui_view_projection) );
 
@@ -539,9 +540,8 @@ int main(int argc, char **argv)
     texture_bind(voxel_texture, 0);
     texture_bind(transfer_function, 1);
     u32 elem_count = ebuffer_cpu.offset_new / sizeof(u32);
-    render_draw_elems( vbuffer_gpu, ebuffer_gpu, tri_prog, elem_count, 0, 0);
-    // render_draw_elems( vbuffer_gpu, ebuffer_gpu, raytrace_prog, elem_count, 0, 0);
-    
+    // render_draw_elems( vbuffer_gpu, ebuffer_gpu, tri_prog, elem_count, 0, 0);
+    render_draw_elems( vbuffer_gpu, ebuffer_gpu, raytrace_prog, elem_count, 0, 0);
     
     // Draw UI background stuff
     render_constant_set( ui_view_proj_gpu, 1 );
