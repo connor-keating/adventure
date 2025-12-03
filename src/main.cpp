@@ -277,8 +277,6 @@ int main(int argc, char **argv)
   // Scratch arena that can be freed frequently.
   u32 scratch_max = Gigabytes(3);
   arena scratch = subarena_init(&memory, scratch_max);
-  // Start the platform layer
-  platform_init(&memory);
 
   // Create a window for the application
   platform_window window = platform_window_init();
