@@ -3,6 +3,7 @@
 #include "platform.h"
 #include "render.h"
 #include "app_data.h"
+#include "application.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -269,6 +270,8 @@ int main(int argc, char **argv)
   size_t memory_size = (size_t) Gigabytes(5);
   void *raw_memory = platform_memory_alloc(memory_base, memory_size);
   arena memory = arena_init(raw_memory, memory_size);
+
+  app_init( &memory );
 
   // Init CPU buffers
   // Scratch arena that can be freed frequently.
