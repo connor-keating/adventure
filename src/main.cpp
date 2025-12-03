@@ -442,9 +442,14 @@ int main(int argc, char **argv)
   shader_load(ui_shaders, VERTEX, "shaders/ui.hlsl", "VSMain", "vs_5_0");
   shader_load(ui_shaders, PIXEL,  "shaders/ui.hlsl", "PSMain", "ps_5_0");
   // UI ViewProjection
-  glm::mat4 box_scale = glm::scale(
-    glm::mat4(1.0f),
-    glm::vec3(200.0f, 200.0f, 0.0f)
+  glm::mat4 box_transform = glm::mat4(1.0f);
+  box_transform = glm::translate(
+    box_transform,
+    glm::vec3( 300.0f, -100.0f, 0.0f )
+  );
+  box_transform = glm::scale(
+    box_transform,
+    glm::vec3(100.0f, 50.0f, 0.0f)
   );
   f32 xmax = window.width / 2.0f;
   f32 ymax = window.height / 2.0f;
@@ -455,7 +460,7 @@ int main(int argc, char **argv)
     ymin, ymax,
     -1.0f,  1.0f 
   );
-  ui_view_projection *= box_scale;
+  ui_view_projection *= box_transform;
   rbuffer_ptr ui_view_proj_gpu = render_buffer_dynamic_init( &memory, BUFF_CONST, &ui_view_projection, 0, sizeof(ui_view_projection) );
   render_buffer_update( ui_view_proj_gpu, &ui_view_projection, sizeof(ui_view_projection) );
 
