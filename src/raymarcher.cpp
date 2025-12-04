@@ -1,6 +1,7 @@
 #include "application.h"
 
 #include "platform.h"
+#include "render.h"
 
 
 struct appstate
@@ -22,6 +23,9 @@ void app_init( arena *memory )
   platform_init( memory );
   // Create a window for the application
   state->window = platform_window_init();
+  // Initialize renderer
+  render_init( memory );
+  // Application startup complete, show the window.
   platform_window_show();
 }
 
@@ -39,4 +43,6 @@ void app_update( arena *memory )
   {
     platform_window_close();
   }
+  frame_init();
+  frame_render();
 }
