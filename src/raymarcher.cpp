@@ -1,5 +1,6 @@
 #include "application.h"
 
+#include "input.h"
 #include "platform.h"
 #include "render.h"
 
@@ -14,6 +15,12 @@ struct appstate
 global appstate *state;
 
 
+bool app_is_running()
+{
+  state->is_running = platform_is_running();
+  return state->is_running;
+}
+
 void app_init( arena *memory )
 {
   // Create internal global state
@@ -27,12 +34,6 @@ void app_init( arena *memory )
   render_init( memory );
   // Application startup complete, show the window.
   platform_window_show();
-}
-
-bool app_is_running()
-{
-  state->is_running = platform_is_running();
-  return state->is_running;
 }
 
 void app_update( arena *memory )
