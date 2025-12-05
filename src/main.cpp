@@ -1,8 +1,5 @@
 #include "core.cpp"
-#include "linalg.cpp"
 #include "platform.h"
-#include "render.h"
-#include "app_data.h"
 #include "application.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -17,20 +14,35 @@ global bool is_running;
 #endif
 
 // Application layers
-#include "text.cpp"
-#include "primitives.cpp"
+// #include "text.cpp"
 // #include "data3d.cpp"
 
 // TODO: Why does app crash when I share it with discord?
 
-struct camera
+
+int main(int argc, char **argv)
 {
-  glm::mat4 view_inv;            // 64 bytes
-  glm::mat4 proj_inv;            // 64 bytes
-  glm::mat4 wrld_inv;            // 64 bytes - inverse rotation for volume
-  glm::vec3 pos;                 // 12 bytes
-  f32 _padding;                  // 4 bytes → pad to 16-byte multiple
-};
+  // Allocate all program memory upfront.
+  #if _DEBUG
+    void *memory_base = (void*)Terabytes(2);
+  #else
+    void *memory_base = 0;
+  #endif
+  size_t memory_size = (size_t) Gigabytes(5);
+  void *raw_memory = platform_memory_alloc(memory_base, memory_size);
+  arena memory = arena_init(raw_memory, memory_size);
+
+  app_init( &memory );
+  while ( app_is_running() )
+  {
+    app_update( &memory );
+  }
+
+  return 0;
+}
+
+#if 0
+
 
 
 void input_reset(control_state *input_state)
@@ -51,12 +63,6 @@ void input_reset(control_state *input_state)
   }
 }
 
-
-inline u32 index3d( u32 x, u32 y, u32 z, u32 width, u32 height )
-{
-  return x + y * width + z * width * height;
-}
-
 texture_ptr texture_read(const char *filename, arena *a)
 {
   i32 test = platform_file_exists(filename);
@@ -68,112 +74,6 @@ texture_ptr texture_read(const char *filename, arena *a)
 }
 
 
-texture_ptr image3d_create( arena *a )
-{
-  // Create a higher resolution volume with gradient density
-  i32 resolution = 32;  // 32x32x32 = 32768 voxels
-  u32 total_voxels = resolution * resolution * resolution;
-  u8 *voxel_data = arena_push_array(a, total_voxels, u8);
-
-  // Create a radial gradient sphere
-  // Density = 1.0 at center, fading to 0.0 at edges
-  f32 center = resolution / 2.0f;
-  f32 max_radius = resolution / 2.0f;
-
-  for (i32 z = max_radius; z < resolution; ++z)
-  {
-    for (i32 y = 0; y < resolution; ++y)
-    {
-      for (i32 x = 0; x < resolution; ++x)
-      {
-        // Calculate distance from center
-        f32 dx = (f32)x - center;
-        f32 dy = (f32)y - center;
-        f32 dz = (f32)z - center;
-        f32 distance = sqrtf(dx*dx + dy*dy + dz*dz);
-
-        // Normalize distance to [0, 1] range
-        f32 normalized_dist = distance / max_radius;
-
-        // Invert so center is high density
-        f32 density = 1.0f - normalized_dist;
-
-        // Clamp to [0, 1]
-        if (density < 0.0f) density = 0.0f;
-        if (density > 1.0f) density = 1.0f;
-
-        // Convert to u8 [0, 255]
-        u8 value = (u8)(density * 255.0f);
-
-        // Store in volume
-        u32 index = index3d(x, y, z, resolution, resolution);
-        voxel_data[index] = value;
-      }
-    }
-  }
-
-  // Add colored corner markers (different densities = different colors)
-  // Each corner is a 3x3x3 block for better visibility
-  // Heat map: 0-63=Blue, 64-127=Cyan, 128-191=Yellow, 192-255=White
-
-  u8 corner_colors[8] = {
-    32,   // Corner 0: Blue (low density)
-    64,   // Corner 1: Blue-Cyan transition
-    96,   // Corner 2: Cyan
-    128,  // Corner 3: Cyan-Yellow transition
-    160,  // Corner 4: Yellow
-    192,  // Corner 5: Yellow-White transition
-    224,  // Corner 6: Near white
-    255   // Corner 7: White (max density)
-  };
-
-  i32 corner_positions[8][3] = {
-    {0, 0, 0},
-    {resolution-1, 0, 0},
-    {0, resolution-1, 0},
-    {resolution-1, resolution-1, 0},
-    {0, 0, resolution-1},
-    {resolution-1, 0, resolution-1},
-    {0, resolution-1, resolution-1},
-    {resolution-1, resolution-1, resolution-1}
-  };
-
-  // Draw 3x3x3 blocks at each corner
-  for (i32 corner = 0; corner < 8; ++corner)
-  {
-    i32 cx = corner_positions[corner][0];
-    i32 cy = corner_positions[corner][1];
-    i32 cz = corner_positions[corner][2];
-
-    for (i32 dz = -1; dz <= 1; ++dz)
-    {
-      for (i32 dy = -1; dy <= 1; ++dy)
-      {
-        for (i32 dx = -1; dx <= 1; ++dx)
-        {
-          i32 x = cx + dx;
-          i32 y = cy + dy;
-          i32 z = cz + dz;
-
-          // Clamp to volume bounds
-          if (x >= 0 && x < resolution &&
-              y >= 0 && y < resolution &&
-              z >= 0 && z < resolution)
-          {
-            voxel_data[index3d(x, y, z, resolution, resolution)] = corner_colors[corner];
-          }
-        }
-      }
-    }
-  }
-
-  // Upload to GPU
-  texture_ptr voxel_texture = texture3d_init( a, voxel_data, resolution, resolution, resolution );
-  return voxel_texture;
-}
-
-
-#if 0
 int main(int argc, char **argv)
 {
 // Allocate all program memory upfront.
@@ -218,12 +118,12 @@ int main(int argc, char **argv)
     -5.0f, 5.0f,  // Y
     -1.0f, 1.0f   // Z
   );
-  rbuffer_ptr v = render_buffer_init( &memory, BUFF_VERTS, verts, sizeof(vertex1), sizeof(verts) ); 
-  rbuffer_ptr e = render_buffer_init( &memory, BUFF_ELEMS, elems, sizeof(u32), sizeof(elems) ); 
+  rbuffer* v = rbuffer_init( &memory, BUFF_VERTS, verts, sizeof(vertex1), sizeof(verts) ); 
+  rbuffer* e = rbuffer_init( &memory, BUFF_ELEMS, elems, sizeof(u32), sizeof(elems) ); 
   shaders_ptr shaders = shader_init(&memory);
   shader_load(shaders, VERTEX, "shaders/minimal.hlsl", "VSMain", "vs_5_0");
   shader_load(shaders, PIXEL,  "shaders/minimal.hlsl", "PSMain", "ps_5_0");
-  rbuffer_ptr rbuffer1 = render_buffer_dynamic_init( 
+  rbuffer* rbuffer1 = rbuffer_dynamic_init( 
     &memory,
     BUFF_CONST,
     &projection,
@@ -231,7 +131,7 @@ int main(int argc, char **argv)
     sizeof(projection) 
   );
   render_constant_set( rbuffer1, 0 );
-  render_buffer_update( rbuffer1, &projection, sizeof(projection) );
+  rbuffer_update( rbuffer1, &projection, sizeof(projection) );
 
   // Open app
   input_state inputs[KEY_COUNT];
@@ -257,8 +157,8 @@ int main(int argc, char **argv)
     frame_render();
   }
 }
-#endif
 
+// This is the way.
 int main(int argc, char **argv)
 {
   // Allocate all program memory upfront.
@@ -278,9 +178,6 @@ int main(int argc, char **argv)
   u32 scratch_max = Gigabytes(3);
   arena scratch = subarena_init(&memory, scratch_max);
 
-  // Create a window for the application
-  platform_window window = platform_window_init();
-
   // Initialize renderer
   render_init(&memory);
 
@@ -288,14 +185,14 @@ int main(int argc, char **argv)
   u32 VERTEX_MAX = 100000;
   arena vbuffer_cpu = subarena_init( &memory, sizeof(vertex1)*VERTEX_MAX );
   arena ebuffer_cpu = subarena_init( &memory, sizeof(u32)*VERTEX_MAX );
-  rbuffer_ptr vbuffer_gpu = render_buffer_dynamic_init(
+  rbuffer* vbuffer_gpu = rbuffer_dynamic_init(
     &memory,
     BUFF_VERTS,
     vbuffer_cpu.buffer,
     sizeof(vertex1),
     vbuffer_cpu.length
   );
-  rbuffer_ptr ebuffer_gpu = render_buffer_dynamic_init(
+  rbuffer* ebuffer_gpu = rbuffer_dynamic_init(
     &memory,
     BUFF_ELEMS,
     ebuffer_cpu.buffer,
@@ -304,8 +201,8 @@ int main(int argc, char **argv)
   );
   primitive_box2d( &vbuffer_cpu, &ebuffer_cpu );
   // TODO: Update whole buffer or just what you need with offset_new?
-  render_buffer_update( vbuffer_gpu, vbuffer_cpu.buffer, vbuffer_cpu.length );
-  render_buffer_update( ebuffer_gpu, ebuffer_cpu.buffer, ebuffer_cpu.length );
+  rbuffer_update( vbuffer_gpu, vbuffer_cpu.buffer, vbuffer_cpu.length );
+  rbuffer_update( ebuffer_gpu, ebuffer_cpu.buffer, ebuffer_cpu.length );
   // Load shaders
   shaders_ptr tri_prog = shader_init(&memory);
   shader_load(tri_prog, VERTEX, "shaders/test.hlsl", "VSMain", "vs_5_0");
@@ -335,8 +232,8 @@ int main(int argc, char **argv)
   cam.wrld_inv = glm::mat4(1.0f); // Identity for now
 
   // Upload to GPU
-  rbuffer_ptr camera_gpu = render_buffer_dynamic_init( &memory, BUFF_CONST, &cam, 0, sizeof(camera) );
-  render_buffer_update( camera_gpu, &cam, sizeof(camera) );
+  rbuffer* camera_gpu = rbuffer_dynamic_init( &memory, BUFF_CONST, &cam, 0, sizeof(camera) );
+  rbuffer_update( camera_gpu, &cam, sizeof(camera) );
   // Bind camera constant buffer to pixel shader
   render_constant_set( camera_gpu, 0 );
 
@@ -355,8 +252,8 @@ int main(int argc, char **argv)
   glm::mat4 view_projection = projection * view;
   */
 
-  // rbuffer_ptr viewproj_mat = render_buffer_dynamic_init( &memory, sizeof(view_projection) );
-  // render_buffer_update( viewproj_mat, &view_projection, sizeof(view_projection) );
+  // rbuffer* viewproj_mat = rbuffer_dynamic_init( &memory, sizeof(view_projection) );
+  // rbuffer_update( viewproj_mat, &view_projection, sizeof(view_projection) );
   // render_constant_set( viewproj_mat, 1 );
 
   // Create a 3D texture
@@ -421,14 +318,14 @@ int main(int argc, char **argv)
   // Initialize UI
   arena ui_vbuffer_cpu = subarena_init( &memory, sizeof(vertex1)*VERTEX_MAX );
   arena ui_ebuffer_cpu = subarena_init( &memory, sizeof(u32)*VERTEX_MAX );
-  rbuffer_ptr ui_vbuffer_gpu = render_buffer_dynamic_init(
+  rbuffer* ui_vbuffer_gpu = rbuffer_dynamic_init(
     &memory,
     BUFF_VERTS,
     ui_vbuffer_cpu.buffer,
     sizeof(vertex1),
     ui_vbuffer_cpu.length
   );
-  rbuffer_ptr ui_ebuffer_gpu = render_buffer_dynamic_init(
+  rbuffer* ui_ebuffer_gpu = rbuffer_dynamic_init(
     &memory,
     BUFF_ELEMS,
     ui_ebuffer_cpu.buffer,
@@ -436,8 +333,8 @@ int main(int argc, char **argv)
     ui_ebuffer_cpu.length
   );
   primitive_box2d( &ui_vbuffer_cpu, &ui_ebuffer_cpu );
-  render_buffer_update( ui_vbuffer_gpu, ui_vbuffer_cpu.buffer, ui_vbuffer_cpu.length );
-  render_buffer_update( ui_ebuffer_gpu, ui_ebuffer_cpu.buffer, ui_ebuffer_cpu.length );
+  rbuffer_update( ui_vbuffer_gpu, ui_vbuffer_cpu.buffer, ui_vbuffer_cpu.length );
+  rbuffer_update( ui_ebuffer_gpu, ui_ebuffer_cpu.buffer, ui_ebuffer_cpu.length );
   // UI Shaders
   shaders_ptr ui_shaders = shader_init(&memory);
   shader_load(ui_shaders, VERTEX, "shaders/ui.hlsl", "VSMain", "vs_5_0");
@@ -462,8 +359,8 @@ int main(int argc, char **argv)
     -1.0f,  1.0f 
   );
   ui_view_projection *= box_transform;
-  rbuffer_ptr ui_view_proj_gpu = render_buffer_dynamic_init( &memory, BUFF_CONST, &ui_view_projection, 0, sizeof(ui_view_projection) );
-  render_buffer_update( ui_view_proj_gpu, &ui_view_projection, sizeof(ui_view_projection) );
+  rbuffer* ui_view_proj_gpu = rbuffer_dynamic_init( &memory, BUFF_CONST, &ui_view_projection, 0, sizeof(ui_view_projection) );
+  rbuffer_update( ui_view_proj_gpu, &ui_view_projection, sizeof(ui_view_projection) );
 
   // Initialize Text
   u32 text_vert_count = 6000;
@@ -471,7 +368,7 @@ int main(int argc, char **argv)
   const char *font_file = "C:/MyFonts/Source_Code_Pro/static/SourceCodePro-Regular.ttf";
   texture_ptr text_texture = text_init( &memory, font_file );
   // render_text_init(&memory);
-  rbuffer_ptr tbuffer_gpu = render_buffer_dynamic_init(
+  rbuffer* tbuffer_gpu = rbuffer_dynamic_init(
     &memory,
     BUFF_VERTS,
     tbuffer_cpu.buffer,
@@ -497,7 +394,7 @@ int main(int argc, char **argv)
   glm::vec3 tpos = glm::vec3(0.0f, 0.0f, 0.0f);
   bool is_ccw = false;
   text_add(&tbuffer_cpu, "TEXT!", 5, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
-  render_buffer_update(tbuffer_gpu, tbuffer_cpu.buffer, tbuffer_cpu.offset_new);
+  rbuffer_update(tbuffer_gpu, tbuffer_cpu.buffer, tbuffer_cpu.offset_new);
 
   // Rotation 
   f32 angle = 0.0f;
@@ -537,7 +434,7 @@ int main(int argc, char **argv)
 
     // Update camera constant buffer with new rotation
     render_constant_set( camera_gpu, 0 );
-    render_buffer_update(camera_gpu, &cam, sizeof(camera));
+    rbuffer_update(camera_gpu, &cam, sizeof(camera));
 
     // This adds rotation to the view/proj matrix
     /*
@@ -551,7 +448,7 @@ int main(int argc, char **argv)
 
     // I only have 1 object atm.
     glm::mat4 temp = view_projection * world;
-    render_buffer_update( viewproj_mat, &temp, sizeof(temp) );
+    rbuffer_update( viewproj_mat, &temp, sizeof(temp) );
     */
 
     // Bind textures for raymarching
@@ -563,7 +460,7 @@ int main(int argc, char **argv)
     
     // Draw UI background stuff
     render_constant_set( ui_view_proj_gpu, 1 );
-    render_buffer_update( ui_view_proj_gpu, &ui_view_projection, sizeof(ui_view_projection));
+    rbuffer_update( ui_view_proj_gpu, &ui_view_projection, sizeof(ui_view_projection));
     u32 ui_elem_count = ui_ebuffer_cpu.offset_new / sizeof(u32);
     render_draw_ui_elems( ui_vbuffer_gpu, ui_ebuffer_gpu, ui_shaders, ui_elem_count, 0, 0);
 
@@ -574,13 +471,13 @@ int main(int argc, char **argv)
 
     frame_render();
   }
-  render_buffer_close( vbuffer_gpu );
-  render_buffer_close( ebuffer_gpu );
-  render_buffer_close( ui_vbuffer_gpu );
-  render_buffer_close( ui_ebuffer_gpu );
-  render_buffer_close( ui_view_proj_gpu );
-  render_buffer_close( camera_gpu );
-  render_buffer_close( tbuffer_gpu );
+  rbuffer_close( vbuffer_gpu );
+  rbuffer_close( ebuffer_gpu );
+  rbuffer_close( ui_vbuffer_gpu );
+  rbuffer_close( ui_ebuffer_gpu );
+  rbuffer_close( ui_view_proj_gpu );
+  rbuffer_close( camera_gpu );
+  rbuffer_close( tbuffer_gpu );
   texture_close( transfer_function );
   texture_close( voxel_texture );
   texture_close( text_texture );
@@ -592,7 +489,6 @@ int main(int argc, char **argv)
   return 0;
 }
 
-#if 0
 int main(int argc, char **argv)
 {
   // Allocate all program memory upfront.
@@ -638,19 +534,19 @@ int main(int argc, char **argv)
   render_state renderer = render_init(&window);
   // Initialize render buffers
   size_t lines_vbo_size = lines_max * sizeof(vertex);
-  render_buffer lines_gpu = render_buffer_init(nullptr, lines_vbo_size);
-  render_buffer_attribute(lines_gpu, 0, 3, sizeof(fvec3), 0);
-  render_buffer_elements_init(&lines_gpu, nullptr, lines_max*sizeof(u32));
+  rbuffer lines_gpu = rbuffer_init(nullptr, lines_vbo_size);
+  rbuffer_attribute(lines_gpu, 0, 3, sizeof(fvec3), 0);
+  rbuffer_elements_init(&lines_gpu, nullptr, lines_max*sizeof(u32));
   u32 lines_program = render_program_init( &scratch, "shaders\\lines.vert", "shaders\\lines.frag");
-  render_buffer text_gpu_buffer = text_gpu_init(text_vert_count);
+  rbuffer text_gpu_buffer = text_gpu_init(text_vert_count);
 
 
   // Initialize debugging stuff
   render_point_size_set(10.0f);
   vertex origin_vert = {};
   origin_vert.pos = fvec3{ {0, 0, 0} };
-  render_buffer origin_gpu = render_buffer_init(&origin_vert.pos, sizeof(origin_vert));
-  render_buffer_attribute(origin_gpu, 0, 3, sizeof(fvec3), 0);
+  rbuffer origin_gpu = rbuffer_init(&origin_vert.pos, sizeof(origin_vert));
+  rbuffer_attribute(origin_gpu, 0, 3, sizeof(fvec3), 0);
   u32 origin_program = render_program_init( &scratch, "shaders\\points.vert",  "shaders\\points.frag");
 
 
@@ -676,10 +572,10 @@ int main(int argc, char **argv)
   // Read in model data
   mesh object_model = model_load_obj("assets\\bunny.obj", &vert_buffer_lines, &elem_buffer_lines);
   size_t object_buffer_size = sizeof(object_model.vertices[0]) * object_model.vert_count;
-  render_buffer_push(lines_gpu, (void*)object_model.vertices, 0, object_buffer_size);
+  rbuffer_push(lines_gpu, (void*)object_model.vertices, 0, object_buffer_size);
   i64 object_starting_byte = model_starting_offset(&elem_buffer_lines, object_model);
   i64 object_bytes = object_model.index_count * sizeof(u32);
-  render_buffer_elements_push(lines_gpu, object_model.indices, object_starting_byte, object_bytes);
+  rbuffer_elements_push(lines_gpu, object_model.indices, object_starting_byte, object_bytes);
 
   // Get bounding box
   // mesh bbox = model_bbox_add(&vert_buffer_lines, &elem_buffer_lines, object_model);
@@ -691,10 +587,10 @@ int main(int argc, char **argv)
   voxel_grid grid = model_voxelize_solid(object_model, voxel_count, &vert_buffer_lines, &elem_buffer_lines, &memory);
   mesh bbox = bbox_create(grid.min, grid.max, &vert_buffer_lines, &elem_buffer_lines);
   // Update model
-  render_buffer_push(lines_gpu, (void*)object_model.vertices, 0, object_buffer_size);
+  rbuffer_push(lines_gpu, (void*)object_model.vertices, 0, object_buffer_size);
   // Add bbox to renderer
   size_t bbox_vbo_size = sizeof(bbox.vertices[0]) * bbox.vert_count;
-  render_buffer_push(lines_gpu, (void*)bbox.vertices, object_buffer_size, bbox_vbo_size);
+  rbuffer_push(lines_gpu, (void*)bbox.vertices, object_buffer_size, bbox_vbo_size);
   i64 bbox_starting_byte = model_starting_offset(&elem_buffer_lines, bbox);
   i64 bbox_starting_index = bbox_starting_byte / sizeof(bbox.indices[0]);
   i64 bbox_bytes   = bbox.index_count * sizeof(u32);
@@ -702,16 +598,16 @@ int main(int argc, char **argv)
   {
     bbox.indices[i] += bbox_starting_index;
   }
-  render_buffer_elements_push(lines_gpu, bbox.indices, bbox_starting_byte, bbox_bytes);
+  rbuffer_elements_push(lines_gpu, bbox.indices, bbox_starting_byte, bbox_bytes);
 
   // Free scratch
   arena_free_all(&scratch);
 
   // Set up instanced cube rendering for grid.
   mesh cube = primitive_cube(&scratch);
-  render_buffer instance_buffer = render_buffer_init((void*)cube.vertices, cube.vert_count*sizeof(vertex));
-  render_buffer_attribute(instance_buffer, 0, 3, 3*sizeof(f32), (void*)0);
-  render_buffer_elements_init(&instance_buffer, cube.indices, cube.index_count*sizeof(u32));
+  rbuffer instance_buffer = rbuffer_init((void*)cube.vertices, cube.vert_count*sizeof(vertex));
+  rbuffer_attribute(instance_buffer, 0, 3, 3*sizeof(f32), (void*)0);
+  rbuffer_elements_init(&instance_buffer, cube.indices, cube.index_count*sizeof(u32));
   u32 instance_program = render_program_init( &scratch, "shaders\\instance.vert", "shaders\\instance.frag");
   fvec3 grid_shape = fvec3_uniform(voxel_count);
   voxel_grid_init(&scratch, grid_shape);
@@ -806,7 +702,7 @@ int main(int argc, char **argv)
     glm::vec3 tpos = glm::vec3(0.0f, 0.0f, 0.0f);
     // Add text data to gpu buffer
     text_add(&text_buffer, "TEXT!", 5, window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
-    render_buffer_push(text_gpu_buffer, text_buffer.buffer, 0, text_buffer.offset_new);
+    rbuffer_push(text_gpu_buffer, text_buffer.buffer, 0, text_buffer.offset_new);
     // Draw text
     u32 text_vert_count = text_count_get(&text_buffer);
     draw_text(text_gpu_buffer, text_shader, text_vert_count);
