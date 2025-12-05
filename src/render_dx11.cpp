@@ -22,7 +22,7 @@ struct shaders
   ID3D11PixelShader  *pixel;
 };
 
-struct render_buffer
+struct rbuffer
 {
   ID3D11Buffer* buffer;
   u32 stride;
@@ -431,9 +431,9 @@ void render_resize(i32 width, i32 height)
 }
 
 
-rbuffer_ptr render_buffer_init(arena *a, buffer_type t, void* data, u32 stride, u32 byte_count)
+rbuffer* rbuffer_init(arena *a, buffer_type t, void* data, u32 stride, u32 byte_count)
 {
-  render_buffer *out = arena_push_struct(a, render_buffer);
+  rbuffer *out = arena_push_struct(a, rbuffer);
   out->stride = stride;
   out->offset = 0;
   // Determine bind flags based on buffer type
@@ -452,16 +452,16 @@ rbuffer_ptr render_buffer_init(arena *a, buffer_type t, void* data, u32 stride, 
 }
 
 
-void render_buffer_close( rbuffer_ptr b)
+void rbuffer_close( rbuffer* b)
 {
   b->buffer->Release();
 }
 
 
-rbuffer_ptr render_buffer_dynamic_init(arena *a, buffer_type t, void *data, u32 stride, u32 byte_count)
+rbuffer* rbuffer_dynamic_init(arena *a, buffer_type t, void *data, u32 stride, u32 byte_count)
 {
   // Initialize output in arena
-  render_buffer *out = arena_push_struct(a, render_buffer);
+  rbuffer *out = arena_push_struct(a, rbuffer);
   out->stride = stride;
   out->offset = 0;
   // Determine bind flags based on buffer type
@@ -481,7 +481,7 @@ rbuffer_ptr render_buffer_dynamic_init(arena *a, buffer_type t, void *data, u32 
 }
 
 
-void render_constant_set( rbuffer_ptr b, u32 slot )
+void render_constant_set( rbuffer* b, u32 slot )
 {
   // Shared buffer for both shaders
   renderer->context->VSSetConstantBuffers( slot, 1, &b->buffer );
@@ -489,7 +489,7 @@ void render_constant_set( rbuffer_ptr b, u32 slot )
 }
 
 
-void render_buffer_update(rbuffer_ptr b, void* data, u32 byte_count)
+void rbuffer_update(rbuffer* b, void* data, u32 byte_count)
 {
   D3D11_MAPPED_SUBRESOURCE mapped;
   HRESULT hr = renderer->context->Map(b->buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
@@ -571,7 +571,7 @@ void render_text_init(arena *a)
 }
 
 
-void render_draw(rbuffer_ptr vbuffer, shaders_ptr s, u32 count)
+void render_draw(rbuffer* vbuffer, shaders_ptr s, u32 count)
 {
   renderer->context->IASetVertexBuffers(0, 1, &vbuffer->buffer, &vbuffer->stride, &vbuffer->offset);
   renderer->context->IASetInputLayout(s->vertex_in);
@@ -583,7 +583,7 @@ void render_draw(rbuffer_ptr vbuffer, shaders_ptr s, u32 count)
 }
 
 
-void render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, u32 count, u32 elem_start, u32 vert_start)
+void render_draw_elems(rbuffer* vbuffer, rbuffer* ebuffer, shaders_ptr s, u32 count, u32 elem_start, u32 vert_start)
 {
   renderer->context->IASetVertexBuffers(0, 1, &vbuffer->buffer, &vbuffer->stride, &vbuffer->offset);
   renderer->context->IASetIndexBuffer(ebuffer->buffer, DXGI_FORMAT_R32_UINT, 0);
@@ -596,7 +596,7 @@ void render_draw_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, 
 }
 
 
-void render_draw_ui( rbuffer_ptr vbuffer, shaders_ptr s, u32 count )
+void render_draw_ui( rbuffer* vbuffer, shaders_ptr s, u32 count )
 {
   renderer->context->OMSetDepthStencilState(renderer->depth_stencil_disabled, 0);
   render_draw( vbuffer, s, count);
@@ -604,7 +604,7 @@ void render_draw_ui( rbuffer_ptr vbuffer, shaders_ptr s, u32 count )
 }
 
 
-void render_draw_ui_elems(rbuffer_ptr vbuffer, rbuffer_ptr ebuffer, shaders_ptr s, u32 count, u32 elem_start, u32 vert_start)
+void render_draw_ui_elems(rbuffer* vbuffer, rbuffer* ebuffer, shaders_ptr s, u32 count, u32 elem_start, u32 vert_start)
 {
   renderer->context->OMSetDepthStencilState(renderer->depth_stencil_disabled, 0);
   render_draw_elems( vbuffer, ebuffer, s, count, elem_start, vert_start );
