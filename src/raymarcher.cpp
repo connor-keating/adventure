@@ -30,7 +30,6 @@ struct appstate
   camera          cam;
   rbuffer        *camera_ray;
   shaders        *s;
-  f32 angle; // TODO: How do I remove this?
 };
 
 global appstate *state;
@@ -156,7 +155,6 @@ void app_init( arena *memory )
 {
   // Create internal global state
   state = arena_push_struct( memory, appstate );
-  state->angle = 0.0f;
   state->is_running = false;
   // Start the platform layer
   platform_init( memory );
@@ -284,11 +282,12 @@ void app_update( arena *memory )
   platform_clock_update(&state->timer);
   frame_init();
   // Update volume rotation
-  state->angle += (PI/4.0f) * state->timer.delta; // rad += (rad/s)*s
+  static f32 angle = 0.0f;
+  angle += (PI/4.0f) * state->timer.delta; // rad += (rad/s)*s
   // wrap angle so it doesn't explode
-  if (state->angle > 2.0*PI) state->angle -= 2.0*PI;
+  if (angle > 2.0*PI) angle -= 2.0*PI;
   glm::vec3 rotation_axis = glm::vec3(0.0f, 1.0f, 0.0f); // Y-axis
-  glm::mat4 volume_rotation = glm::rotate(glm::mat4(1.0f), state->angle, rotation_axis);
+  glm::mat4 volume_rotation = glm::rotate(glm::mat4(1.0f), angle, rotation_axis);
   state->cam.wrld_inv = glm::inverse(volume_rotation);
   render_constant_set( state->camera_ray, 0 );
   rbuffer_update( state->camera_ray, &state->cam, sizeof(camera));
