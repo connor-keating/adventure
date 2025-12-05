@@ -176,6 +176,7 @@ void              arena_pop(arena_savepoint point);
 void              arena_free_last(arena *a);
 void              arena_free_all(arena *a);
 
+arena             subarena_init( arena *parent, size_t byte_count );
 
 #if _DEBUG
   #define DEBUG(message) printf(message); fflush(stdout);
