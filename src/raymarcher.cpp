@@ -29,6 +29,7 @@ struct appstate
   rbuffer        *ebuffer_gpu;
   camera          cam;
   rbuffer        *camera_ray;
+  u64             shader[MAX_COUNT_SHADERS];
 };
 
 global appstate *state;
@@ -191,9 +192,9 @@ void app_init( arena *memory )
     state->ebuffer_cpu.length 
   );
   // Load raymarching shaders
-  u64 shader_ray = shader_init( memory );
-  shader_load( shader_ray, VERTEX, "shaders/raymarching.hlsl", "VSMain", "vs_5_0");
-  shader_load( shader_ray, PIXEL,  "shaders/raymarching.hlsl", "PSMain", "ps_5_0");
+  state->shader[0] = shader_init( memory );
+  shader_load( state->shader[0], VERTEX, "shaders/raymarching.hlsl", "VSMain", "vs_5_0");
+  shader_load( state->shader[0], PIXEL,  "shaders/raymarching.hlsl", "PSMain", "ps_5_0");
   // Constant buffer
   // Camera
   state->cam.pos = glm::vec3(0.0f, 0.0f, -2.0f);
@@ -296,7 +297,7 @@ void app_update( arena *memory )
   render_draw_elems( 
     state->vbuffer_gpu, 
     state->ebuffer_gpu, 
-    0,  // Shader ray ID
+    state->shader[0],  // Shader ray ID
     elem_count, 
     0, 0
   );
