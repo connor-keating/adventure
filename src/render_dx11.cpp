@@ -54,7 +54,14 @@ struct render_state
   ID3D11DepthStencilState* depth_stencil_disabled;
 };
 
+struct render_data
+{
+  shaders *s; // Array of shaders. Length set by app.
+  u64 shader_first_available;
+};
+
 global render_state *renderer;
+global render_data  *rdata;
 
 
 #if defined(_DEBUG)
@@ -374,6 +381,14 @@ void render_init(arena *a)
 }
 
 
+void render_data_init( arena *a, u64 shader_count )
+{
+  // TODO: Moving shaders into render_data. shaders load will return the index
+  rdata = arena_push_struct( a, render_data);
+  rdata->s = arena_push_array( a, shader_count, shaders );
+}
+
+
 void render_resize(i32 width, i32 height)
 {
   // Release the old views, as they hold references to the buffers we
@@ -583,14 +598,15 @@ void render_draw(rbuffer* vbuffer, shaders_ptr s, u32 count)
 }
 
 
-void render_draw_elems(rbuffer* vbuffer, rbuffer* ebuffer, shaders_ptr s, u32 count, u32 elem_start, u32 vert_start)
+void render_draw_elems(rbuffer* vbuffer, rbuffer* ebuffer, u64 shader_index, u32 count, u32 elem_start, u32 vert_start)
 {
+  shaders s = rdata->s[shader_index];
   renderer->context->IASetVertexBuffers(0, 1, &vbuffer->buffer, &vbuffer->stride, &vbuffer->offset);
   renderer->context->IASetIndexBuffer(ebuffer->buffer, DXGI_FORMAT_R32_UINT, 0);
-  renderer->context->IASetInputLayout(s->vertex_in);
+  renderer->context->IASetInputLayout(s.vertex_in);
   renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  renderer->context->VSSetShader(s->vertex, 0, 0);
-  renderer->context->PSSetShader(s->pixel, 0, 0);
+  renderer->context->VSSetShader(s.vertex, 0, 0);
+  renderer->context->PSSetShader(s.pixel, 0, 0);
   // renderer->context->RSSetState(renderer->rasterizer_default);
   renderer->context->DrawIndexed(count, elem_start, vert_start);
 }
@@ -604,10 +620,10 @@ void render_draw_ui( rbuffer* vbuffer, shaders_ptr s, u32 count )
 }
 
 
-void render_draw_ui_elems(rbuffer* vbuffer, rbuffer* ebuffer, shaders_ptr s, u32 count, u32 elem_start, u32 vert_start)
+void render_draw_ui_elems(rbuffer* vbuffer, rbuffer* ebuffer, u64 shader_index, u32 count, u32 elem_start, u32 vert_start)
 {
   renderer->context->OMSetDepthStencilState(renderer->depth_stencil_disabled, 0);
-  render_draw_elems( vbuffer, ebuffer, s, count, elem_start, vert_start );
+  render_draw_elems( vbuffer, ebuffer, shader_index, count, elem_start, vert_start );
   renderer->context->OMSetDepthStencilState(renderer->depth_stencil_enabled, 0);
 }
 
@@ -852,15 +868,16 @@ void texture_bind(texture *tex, u32 slot)
 }
 
 
-shaders_ptr shader_init(arena *a)
+u64 shader_init(arena *a)
 {
   // Init output
-  shaders *s = arena_push_struct(a, shaders);
-  return s;
+  u64 available = rdata->shader_first_available;
+  rdata->shader_first_available++;
+  return available;
 }
 
 
-void shader_load(shaders *s, shader_type t, const char *file, const char *entry, const char *target)
+void shader_load( u64 shader_index, shader_type t, const char *file, const char *entry, const char *target)
 {
   // Convert file path to UTF-8 char
   wchar_t filewide[256];
@@ -887,6 +904,7 @@ void shader_load(shaders *s, shader_type t, const char *file, const char *entry,
   }
   ASSERT(SUCCEEDED(hr), "Failed to compile shader from file.");
   // Create shader object
+  shaders *s = &rdata->s[shader_index];
   switch (t)
   {
     case (VERTEX):
