@@ -11,10 +11,6 @@ struct shaders;
 struct rbuffer;
 struct texture;
 
-// Pointer types for the internal structs.
-typedef texture* texture_ptr;
-
-
 enum texture_dimension
 {
   ONE,
@@ -59,9 +55,9 @@ void          render_draw_elems(rbuffer* vbuffer, rbuffer* ebuffer, u64 shader_i
 void          render_draw_ui(rbuffer* vertex_buffer, shaders* s, u32 count);
 void          render_draw_ui_elems(rbuffer* vbuffer, rbuffer* ebuffer, shaders* s, u32 count, u32 elem_start, u32 vert_start);
 
-texture_ptr   texture1d_init(arena *a, void* data, i32 width);
-texture_ptr   texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 channels);
-texture_ptr   texture3d_init(arena *a, void* data, i32 width, i32 height, i32 depth);
+texture*   texture1d_init(arena *a, void* data, i32 width);
+texture*   texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 channels);
+texture*   texture3d_init(arena *a, void* data, i32 width, i32 height, i32 depth);
 void          texture_bind(texture *tex, u32 slot);
 void          texture_close(texture *tex);
 

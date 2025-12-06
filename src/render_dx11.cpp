@@ -652,7 +652,7 @@ void render_close()
 }
 
 
-texture_ptr texture1d_init(arena *a, void* data, i32 width)
+texture* texture1d_init(arena *a, void* data, i32 width)
 {
   texture *tex = arena_push_struct(a, texture);
   tex->dim = ONE;
@@ -714,7 +714,7 @@ texture_ptr texture1d_init(arena *a, void* data, i32 width)
 }
 
 
-texture_ptr texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 channels)
+texture* texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 channels)
 {
   texture *tex = arena_push_struct(a, texture);
   tex->dim = TWO;
@@ -804,7 +804,7 @@ void texture_close( texture *tex )
 }
 
 
-texture_ptr texture3d_init(arena *a, void* data, i32 width, i32 height, i32 depth)
+texture* texture3d_init(arena *a, void* data, i32 width, i32 height, i32 depth)
 {
   texture *tex = arena_push_struct(a, texture);
   tex->dim = THREE;

@@ -39,7 +39,7 @@ internal inline u32 index3d( u32 x, u32 y, u32 z, u32 width, u32 height )
   return x + y * width + z * width * height;
 }
 
-internal texture_ptr image3d_create( arena *a )
+internal texture* image3d_create( arena *a )
 {
   // Create a higher resolution volume with gradient density
   i32 resolution = 32;  // 32x32x32 = 32768 voxels
@@ -139,7 +139,7 @@ internal texture_ptr image3d_create( arena *a )
   }
 
   // Upload to GPU
-  texture_ptr voxel_texture = texture3d_init( a, voxel_data, resolution, resolution, resolution );
+  texture* voxel_texture = texture3d_init( a, voxel_data, resolution, resolution, resolution );
   return voxel_texture;
 }
 
@@ -217,7 +217,7 @@ void app_init( arena *memory )
   // Bind camera constant buffer to pixel shader
   render_constant_set( state->camera_ray, 0 );
   // Create 3D image texture for raymarching
-  texture_ptr voxel_texture = image3d_create( memory );
+  texture* voxel_texture = image3d_create( memory );
   texture_bind(voxel_texture, 0);
   // Create color transfer function for raymarching
   // Create transfer function (1D texture for color mapping)
@@ -262,7 +262,7 @@ void app_init( arena *memory )
     tf_data[i * 4 + 2] = b;
     tf_data[i * 4 + 3] = a;
   }
-  texture_ptr transfer_function = texture1d_init( memory, tf_data, tf_size);
+  texture* transfer_function = texture1d_init( memory, tf_data, tf_size);
   texture_bind(transfer_function, 1);
   // Initialize the timer
   state->timer = platform_clock_init(FPS_TARGET);
