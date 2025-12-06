@@ -29,7 +29,6 @@ struct appstate
   rbuffer        *ebuffer_gpu;
   camera          cam;
   rbuffer        *camera_ray;
-  shaders        *s;
 };
 
 global appstate *state;
@@ -162,6 +161,7 @@ void app_init( arena *memory )
   state->window = platform_window_init();
   // Initialize renderer
   render_init( memory );
+  render_data_init( memory, MAX_COUNT_SHADERS );
   state->vbuffer_cpu = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(vertex1) );
   state->ebuffer_cpu = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(u32) );
   state->vbuffer_gpu = rbuffer_dynamic_init(
@@ -191,9 +191,9 @@ void app_init( arena *memory )
     state->ebuffer_cpu.length 
   );
   // Load raymarching shaders
-  state->s = shader_init( memory );
-  shader_load(state->s, VERTEX, "shaders/raymarching.hlsl", "VSMain", "vs_5_0");
-  shader_load(state->s, PIXEL,  "shaders/raymarching.hlsl", "PSMain", "ps_5_0");
+  u64 shader_ray = shader_init( memory );
+  shader_load( shader_ray, VERTEX, "shaders/raymarching.hlsl", "VSMain", "vs_5_0");
+  shader_load( shader_ray, PIXEL,  "shaders/raymarching.hlsl", "PSMain", "ps_5_0");
   // Constant buffer
   // Camera
   state->cam.pos = glm::vec3(0.0f, 0.0f, -2.0f);
@@ -296,9 +296,21 @@ void app_update( arena *memory )
   render_draw_elems( 
     state->vbuffer_gpu, 
     state->ebuffer_gpu, 
+    0,  // Shader ray ID
+    elem_count, 
+    0, 0
+  );
+  // Create UI elements
+  /*
+  glm::mat4 ui_world = glm::mat4(1.0f);
+  render_draw_elems( 
+    state->vbuffer_gpu, 
+    state->ebuffer_gpu, 
     state->s, 
     elem_count, 
     0, 0
   );
+  render_draw_ui_elems( ui_vbuffer_gpu, ui_ebuffer_gpu, ui_shaders, ui_elem_count, 0, 0);
+  */
   frame_render();
 }
