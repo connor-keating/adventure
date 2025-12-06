@@ -586,7 +586,7 @@ void render_text_init(arena *a)
 }
 
 
-void render_draw(rbuffer* vbuffer, shaders_ptr s, u32 count)
+void render_draw(rbuffer* vbuffer, shaders* s, u32 count)
 {
   renderer->context->IASetVertexBuffers(0, 1, &vbuffer->buffer, &vbuffer->stride, &vbuffer->offset);
   renderer->context->IASetInputLayout(s->vertex_in);
@@ -612,7 +612,7 @@ void render_draw_elems(rbuffer* vbuffer, rbuffer* ebuffer, u64 shader_index, u32
 }
 
 
-void render_draw_ui( rbuffer* vbuffer, shaders_ptr s, u32 count )
+void render_draw_ui( rbuffer* vbuffer, shaders* s, u32 count )
 {
   renderer->context->OMSetDepthStencilState(renderer->depth_stencil_disabled, 0);
   render_draw( vbuffer, s, count);

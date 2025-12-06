@@ -12,7 +12,6 @@ struct rbuffer;
 struct texture;
 
 // Pointer types for the internal structs.
-typedef shaders* shaders_ptr;
 typedef texture* texture_ptr;
 
 
@@ -55,10 +54,10 @@ void          render_constant_set( rbuffer* b, u32 slot );
 
 void          render_text_init(arena *a);
 
-void          render_draw(rbuffer* vertex_buffer, shaders_ptr s, u32 count);
+void          render_draw(rbuffer* vertex_buffer, shaders* s, u32 count);
 void          render_draw_elems(rbuffer* vbuffer, rbuffer* ebuffer, u64 shader_index, u32 count, u32 elem_start, u32 vert_start);
-void          render_draw_ui(rbuffer* vertex_buffer, shaders_ptr s, u32 count);
-void          render_draw_ui_elems(rbuffer* vbuffer, rbuffer* ebuffer, shaders_ptr s, u32 count, u32 elem_start, u32 vert_start);
+void          render_draw_ui(rbuffer* vertex_buffer, shaders* s, u32 count);
+void          render_draw_ui_elems(rbuffer* vbuffer, rbuffer* ebuffer, shaders* s, u32 count, u32 elem_start, u32 vert_start);
 
 texture_ptr   texture1d_init(arena *a, void* data, i32 width);
 texture_ptr   texture2d_init(arena *a, void* pixels, i32 width, i32 height, i32 channels);
