@@ -100,6 +100,13 @@ inline ivec2 ivec2_init(i32 x, i32 y)
 }
 
 
+inline fvec4 fvec4_init( f32 x, f32 y, f32 z, f32 w )
+{
+  fvec4 v = { .array = {x, y, z, w} };
+  return v;
+}
+
+
 ivec3 ivec3_uniform(i32 value)
 {
   return ivec3{ {value, value, value} };
@@ -109,6 +116,12 @@ ivec3 ivec3_uniform(i32 value)
 fvec3 fvec3_uniform(f32 value)
 {
   return fvec3{ {value, value, value} };
+}
+
+
+fvec4 fvec4_uniform( f32 value )
+{
+  return fvec4_init( value, value, value, value );
 }
 
 
