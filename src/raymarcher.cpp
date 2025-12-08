@@ -29,6 +29,7 @@ struct appstate
   rbuffer        *ebuffer_gpu;
   camera          cam;
   rbuffer        *camera_ray;
+  rbuffer        *ui_matrix;
   u64             shader[MAX_COUNT_SHADERS];
 };
 
@@ -179,10 +180,16 @@ void app_init( arena *memory )
     sizeof(u32),
     state->ebuffer_cpu.length
   );
-  // Load raymarching shaders
+  // Load UI shaders
   state->shader[0] = shader_init( memory );
-  shader_load( state->shader[0], VERTEX, "shaders/raymarching.hlsl", "VSMain", "vs_5_0");
-  shader_load( state->shader[0], PIXEL,  "shaders/raymarching.hlsl", "PSMain", "ps_5_0");
+  shader_load( state->shader[0], VERTEX, "shaders/ui.hlsl", "VSMain", "vs_5_0");
+  shader_load( state->shader[0], PIXEL,  "shaders/ui.hlsl", "PSMain", "ps_5_0");
+  glm::mat4 identity = glm::mat4(1.0f);
+  state->ui_matrix = rbuffer_dynamic_init( memory, BUFF_CONST, &identity, 0, sizeof(identity) );
+  // Load raymarching shaders
+  state->shader[1] = shader_init( memory );
+  shader_load( state->shader[1], VERTEX, "shaders/raymarching.hlsl", "VSMain", "vs_5_0");
+  shader_load( state->shader[1], PIXEL,  "shaders/raymarching.hlsl", "PSMain", "ps_5_0");
   // Constant buffer
   // Camera
   state->cam.pos = glm::vec3(0.0f, 0.0f, -2.0f);
@@ -275,6 +282,7 @@ void app_update( arena *memory )
   arena_free_all( &state->ebuffer_cpu );
   // Add raymarching quad to buffers
   model3d raybox2d = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu );
+  model3d button_test = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu );
   // TODO: Update whole buffer or just what you need with offset_new?
   rbuffer_update( 
     state->vbuffer_gpu, 
@@ -297,26 +305,29 @@ void app_update( arena *memory )
   render_constant_set( state->camera_ray, 0 );
   rbuffer_update( state->camera_ray, &state->cam, sizeof(camera));
   // Draw raymarched quad
-  u32 elem_count = state->ebuffer_cpu.offset_new / sizeof(u32);
   render_draw_elems( 
     state->vbuffer_gpu, 
     state->ebuffer_gpu, 
-    state->shader[0],  // Shader ray ID
+    state->shader[1],  // Shader ray ID
     raybox2d.count, 
     raybox2d.vert_start, 
     raybox2d.elem_start
   );
   // Create UI elements
-  /*
   glm::mat4 ui_world = glm::mat4(1.0f);
-  render_draw_elems( 
+  ui_world = glm::scale(
+    ui_world,
+    glm::vec3(0.2f, 0.2f, 0.0f)
+  );
+  rbuffer_update( state->ui_matrix, &ui_world, sizeof(ui_world) );
+  render_constant_set( state->ui_matrix, 1 );
+  render_draw_ui_elems( 
     state->vbuffer_gpu, 
     state->ebuffer_gpu, 
-    state->s, 
-    elem_count, 
-    0, 0
+    state->shader[0], 
+    button_test.count, 
+    0, // button_test.vert_start, 
+    0 // button_test.elem_start
   );
-  render_draw_ui_elems( ui_vbuffer_gpu, ui_ebuffer_gpu, ui_shaders, ui_elem_count, 0, 0);
-  */
   frame_render();
 }
