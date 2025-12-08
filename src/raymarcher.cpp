@@ -179,18 +179,6 @@ void app_init( arena *memory )
     sizeof(u32),
     state->ebuffer_cpu.length
   );
-  primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu );
-  // TODO: Update whole buffer or just what you need with offset_new?
-  rbuffer_update( 
-    state->vbuffer_gpu, 
-    state->vbuffer_cpu.buffer, 
-    state->vbuffer_cpu.length
-  );
-  rbuffer_update( 
-    state->ebuffer_gpu, 
-    state->ebuffer_cpu.buffer, 
-    state->ebuffer_cpu.length 
-  );
   // Load raymarching shaders
   state->shader[0] = shader_init( memory );
   shader_load( state->shader[0], VERTEX, "shaders/raymarching.hlsl", "VSMain", "vs_5_0");
@@ -282,6 +270,22 @@ void app_update( arena *memory )
   }
   platform_clock_update(&state->timer);
   frame_init();
+  // Reset render data buffers
+  arena_free_all( &state->vbuffer_cpu );
+  arena_free_all( &state->ebuffer_cpu );
+  // Add raymarching quad to buffers
+  primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu );
+  // TODO: Update whole buffer or just what you need with offset_new?
+  rbuffer_update( 
+    state->vbuffer_gpu, 
+    state->vbuffer_cpu.buffer, 
+    state->vbuffer_cpu.length
+  );
+  rbuffer_update( 
+    state->ebuffer_gpu, 
+    state->ebuffer_cpu.buffer, 
+    state->ebuffer_cpu.length 
+  );
   // Update volume rotation
   static f32 angle = 0.0f;
   angle += (PI/4.0f) * state->timer.delta; // rad += (rad/s)*s
