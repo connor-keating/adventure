@@ -2,19 +2,41 @@
 #include "app_data.h"
 
 
-model3d primitive_box2d( arena *vbuffer, arena *ebuffer )
+model3d primitive_box2d( arena *vbuffer, arena *ebuffer, fvec4 color )
 {
   // Initialize output
   model3d output = {};
   // Vertices
   f32 verts[36] = {
     // position          // color (RGBA)              // Texture
-    -1.0f, -1.0f, 0.0f,  1.0f, 1.0f, 0.0f, 1.0f,  0.0f, 0.0f, // low left
-     1.0f, -1.0f, 0.0f,  1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 0.0f, // low right
-     1.0f,  1.0f, 0.0f,  0.0f, 1.0f, 1.0f, 1.0f,  1.0f, 1.0f, // top right
-    -1.0f,  1.0f, 0.0f,  1.0f, 1.0f, 1.0f, 1.0f,  0.0f, 1.0f, // top left
+    -1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f, // low left
+     1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f,  1.0f, 0.0f, // low right
+     1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f,  1.0f, 1.0f, // top right
+    -1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f,  0.0f, 1.0f, // top left
   };
-  // Elements
+  // Set the color
+  {
+    // Color vertex 1
+    verts[3] = color.x;
+    verts[4] = color.y;
+    verts[5] = color.z;
+    verts[6] = color.w;
+    // Color vertex 2
+    verts[12] = color.x;
+    verts[13] = color.y;
+    verts[14] = color.z;
+    verts[15] = color.w;
+    // Color vertex 3
+    verts[21] = color.x;
+    verts[22] = color.y;
+    verts[23] = color.z;
+    verts[24] = color.w;
+    // Color vertex 4
+    verts[30] = color.x;
+    verts[31] = color.y;
+    verts[32] = color.z;
+    verts[33] = color.w;
+  }
   u32 elems[6] = {
     0, 1, 2, // tri 1
     0, 2, 3, // tri 2
