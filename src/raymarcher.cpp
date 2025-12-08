@@ -281,8 +281,8 @@ void app_update( arena *memory )
   arena_free_all( &state->vbuffer_cpu );
   arena_free_all( &state->ebuffer_cpu );
   // Add raymarching quad to buffers
-  model3d raybox2d = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu );
-  model3d button_test = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu );
+  model3d raybox2d = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_uniform(0.0f) );
+  model3d button_test = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
   // TODO: Update whole buffer or just what you need with offset_new?
   rbuffer_update( 
     state->vbuffer_gpu, 
