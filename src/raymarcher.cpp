@@ -282,7 +282,7 @@ void app_update( arena *memory )
   arena_free_all( &state->ebuffer_cpu );
   // Add raymarching quad to buffers
   model3d raybox2d = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu );
-  model3d button_test = primitive_box2d_extra( &state->vbuffer_cpu, &state->ebuffer_cpu );
+  model3d button_test = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu );
   // TODO: Update whole buffer or just what you need with offset_new?
   rbuffer_update( 
     state->vbuffer_gpu, 
@@ -304,19 +304,17 @@ void app_update( arena *memory )
   state->cam.wrld_inv = glm::inverse(volume_rotation);
   render_constant_set( state->camera_ray, 0 );
   rbuffer_update( state->camera_ray, &state->cam, sizeof(camera));
-  glm::mat4 ui_world = glm::mat4(1.0f);
-  rbuffer_update( state->ui_matrix, &ui_world, sizeof(ui_world) );
-  render_constant_set( state->ui_matrix, 1 );
   // Draw raymarched quad
   render_draw_elems( 
     state->vbuffer_gpu, 
     state->ebuffer_gpu, 
-    state->shader[0],  // Shader ray ID
+    state->shader[1],  // Shader ray ID
     raybox2d.count, 
     raybox2d.elem_start,
     raybox2d.vert_start
   );
   // Create UI elements
+  glm::mat4 ui_world = glm::mat4(1.0f);
   ui_world = glm::scale(
     ui_world,
     glm::vec3(0.2f, 0.2f, 0.0f)
