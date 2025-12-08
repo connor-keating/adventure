@@ -315,10 +315,8 @@ void app_update( arena *memory )
   );
   // Create UI elements
   glm::mat4 ui_world = glm::mat4(1.0f);
-  ui_world = glm::scale(
-    ui_world,
-    glm::vec3(0.2f, 0.2f, 0.0f)
-  );
+  ui_world = glm::translate( ui_world, glm::vec3( 0.5f, 0.0f, 0.0f ) );
+  ui_world = glm::scale( ui_world, glm::vec3(0.2f, 0.2f, 0.0f) );
   rbuffer_update( state->ui_matrix, &ui_world, sizeof(ui_world) );
   render_constant_set( state->ui_matrix, 1 );
   render_draw_ui_elems( 
@@ -327,7 +325,19 @@ void app_update( arena *memory )
     state->shader[0], 
     button_test.count, 
     button_test.elem_start,
-    button_test.vert_start// 0
+    button_test.vert_start
+  );
+  ui_world = glm::mat4(1.0f);
+  ui_world = glm::translate( ui_world, glm::vec3( -0.5f, 0.0f, 0.0f ) );
+  ui_world = glm::scale( ui_world, glm::vec3(0.2f, 0.2f, 0.0f) );
+  rbuffer_update( state->ui_matrix, &ui_world, sizeof(ui_world) );
+  render_draw_ui_elems( 
+    state->vbuffer_gpu, 
+    state->ebuffer_gpu, 
+    state->shader[0], 
+    button_test.count, 
+    button_test.elem_start,
+    button_test.vert_start
   );
   frame_render();
 }
