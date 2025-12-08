@@ -274,7 +274,7 @@ void app_update( arena *memory )
   arena_free_all( &state->vbuffer_cpu );
   arena_free_all( &state->ebuffer_cpu );
   // Add raymarching quad to buffers
-  primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu );
+  model3d raybox2d = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu );
   // TODO: Update whole buffer or just what you need with offset_new?
   rbuffer_update( 
     state->vbuffer_gpu, 
@@ -302,8 +302,9 @@ void app_update( arena *memory )
     state->vbuffer_gpu, 
     state->ebuffer_gpu, 
     state->shader[0],  // Shader ray ID
-    elem_count, 
-    0, 0
+    raybox2d.count, 
+    raybox2d.vert_start, 
+    raybox2d.elem_start
   );
   // Create UI elements
   /*
