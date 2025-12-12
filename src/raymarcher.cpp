@@ -38,7 +38,7 @@ global appstate *state;
 
 internal inline u32 index3d( u32 x, u32 y, u32 z, u32 width, u32 height )
 {
-  return x + y * width + z * width * height;
+return x + y * width + z * width * height;
 }
 
 internal texture* image3d_create( arena *a )
@@ -284,16 +284,8 @@ void app_update( arena *memory )
   model3d raybox2d = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_uniform(0.0f) );
   model3d button_test = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
   // TODO: Update whole buffer or just what you need with offset_new?
-  rbuffer_update( 
-    state->vbuffer_gpu, 
-    state->vbuffer_cpu.buffer, 
-    state->vbuffer_cpu.length
-  );
-  rbuffer_update( 
-    state->ebuffer_gpu, 
-    state->ebuffer_cpu.buffer, 
-    state->ebuffer_cpu.length 
-  );
+  rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.length );
+  rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.length );
   // Update volume rotation
   static f32 angle = 0.0f;
   angle += (PI/4.0f) * state->timer.delta; // rad += (rad/s)*s
