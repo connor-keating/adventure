@@ -930,10 +930,9 @@ void shader_close( shaders *s )
   s->pixel->Release();
 }
 
-void frame_init()
+void frame_init(f32 *background_color)
 {
-  f32 color[4] = {0.0f, 0.325f, 0.282f, 1.0f};
-  renderer->context->ClearRenderTargetView(renderer->render_target, color);
+  renderer->context->ClearRenderTargetView(renderer->render_target, background_color);
   renderer->context->ClearDepthStencilView(renderer->depth_view, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 

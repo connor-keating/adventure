@@ -73,5 +73,5 @@ u64        shader_init(arena *a);
 void       shader_load( u64 shader_index, shader_type t, const char *file, const char *entry, const char *target);
 void       shader_close(shaders *s);
 
-void       frame_init();
+void       frame_init( f32 *background_color);
 void       frame_render();
