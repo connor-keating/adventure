@@ -6,6 +6,9 @@ SetLocal EnableDelayedExpansion
 set outdir=%cd%\bin
 if not exist %outdir% mkdir %outdir%
 
+:: What are you building?
+set app2build=raymarcher.cpp
+
 :: Mode
 :: Should be _DEBUG or _PRODUCTION
 set mode=_DEBUG
@@ -37,10 +40,10 @@ if %mode% == _PRODUCTION (
 pushd "src"
 
 set assembly=application
-set app_src_dir=..\apps\
+set app_src_dir=..\apps
 set app_flags=-D_D3D -D%mode%
 set compiler_flags=-g -std=c++20 -Wvarargs -Wall -Werror -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-deprecated
-set includes=-I.\ -I..\external\ -I%app_src_dir%
+set includes=-I. -I..\external -I%app_src_dir%
 set linker_flags=-luser32 -lgdi32 -lwinmm -ld3d11 -ldxgi -lopengl32 -ld3dcompiler
 :: set defines=
 
@@ -69,7 +72,7 @@ echo:
 :: Build application
 echo %assembly% compiling...
 :: clang++ %compiler_flags% %app_flags% maintest.cpp %code_files% -o %outdir%\%assembly%.exe %defines% %includes% %linker_flags% -L%OUTDIR% -l%plat_assembly%.lib
-clang++ %compiler_flags% %app_flags% main.cpp render_dx11.cpp %app_src_dir%raymarcher.cpp %code_files% -o %outdir%\%assembly%.exe %defines% %includes% %linker_flags% -L%OUTDIR% -l%plat_assembly%.lib
+clang++ %compiler_flags% %app_flags% main.cpp render_dx11.cpp %app_src_dir%\%app2build% %code_files% -o %outdir%\%assembly%.exe %defines% %includes% %linker_flags% -L%OUTDIR% -l%plat_assembly%.lib
 
 popd 
 
