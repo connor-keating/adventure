@@ -7,7 +7,7 @@ set outdir=%cd%\bin
 if not exist %outdir% mkdir %outdir%
 
 :: What are you building?
-set app2build=raymarcher.cpp
+set app2build=scratch.cpp
 
 :: Mode
 :: Should be _DEBUG or _PRODUCTION
