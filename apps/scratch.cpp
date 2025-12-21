@@ -40,9 +40,9 @@ void app_init(arena *memory)
   render_init(memory);
   render_data_init( memory, MAX_COUNT_SHADERS );
   fvec4 tri[3] = {
-    fvec4_init( 0.5f, -0.5f, 0.5f, 1.0f), // Vert1
-    fvec4_init( 0.0f,  0.5f, 0.5f, 1.0f), // Vert2
-    fvec4_init(-0.5f, -0.5f, 0.5f, 1.0f)  // Vert3
+    fvec4_init( 0.0f, -0.5f, 0.5f, 1.0f), // Vert1
+    fvec4_init(-0.5f,  0.5f, 0.5f, 1.0f), // Vert2
+    fvec4_init(-1.0f, -0.5f, 0.5f, 1.0f)  // Vert3
   };
   state->tribuffer = rbuffer_init(memory, BUFF_VERTS, tri, sizeof(fvec4), sizeof(tri) );
   // Shaders
@@ -65,7 +65,7 @@ void app_update(arena *a)
 
   rbuffer_vertex_set( state->tribuffer );
   shader_set( state->shader[0] );
-  render_draw( 3 );
+  render_draw_instances( 3, 2 );
 
   frame_render();
 }

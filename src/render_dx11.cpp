@@ -619,6 +619,18 @@ void render_draw_elems(rbuffer* vbuffer, rbuffer* ebuffer, u64 shader_index, u32
 }
 
 
+void render_draw_instances( u32 vertex_count, u32 instance_count )
+{
+  renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  renderer->context->DrawInstanced(
+    vertex_count,     // [in] UINT VertexCountPerInstance,
+    instance_count,   // [in] UINT InstanceCount,
+    0,                // [in] UINT StartVertexLocation,
+    0                 // [in] UINT StartInstanceLocation
+  );
+}
+
+
 void render_draw_ui( u32 count )
 {
   renderer->context->OMSetDepthStencilState(renderer->depth_stencil_disabled, 0);
