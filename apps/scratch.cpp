@@ -14,6 +14,7 @@ struct appstate
 {
   bool             is_running;
   platform_window  window;
+  rbuffer*         tribuffer;
   input_state      inputs[KEY_COUNT];
   u64              shader[MAX_COUNT_SHADERS];
 };
@@ -38,10 +39,16 @@ void app_init(arena *memory)
   // Initialize renderer
   render_init(memory);
   render_data_init( memory, MAX_COUNT_SHADERS );
+  f32 tri[12] = {
+    0.5f, -0.5f, 0.5f, 1.0f, // Vert1
+    0.0f,  0.5f, 0.5f, 1.0f, // Vert2
+   -0.5f, -0.5f, 0.5f, 1.0f  // Vert3
+  };
+  state->tribuffer = rbuffer_init(memory, BUFF_VERTS, tri, 4*sizeof(f32), sizeof(tri) );
   // Shaders
   state->shader[0] = shader_init( memory );
-  shader_load( state->shader[0], VERTEX, "shaders/tri.hlsl", "VSMain", "vs_5_0");
-  shader_load( state->shader[0], PIXEL,  "shaders/tri.hlsl", "PSMain", "ps_5_0");
+  shader_load( state->shader[0], VERTEX, "shaders/simple.hlsl", "VSMain", "vs_5_0");
+  shader_load( state->shader[0], PIXEL,  "shaders/simple.hlsl", "PSMain", "ps_5_0");
   // Start the window
   platform_window_show();
 }
@@ -54,9 +61,11 @@ void app_update(arena *a)
     platform_window_close();
   }
   fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
-
   frame_init(frame_background.array);
+
+  rbuffer_vertex_set( state->tribuffer );
   shader_set( state->shader[0] );
   render_draw( 3 );
+
   frame_render();
 }
