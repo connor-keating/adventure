@@ -53,7 +53,6 @@ void app_update(arena *a)
   {
     platform_window_close();
   }
-  // fvec4 frame_background = fvec4_init( 0.0f, 0.325f, 0.282f, 1.0f );
   fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
 
   frame_init(frame_background.array);
