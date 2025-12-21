@@ -39,10 +39,10 @@ void app_init(arena *memory)
   // Initialize renderer
   render_init(memory);
   render_data_init( memory, MAX_COUNT_SHADERS );
-  f32 tri[12] = {
-    0.5f, -0.5f, 0.5f, 1.0f, // Vert1
-    0.0f,  0.5f, 0.5f, 1.0f, // Vert2
-   -0.5f, -0.5f, 0.5f, 1.0f  // Vert3
+  fvec4 tri[3] = {
+    fvec4_init( 0.5f, -0.5f, 0.5f, 1.0f), // Vert1
+    fvec4_init( 0.0f,  0.5f, 0.5f, 1.0f), // Vert2
+    fvec4_init(-0.5f, -0.5f, 0.5f, 1.0f)  // Vert3
   };
   state->tribuffer = rbuffer_init(memory, BUFF_VERTS, tri, 4*sizeof(f32), sizeof(tri) );
   // Shaders
