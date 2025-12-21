@@ -11,7 +11,7 @@ out_vertex VSMain(uint vid : SV_VERTEXID)
   // if CCW:
   float xcomp = vid * -0.5f;
   float ycomp = ((vid & 1)==0) * -1.0f;
-  float4 pos = float4( xcomp , ycomp, 1.0f, 1.0f ) + 0.5f;
+  float4 pos = float4( xcomp , ycomp, 0.0f, 0.5f ) + 0.5f;
   out_vertex output = { 
     pos,
     float4(vid == 0, vid == 1, vid == 2, 1) 
