@@ -44,7 +44,7 @@ void app_init(arena *memory)
     fvec4_init( 0.0f,  0.5f, 0.5f, 1.0f), // Vert2
     fvec4_init(-0.5f, -0.5f, 0.5f, 1.0f)  // Vert3
   };
-  state->tribuffer = rbuffer_init(memory, BUFF_VERTS, tri, 4*sizeof(f32), sizeof(tri) );
+  state->tribuffer = rbuffer_init(memory, BUFF_VERTS, tri, sizeof(fvec4), sizeof(tri) );
   // Shaders
   state->shader[0] = shader_init( memory );
   shader_load( state->shader[0], VERTEX, "shaders/simple.hlsl", "VSMain", "vs_5_0");
