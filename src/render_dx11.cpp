@@ -911,7 +911,7 @@ void shader_load( u64 shader_index, shader_type t, const char *file, const char 
     case (VERTEX):
     {
       renderer->device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &s->vertex);
-      // s->vertex_in = render_vertex_description(blob);
+      s->vertex_in = render_vertex_description(blob);
       break;
     }
     case (PIXEL):
