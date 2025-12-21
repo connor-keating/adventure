@@ -515,6 +515,12 @@ void rbuffer_update(rbuffer* b, void* data, u32 byte_count)
 }
 
 
+void rbuffer_vertex_set( rbuffer *b )
+{
+  renderer->context->IASetVertexBuffers(0, 1, &b->buffer, &b->stride, &b->offset);
+}
+
+
 void render_text_init(arena *a)
 {
   vert_texture quad[] = {
@@ -586,14 +592,9 @@ void render_text_init(arena *a)
 }
 
 
-void render_draw(rbuffer* vbuffer, shaders* s, u32 count)
+void render_draw( u32 count )
 {
-  renderer->context->IASetVertexBuffers(0, 1, &vbuffer->buffer, &vbuffer->stride, &vbuffer->offset);
-  renderer->context->IASetInputLayout(s->vertex_in);
   renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  renderer->context->VSSetShader(s->vertex, 0, 0);
-  renderer->context->PSSetShader(s->pixel, 0, 0);
-  // renderer->context->RSSetState(renderer->rasterizer_default);
   renderer->context->Draw(count, 0);
 }
 
@@ -612,10 +613,10 @@ void render_draw_elems(rbuffer* vbuffer, rbuffer* ebuffer, u64 shader_index, u32
 }
 
 
-void render_draw_ui( rbuffer* vbuffer, shaders* s, u32 count )
+void render_draw_ui( u32 count )
 {
   renderer->context->OMSetDepthStencilState(renderer->depth_stencil_disabled, 0);
-  render_draw( vbuffer, s, count);
+  render_draw( count );
   renderer->context->OMSetDepthStencilState(renderer->depth_stencil_enabled, 0);
 }
 
@@ -910,7 +911,7 @@ void shader_load( u64 shader_index, shader_type t, const char *file, const char 
     case (VERTEX):
     {
       renderer->device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &s->vertex);
-      s->vertex_in = render_vertex_description(blob);
+      // s->vertex_in = render_vertex_description(blob);
       break;
     }
     case (PIXEL):
@@ -923,12 +924,23 @@ void shader_load( u64 shader_index, shader_type t, const char *file, const char 
 }
 
 
+void shader_set(u64 shader_index )
+{
+  shaders s = rdata->s[shader_index];
+  renderer->context->VSSetShader(s.vertex, 0, 0);
+  renderer->context->PSSetShader(s.pixel, 0, 0);
+  // TODO: input layout should be attached to vbuffer
+  renderer->context->IASetInputLayout(s.vertex_in);
+}
+
+
 void shader_close( shaders *s )
 {
   s->vertex->Release();
   s->vertex_in->Release();
   s->pixel->Release();
 }
+
 
 void frame_init(f32 *background_color)
 {
