@@ -276,7 +276,8 @@ void app_update( arena *memory )
     platform_window_close();
   }
   platform_clock_update(&state->timer);
-  frame_init();
+  fvec4 frame_background = fvec4_init( 0.0f, 0.325f, 0.282f, 1.0f );
+  frame_init( frame_background.array );
   // Reset render data buffers
   arena_free_all( &state->vbuffer_cpu );
   arena_free_all( &state->ebuffer_cpu );
