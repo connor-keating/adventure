@@ -51,13 +51,12 @@ void app_init(arena *memory)
   };
   rbuffer* color_buffer = rbuffer_init(memory, BUFF_VERTS, colors, sizeof(fvec4), sizeof(colors) );
   rbuffer_vertex_set( 1, color_buffer );
-  /*
   glm::mat4 worlds[2] ={
-    glm::translate(glm::mat4(1.0f), glm::vec3(-0.5, 0.0f, 0.0f) ),
-    glm::translate(glm::mat4(1.0f), glm::vec3( 0.5, 0.0f, 0.0f) )
+    glm::translate(glm::mat4(1.0f), glm::vec3( 0.0f, 0.5f, 0.0f) ),
+    glm::translate(glm::mat4(1.0f), glm::vec3( 0.0f,-0.5f, 0.0f) )
   };
-  rbuffer_instance_set( worlds, sizeof(worlds) );
-  */
+  rbuffer* world_buffer = rbuffer_init(memory, BUFF_VERTS, worlds, sizeof(glm::mat4), sizeof(worlds) );
+  rbuffer_vertex_set( 2, world_buffer );
   // Shaders
   state->shader[0] = shader_init( memory );
   shader_load( state->shader[0], VERTEX, "shaders/simple.hlsl", "VSMain", "vs_5_0");
