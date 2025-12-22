@@ -1,7 +1,8 @@
 
 struct vertex_in
 { 
-  float4 pos : POSITION;
+  float4 pos : POSITION0;
+  float4 col : COLOR0;
   uint id: SV_InstanceID;
 };
 
@@ -15,7 +16,7 @@ vertex_out VSMain(vertex_in input)
 {
   vertex_out o;
   o.pos = input.pos + float4(input.id, 0.0f, 0.0f, 0.0f);
-  o.col = float4(input.id == 0, input.id == 1, input.id == 2, 1);
+  o.col = input.col;
   return o;
 }
 
