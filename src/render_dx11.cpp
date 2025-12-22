@@ -88,8 +88,8 @@ internal void debug_print()
       case D3D11_MESSAGE_SEVERITY_INFO:       severity_str = "INFO";       break;
       case D3D11_MESSAGE_SEVERITY_MESSAGE:    severity_str = "MESSAGE";    break;
     }
-    char msg[256];
-    snprintf( msg, 256, "[D3D11 %s] %s\n", severity_str, message->pDescription );
+    char msg[1024];
+    snprintf( msg, 1024, "[D3D11 %s] %s\n", severity_str, message->pDescription );
     printf( "%s", msg );
     free(message);
   }
