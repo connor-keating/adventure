@@ -533,21 +533,6 @@ void rbuffer_vertex_set( u32 slot_start, rbuffer *b )
 }
 
 
-void rbuffer_instance_set(void* data, size_t byte_count)
-{
-  ID3D11Buffer* instance_buff = nullptr;
-  D3D11_BUFFER_DESC descrip = {};
-  descrip.ByteWidth = byte_count;
-  descrip.Usage = D3D11_USAGE_DYNAMIC;
-  descrip.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-  descrip.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-  D3D11_SUBRESOURCE_DATA init_data;
-  init_data.pSysMem = data;
-  HRESULT hr;
-  hr = renderer->device->CreateBuffer( &descrip, &init_data, &instance_buff );
-}
-
-
 void render_text_init(arena *a)
 {
   vert_texture quad[] = {
