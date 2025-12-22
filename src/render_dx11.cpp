@@ -127,9 +127,15 @@ internal ID3D11InputLayout * render_vertex_description(ID3DBlob *vert_shader)
 {
   D3D11_INPUT_ELEMENT_DESC il[] =
   {
-    { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+  //{ "NAME", SemanticIdx, format, input_slot, byte offset, input class, instance step rate },
+    { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA,   0 },
+    { "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
   };
   /*
+    { "WORLD",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0,  D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+    { "WORLD",    1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+    { "WORLD",    2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+    { "WORLD",    3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
   D3D11_INPUT_ELEMENT_DESC il[] =
   {
     { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -521,9 +527,24 @@ void rbuffer_update(rbuffer* b, void* data, u32 byte_count)
 }
 
 
-void rbuffer_vertex_set( rbuffer *b )
+void rbuffer_vertex_set( u32 slot_start, rbuffer *b )
 {
-  renderer->context->IASetVertexBuffers(0, 1, &b->buffer, &b->stride, &b->offset);
+  renderer->context->IASetVertexBuffers(slot_start, 1, &b->buffer, &b->stride, &b->offset);
+}
+
+
+void rbuffer_instance_set(void* data, size_t byte_count)
+{
+  ID3D11Buffer* instance_buff = nullptr;
+  D3D11_BUFFER_DESC descrip = {};
+  descrip.ByteWidth = byte_count;
+  descrip.Usage = D3D11_USAGE_DYNAMIC;
+  descrip.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+  descrip.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+  D3D11_SUBRESOURCE_DATA init_data;
+  init_data.pSysMem = data;
+  HRESULT hr;
+  hr = renderer->device->CreateBuffer( &descrip, &init_data, &instance_buff );
 }
 
 

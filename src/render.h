@@ -53,7 +53,7 @@ rbuffer*   rbuffer_init(arena *a, buffer_type t, void* data, u32 stride, u32 byt
 void       rbuffer_close( rbuffer* b );
 rbuffer*   rbuffer_dynamic_init(arena *a, buffer_type t, void *data, u32 stride, u32 byte_count);
 void       rbuffer_update(rbuffer* buffer, void* data, u32 byte_count);
-void       rbuffer_vertex_set( rbuffer *buffer );
+void       rbuffer_vertex_set( u32 slot_start, rbuffer *buffer );
 void       render_constant_set( rbuffer* b, u32 slot );
 
 void       render_text_init(arena *a);
