@@ -63,7 +63,7 @@ void app_update(arena *a)
   fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
   frame_init(frame_background.array);
 
-  rbuffer_vertex_set( state->tribuffer );
+  rbuffer_vertex_set( 0, state->tribuffer );
   shader_set( state->shader[0] );
   render_draw_instances( 3, 2 );
 
