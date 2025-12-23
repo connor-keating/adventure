@@ -4,21 +4,31 @@
 #include "input.h"
 #include "platform.h"
 #include "render.h"
-#include "app_data.h"
 #include "primitives.cpp"
 
 #define MAX_COUNT_SHADERS 100
 #define MAX_COUNT_VERTEX  1000
 
 
+struct camera
+{
+  glm::mat4 view;            // 64 bytes
+  glm::mat4 proj;            // 64 bytes
+  glm::vec3 pos;                 // 12 bytes
+  f32 _padding;                  // 4 bytes → pad to 16-byte multiple
+};
+
+
 struct appstate
 {
   bool             is_running;
   platform_window  window;
+  camera           cam_ui_cpu;
   arena           vbuffer_cpu; // Vertex buffer
   arena           ebuffer_cpu; // Element buffer
   rbuffer        *vbuffer_gpu;
   rbuffer        *ebuffer_gpu;
+  rbuffer        *cam_ui_gpu;
   input_state      inputs[KEY_COUNT];
   u64              shader[MAX_COUNT_SHADERS];
 };
@@ -69,6 +79,13 @@ void app_init(arena *memory)
   };
   rbuffer* world_buffer = rbuffer_init(memory, BUFF_VERTS, worlds, sizeof(glm::mat4), sizeof(worlds) );
   rbuffer_vertex_set( 2, world_buffer );
+  // Camera
+  state->cam_ui_cpu.view = identity;
+  state->cam_ui_cpu.proj = glm::ortho( -5.0f, 5.0f, -5.0f, 5.0f, 0.0f, 1.0f );
+  state->cam_ui_gpu = rbuffer_dynamic_init( memory, BUFF_CONST, &state->cam_ui_cpu, 0, sizeof(camera) );
+  rbuffer_update( state->cam_ui_gpu, &state->cam_ui_cpu, sizeof(camera) );
+  // Bind camera constant buffer to pixel shader
+  render_constant_set( state->cam_ui_gpu, 0 );
   // Shaders
   state->shader[0] = shader_init( memory );
   shader_load( state->shader[0], VERTEX, "shaders/simple.hlsl", "VSMain", "vs_5_0");
@@ -76,6 +93,7 @@ void app_init(arena *memory)
   // Start the window
   platform_window_show();
 }
+
 
 void app_update(arena *a)
 {
