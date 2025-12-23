@@ -66,13 +66,11 @@ void app_init(arena *memory)
   rbuffer* color_buffer = rbuffer_init(memory, BUFF_VERTS, colors, sizeof(fvec4), sizeof(colors) );
   rbuffer_vertex_set( 1, color_buffer );
   glm::mat4 identity = glm::mat4(1.0f);
-  glm::mat4 shrink = glm::scale(identity, glm::vec3(0.2f, 0.2f, 0.2f) );
-  glm::mat4 t = glm::translate( identity, glm::vec3( 0.0f, 0.5f, 0.0f) );
-  glm::mat4 model1 = t * shrink;
-  glm::mat4 model2 = glm::scale(
-    glm::translate( identity, glm::vec3( 0.0f,-0.5f, 0.0f) ), 
-    glm::vec3(0.2f)
-  );
+  glm::mat4 shrink = identity; // glm::scale(identity, glm::vec3(1.0f) );
+  glm::mat4 t1 = glm::translate( identity, glm::vec3( 0.0f, 2.0f, 0.0f) );
+  glm::mat4 t2 = glm::translate( identity, glm::vec3( 0.0f,-2.0f, 0.0f) );
+  glm::mat4 model1 = t1;
+  glm::mat4 model2 = t2;
   glm::mat4 worlds[2] ={
     model1,
     model2
@@ -81,7 +79,11 @@ void app_init(arena *memory)
   rbuffer_vertex_set( 2, world_buffer );
   // Camera
   state->cam_ui_cpu.view = identity;
-  state->cam_ui_cpu.proj = glm::ortho( -5.0f, 5.0f, -5.0f, 5.0f, 0.0f, 1.0f );
+  f32 aspect = (f32)state->window.width / (f32)state->window.height;
+  f32 half_height = 5.0f;
+  f32 half_width = half_height * aspect;
+  state->cam_ui_cpu.proj = glm::ortho( -half_width, half_width, -half_height, half_height, 0.0f, 1.0f );
+  // state->cam_ui_cpu.proj = glm::ortho( -5.0f, 5.0f, -5.0f, 5.0f, 0.0f, 1.0f );
   state->cam_ui_gpu = rbuffer_dynamic_init( memory, BUFF_CONST, &state->cam_ui_cpu, 0, sizeof(camera) );
   rbuffer_update( state->cam_ui_gpu, &state->cam_ui_cpu, sizeof(camera) );
   // Bind camera constant buffer to pixel shader
