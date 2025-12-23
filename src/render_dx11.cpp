@@ -90,7 +90,7 @@ internal void debug_print()
     }
     char msg[1024];
     snprintf( msg, 1024, "[D3D11 %s] %s\n", severity_str, message->pDescription );
-    printf( "%s", msg );
+    printf( "%s\n", msg );
     free(message);
   }
   info_queue->ClearStoredMessages();
@@ -537,6 +537,12 @@ void rbuffer_vertex_set( u32 slot_start, rbuffer *b )
 }
 
 
+void rbuffer_index_set( rbuffer *b )
+{
+  renderer->context->IASetIndexBuffer(b->buffer, DXGI_FORMAT_R32_UINT, 0 );
+}
+
+
 void render_text_init(arena *a)
 {
   vert_texture quad[] = {
@@ -637,6 +643,19 @@ void render_draw_instances( u32 vertex_count, u32 instance_count )
     instance_count,   // [in] UINT InstanceCount,
     0,                // [in] UINT StartVertexLocation,
     0                 // [in] UINT StartInstanceLocation
+  );
+}
+
+
+void render_draw_instances_elems( u32 elem_count, u32 instance_count )
+{
+  renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  renderer->context->DrawIndexedInstanced(
+    elem_count,     // [in] UINT IndexCountPerInstance,
+    instance_count, // [in] UINT InstanceCount,
+    0, // [in] UINT StartIndexLocation,
+    0, // [in] INT  BaseVertexLocation,
+    0 // [in] UINT StartInstanceLocation
   );
 }
 
