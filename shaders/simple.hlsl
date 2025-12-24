@@ -3,6 +3,7 @@
 struct vertex_in
 { 
   float4 pos :      POSITION0;
+  float2 tex :      TEXCOORD0;
   float4 col :      COLOR0;
   float4x4 world:   WORLD;
   uint id: SV_InstanceID;
@@ -11,8 +12,8 @@ struct vertex_in
 struct vertex_out
 {
   float4 pos : SV_POSITION;
-  float4 col : COL;
-  float2 localPos : TEXCOORD0;
+  float4 col : COLOR0;
+  float2 pos_local : TEXCOORD0;
 };
 
 // Constant buffers
@@ -28,19 +29,16 @@ vertex_out VSMain(vertex_in input)
   vertex_out o;
   o.pos = mul(proj, mul(input.world, input.pos));
   o.col = input.col;
-  // Pass local position (ranges from -1 to 1 in the box)
-  o.localPos = input.pos.xy;
+  // Remap range of tex to (-1, 1) in the box
+  o.pos_local = input.tex * 2.0f - 1.0f;
   return o;
 }
 
-float sdRoundedBox(float2 p, float2 size, float radius)
-{
-}
 
 float4 PSMain(vertex_out input) : SV_TARGET
 {
-  // Input.localPos ranges from -1 to 1
-  float2 p = input.localPos;
+  // Input.pos_local ranges from -1 to 1
+  float2 p = input.pos_local;
 
   // Box size (leaving room for rounded corners)
   float2 boxSize = float2(1.0, 1.0);

@@ -56,7 +56,8 @@ void app_init(arena *memory)
   // Begin render buffers
   state->vbuffer_cpu = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(fvec4) );
   state->ebuffer_cpu = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(u32) );
-  state->vbuffer_gpu = rbuffer_dynamic_init( memory, BUFF_VERTS, state->vbuffer_cpu.buffer, sizeof(fvec4), state->vbuffer_cpu.length);
+  // Vertex stride: float4 position (16 bytes) + float2 texcoord (8 bytes) = 24 bytes
+  state->vbuffer_gpu = rbuffer_dynamic_init( memory, BUFF_VERTS, state->vbuffer_cpu.buffer, 24, state->vbuffer_cpu.length);
   state->ebuffer_gpu = rbuffer_dynamic_init( memory, BUFF_ELEMS, state->ebuffer_cpu.buffer, sizeof(u32), state->ebuffer_cpu.length);
   // Load UI thing
   fvec4 colors[2] = {
