@@ -40,6 +40,7 @@ internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT messag
       // Save the new width and height of the client area. 
       // dwClientX = LOWORD(lParam); 
       // dwClientY = HIWORD(lParam); 
+      break;
     }
     default: 
     {
@@ -79,8 +80,9 @@ internal input_key platform_input_translate( u32 id )
   input_key output;
   switch (id)
   {
-    case (VK_ESCAPE): output = KEY_ESCAPE;  break;
-    default:          output = KEY_UNKNOWN; break; 
+    case (MK_LBUTTON): output = KEY_SELECT;  break;
+    case (VK_ESCAPE):  output = KEY_ESCAPE;  break;
+    default:           output = KEY_UNKNOWN; break; 
   };
   return output;
 }
@@ -229,8 +231,23 @@ void platform_message_process( platform_window *window, input_state *inputs )
     u32 message_id = message.message;
     switch (message_id)
     {
-      case(WM_KEYDOWN):
+      case(WM_LBUTTONUP):
+      {
+        printf("mouse up.\n");
+        vkcode = MK_LBUTTON;
+        input_key app_key = platform_input_translate( vkcode );
+        inputs[app_key] = INPUT_UP;
+        break;
+      };
+      case(WM_LBUTTONDOWN):
+      {
+        printf("mouse down.\n");
+        input_key app_key = platform_input_translate( vkcode );
+        inputs[app_key] = INPUT_DOWN;
+        break;
+      };
       case(WM_KEYUP):
+      case(WM_KEYDOWN):
       {
         input_key app_key = platform_input_translate( vkcode );
         inputs[app_key] = INPUT_DOWN;
@@ -242,8 +259,9 @@ void platform_message_process( platform_window *window, input_state *inputs )
         // Previous input handling stuff
         // control_state down_state;
         // control_state state;
-        // down_state = was_down ? CONTROL_HELD : CONTROL_DOWN;
-        // state = is_down ?  down_state : CONTROL_RELEASED;
+        // input_state down_state = was_down ? INPUT_HELD : INPUT_DOWN;
+        // input_state state = is_down ?  down_state : INPUT_RELEASED;
+        // inputs[app_key] = state;
         break;
       };
     };

@@ -100,6 +100,7 @@ void app_init(arena *memory)
 
 void app_update(arena *a)
 {
+  // Reset input from last frame...
   platform_message_process(&state->window, state->inputs);
   if (state->inputs[KEY_ESCAPE] == INPUT_DOWN)
   {
@@ -112,7 +113,13 @@ void app_update(arena *a)
   fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
   frame_init(frame_background.array);
 
+  // Game logic
+  if (state->inputs[KEY_SELECT] == INPUT_DOWN)
+  {
+    printf( "Click.\n" );
+  }
   model3d uibox = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_uniform(0.0f) );
+  // End of frame
   rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.length );
   rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.length );
   rbuffer_vertex_set( 0, state->vbuffer_gpu );
