@@ -233,7 +233,6 @@ void platform_message_process( platform_window *window, input_state *inputs )
     {
       case(WM_LBUTTONUP):
       {
-        printf("mouse up.\n");
         vkcode = MK_LBUTTON;
         input_key app_key = platform_input_translate( vkcode );
         inputs[app_key] = INPUT_RELEASED;
@@ -241,7 +240,6 @@ void platform_message_process( platform_window *window, input_state *inputs )
       };
       case(WM_LBUTTONDOWN):
       {
-        printf("mouse down.\n");
         input_key app_key = platform_input_translate( vkcode );
         inputs[app_key] = INPUT_DOWN;
         break;
