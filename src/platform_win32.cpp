@@ -236,7 +236,7 @@ void platform_message_process( platform_window *window, input_state *inputs )
         printf("mouse up.\n");
         vkcode = MK_LBUTTON;
         input_key app_key = platform_input_translate( vkcode );
-        inputs[app_key] = INPUT_UP;
+        inputs[app_key] = INPUT_RELEASED;
         break;
       };
       case(WM_LBUTTONDOWN):
@@ -250,18 +250,28 @@ void platform_message_process( platform_window *window, input_state *inputs )
       case(WM_KEYDOWN):
       {
         input_key app_key = platform_input_translate( vkcode );
-        inputs[app_key] = INPUT_DOWN;
-        // const char* name = msg_name(message.message);
         // bit 30: The previous key state. The value is 1 if the key is down before the message is sent, or it is zero if the key is up.
-        // bool32 was_down = (message.lParam & (1 << 30));
+        bool32 was_down = (message.lParam & (1 << 30));
         // bit 31: The transition state. The value is always 0 for a WM_KEYDOWN message.
-        // bool32 is_down = ((message.lParam & (1 << 31)) == 0);
+        bool32 is_down = ((message.lParam & (1 << 31)) == 0);
         // Previous input handling stuff
-        // control_state down_state;
-        // control_state state;
-        // input_state down_state = was_down ? INPUT_HELD : INPUT_DOWN;
-        // input_state state = is_down ?  down_state : INPUT_RELEASED;
-        // inputs[app_key] = state;
+        input_state down_state = was_down ? INPUT_HELD : INPUT_DOWN;
+        input_state state = is_down ?  down_state : INPUT_RELEASED;
+        inputs[app_key] = state;
+        // Debugging stuff
+        /*
+        if (vkcode == 	0x41)
+        {
+          printf("Key: A ");
+          switch (state)
+          {
+            case (INPUT_DOWN):     printf("down\n"); break;
+            case (INPUT_UP):       printf("up\n"); break;
+            case (INPUT_HELD):     printf("held\n"); break;
+            case (INPUT_RELEASED): printf("released\n"); break;
+          };
+        }
+        */
         break;
       };
     };
