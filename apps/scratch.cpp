@@ -35,6 +35,16 @@ struct appstate
 
 global appstate *state;
 
+internal void input_reset( input_state *map )
+{
+  for (i32 i = 0; i < KEY_COUNT; ++i)
+  {
+    input_state current = map[i];
+    map[i] = (current == INPUT_RELEASED) ? INPUT_UP : current;
+  }
+}
+
+
 bool app_is_running()
 {
   state->is_running = platform_is_running();
@@ -101,6 +111,8 @@ void app_init(arena *memory)
 void app_update(arena *a)
 {
   // Reset input from last frame...
+  input_reset(state->inputs);
+  // Read all platform messages for this frame
   platform_message_process(&state->window, state->inputs);
   if (state->inputs[KEY_ESCAPE] == INPUT_DOWN)
   {
@@ -114,7 +126,7 @@ void app_update(arena *a)
   frame_init(frame_background.array);
 
   // Game logic
-  if (state->inputs[KEY_SELECT] == INPUT_DOWN)
+  if (state->inputs[KEY_SELECT] == INPUT_RELEASED)
   {
     printf( "Click.\n" );
   }
