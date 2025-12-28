@@ -16,5 +16,5 @@ enum input_state
   INPUT_UP,
   INPUT_HELD,
   INPUT_DOWN,
-  INPUT_RELEASED,
+  INPUT_RELEASED
 };
