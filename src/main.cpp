@@ -1,5 +1,3 @@
-#include <windows.h>
-
 #include "core.cpp"
 #include "platform.h"
 #include "application.h"
@@ -39,12 +37,11 @@ int main(int argc, char **argv)
   arena memory = arena_init(raw_memory, memory_size);
 
   // Load appliation data
-  const char* dll_file = "G:\\adventure\\bin\\scratch.dll";
-  HMODULE dll_handle = LoadLibraryA(dll_file);
-  ASSERT(dll_handle, "Failed to load DLL.");
-  APP_INIT       app_init       = (APP_INIT)       GetProcAddress(dll_handle, "app_init");
-  APP_UPDATE     app_update     = (APP_UPDATE)     GetProcAddress(dll_handle, "app_update");
-  APP_IS_RUNNING app_is_running = (APP_IS_RUNNING) GetProcAddress(dll_handle, "app_is_running");
+  const char* dll_file = "bin\\scratch.dll";
+  void *dll = platform_dll_load(dll_file);
+  APP_INIT       app_init       = (APP_INIT)       platform_dll_func_load( dll, "app_init");
+  APP_UPDATE     app_update     = (APP_UPDATE)     platform_dll_func_load( dll, "app_update");
+  APP_IS_RUNNING app_is_running = (APP_IS_RUNNING) platform_dll_func_load( dll, "app_is_running");
 
   app_init( &memory );
   while ( app_is_running() )
