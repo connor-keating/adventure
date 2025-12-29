@@ -74,6 +74,8 @@ LIBFUNC clock            platform_clock_init(f64 fps_target);
 LIBFUNC i64              platform_clock_time();
 LIBFUNC void             platform_clock_reset(clock *c);
 LIBFUNC void             platform_clock_update(clock *c);
+LIBFUNC void             platform_dll_load(const char *filepath);
+LIBFUNC void             platform_dll_func_load(void *dll, char *func_name);
 
 // TODO: Delete this, see if you can use the C++ tinyobj
 LIBFUNC void             platform_file_data(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len);
