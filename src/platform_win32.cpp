@@ -654,3 +654,19 @@ void platform_clock_update(clock *c)
 	}
   // TODO: End wall clock diff
 }
+
+
+void* platform_dll_load(const char *filepath)
+{
+  HMODULE dll_handle = LoadLibraryA(filepath);
+  ASSERT(dll_handle, "Failed to load DLL.\n");
+  return (void*)dll_handle;
+}
+
+
+void * platform_dll_func_load(void *dll, const char *func_name)
+{
+  HMODULE dll_in = (HMODULE) dll;
+  void *func_ptr = (void*) GetProcAddress( dll_in, func_name );
+  return func_ptr;
+}
