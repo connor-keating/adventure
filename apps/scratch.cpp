@@ -77,7 +77,6 @@ void app_init(arena *memory)
   rbuffer* color_buffer = rbuffer_init(memory, BUFF_VERTS, colors, sizeof(fvec4), sizeof(colors) );
   rbuffer_vertex_set( 1, color_buffer );
   glm::mat4 identity = glm::mat4(1.0f);
-  glm::mat4 shrink = identity; // glm::scale(identity, glm::vec3(1.0f) );
   glm::mat4 t1 = glm::translate( identity, glm::vec3( 0.0f, 2.0f, 0.0f) );
   glm::mat4 t2 = glm::translate( identity, glm::vec3( 0.0f,-2.0f, 0.0f) );
   glm::mat4 model1 = t1;
