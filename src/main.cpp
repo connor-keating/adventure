@@ -1,3 +1,5 @@
+#include <windows.h>
+
 #include "core.cpp"
 #include "platform.h"
 #include "application.h"
@@ -19,6 +21,10 @@ global bool is_running;
 
 // TODO: Why does app crash when I share it with discord?
 
+typedef void (*APP_INIT)(arena *a);
+typedef void (*APP_UPDATE)(arena *a);
+typedef bool (*APP_IS_RUNNING)();
+
 
 int main(int argc, char **argv)
 {
@@ -31,6 +37,14 @@ int main(int argc, char **argv)
   size_t memory_size = (size_t) Gigabytes(5);
   void *raw_memory = platform_memory_alloc(memory_base, memory_size);
   arena memory = arena_init(raw_memory, memory_size);
+
+  // Load appliation data
+  const char* dll_file = "G:\\adventure\\bin\\scratch.dll";
+  HMODULE dll_handle = LoadLibraryA(dll_file);
+  ASSERT(dll_handle, "Failed to load DLL.");
+  APP_INIT       app_init       = (APP_INIT)       GetProcAddress(dll_handle, "app_init");
+  APP_UPDATE     app_update     = (APP_UPDATE)     GetProcAddress(dll_handle, "app_update");
+  APP_IS_RUNNING app_is_running = (APP_IS_RUNNING) GetProcAddress(dll_handle, "app_is_running");
 
   app_init( &memory );
   while ( app_is_running() )
