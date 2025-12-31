@@ -24,7 +24,6 @@ struct camera
 
 struct appstate
 {
-  bool             is_running;
   platform_window  window;
   camera           cam_ui_cpu;
   arena           vbuffer_cpu; // Vertex buffer
@@ -59,8 +58,7 @@ internal void texture_read(const char *filename, arena *a)
 
 bool app_is_running()
 {
-  state->is_running = platform_is_running();
-  return state->is_running;
+  return platform_is_running();
 }
 
 arena app_init()
@@ -77,7 +75,6 @@ arena app_init()
   arena *memory = &app_memory;
   // Create internal global state
   state = arena_push_struct(memory, appstate);
-  state->is_running = false;
   // Start the platform layer
   platform_init(memory);
   // Create a window for the application
