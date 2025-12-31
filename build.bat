@@ -39,6 +39,7 @@ if %mode% == _PRODUCTION (
 :: Go into source code directory
 pushd "src"
 
+
 set assembly=application
 set app_src_dir=..\apps
 set app_flags=-D_D3D -D%mode%
@@ -52,13 +53,20 @@ set linker_flags=-luser32 -lgdi32 -lwinmm -ld3d11 -ldxgi -lopengl32 -ld3dcompile
 
 :: Windows platform lib
 set plat_assembly=platform
-set plat_defines=-D%mode% -D_EXPORT
 set plat_includes=-I.\ -I..\external\
-set plat_flags_comp=-g -std=c++20 -shared -Wvarargs -Wall -Werror -Wno-deprecated -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable
 set plat_flags_link=-luser32 -lgdi32 -lwinmm -lopengl32
 
 echo %plat_assembly% compiling...
-clang++ %plat_flags_comp% %plat_defines% platform_win32.cpp core.cpp -o %OUTDIR%\%plat_assembly%.dll %plat_includes% %plat_flags_link%
+clang++ ^
+%compiler_flags% ^
+-shared ^
+%app_flags% -D_EXPORT ^
+platform_win32.cpp ^
+core.cpp ^
+-o ^
+%OUTDIR%\%plat_assembly%.dll ^
+%plat_includes% ^
+%plat_flags_link%
 
 if %ERRORLEVEL% neq 0 (
     popd 
@@ -71,7 +79,16 @@ echo:
 :: Build application DLL
 
 echo %app2build% app compiling...
-clang++ -D_EXPORT %app_flags% %includes% %plat_flags_comp% %app_src_dir%\%app2build%.cpp core.cpp render_dx11.cpp -o %outdir%\%app2build%.dll %linker_flags% -L%OUTDIR% -l%plat_assembly%.lib
+clang++ ^
+%app_flags% -D_EXPORT -shared ^
+%includes% ^
+%app_src_dir%\%app2build%.cpp core.cpp render_dx11.cpp ^
+-o ^
+%outdir%\%app2build%.dll ^
+%linker_flags% ^
+-L%OUTDIR% ^
+-l%plat_assembly%.lib
+
 if %ERRORLEVEL% neq 0 (
     echo Build failed with errors!
     exit /b %ERRORLEVEL%
@@ -83,7 +100,17 @@ echo:
 echo %assembly% compiling...
 :: clang++ %compiler_flags% %app_flags% maintest.cpp %code_files% -o %outdir%\%assembly%.exe %defines% %includes% %linker_flags% -L%OUTDIR% -l%plat_assembly%.lib
 :: clang++ %compiler_flags% %app_flags% main.cpp render_dx11.cpp %app_src_dir%\%app2build%.cpp -o %outdir%\%assembly%.exe %defines% %includes% %linker_flags% -L%OUTDIR% -l%plat_assembly%.lib 
-clang++ %compiler_flags% %app_flags% main.cpp -o %outdir%\%assembly%.exe %defines% %includes% %linker_flags% -L%OUTDIR% -l%plat_assembly%.lib
+clang++ ^
+%compiler_flags% ^
+%app_flags% ^
+main.cpp ^
+-o ^
+%outdir%\%assembly%.exe ^
+%defines% ^
+%includes% ^
+%linker_flags% ^
+-L%outdir% ^
+-l%plat_assembly%.lib
 
 popd 
 
