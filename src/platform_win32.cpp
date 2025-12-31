@@ -670,3 +670,8 @@ void * platform_dll_func_load(void *dll, const char *func_name)
   void *func_ptr = (void*) GetProcAddress( dll_in, func_name );
   return func_ptr;
 }
+
+void platform_sleep(u32 miliseconds)
+{
+  Sleep(miliseconds);
+}

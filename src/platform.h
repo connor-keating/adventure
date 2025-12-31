@@ -63,6 +63,7 @@ void             platform_clock_reset(clock *c);
 void             platform_clock_update(clock *c);
 void*            platform_dll_load(const char *filepath);
 void*            platform_dll_func_load(void *dll, const char *func_name);
+void             platform_sleep(u32 miliseconds);
 
 // TODO: Delete this, see if you can use the C++ tinyobj
 void             platform_file_data(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len);
