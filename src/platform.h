@@ -4,19 +4,6 @@
 #include "core.h"
 #include "input.h"
 
-// Macros
-#ifdef PLATFORM_WINDOWS
-  #ifdef _EXPORT
-    #define LIBFUNC __declspec(dllexport)
-  #else
-    #define LIBFUNC __declspec(dllimport)
-  #endif
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 // Types
 struct platform_window
 {
@@ -57,31 +44,25 @@ enum control_bindings
 
 
 // Functions
-LIBFUNC void             platform_init(arena *a);
-LIBFUNC void*            platform_memory_alloc(void *mem_base, size_t mem_size);
-LIBFUNC platform_window  platform_window_init();
-LIBFUNC void             platform_window_show();
-LIBFUNC void             platform_window_size(platform_window *wind);
-LIBFUNC void*            platform_window_handle();
-LIBFUNC void             platform_window_close();
-LIBFUNC bool             platform_is_running();
-LIBFUNC void             platform_message_process( platform_window *window, input_state *inputs );
-LIBFUNC void             platform_opengl_init();
-LIBFUNC void             platform_swapbuffers();
-LIBFUNC int              platform_file_exists(const char *filepath);
-LIBFUNC const char *     platform_file_read(const char *file, arena *scratch, size_t *out_size);
-LIBFUNC clock            platform_clock_init(f64 fps_target);
-LIBFUNC i64              platform_clock_time();
-LIBFUNC void             platform_clock_reset(clock *c);
-LIBFUNC void             platform_clock_update(clock *c);
-LIBFUNC void*            platform_dll_load(const char *filepath);
-LIBFUNC void*             platform_dll_func_load(void *dll, const char *func_name);
+void             platform_init(arena *a);
+void*            platform_memory_alloc(void *mem_base, size_t mem_size);
+platform_window  platform_window_init();
+void             platform_window_show();
+void             platform_window_size(platform_window *wind);
+void*            platform_window_handle();
+void             platform_window_close();
+bool             platform_is_running();
+void             platform_message_process( platform_window *window, input_state *inputs );
+void             platform_opengl_init();
+void             platform_swapbuffers();
+int              platform_file_exists(const char *filepath);
+const char *     platform_file_read(const char *file, arena *scratch, size_t *out_size);
+clock            platform_clock_init(f64 fps_target);
+i64              platform_clock_time();
+void             platform_clock_reset(clock *c);
+void             platform_clock_update(clock *c);
+void*            platform_dll_load(const char *filepath);
+void*             platform_dll_func_load(void *dll, const char *func_name);
 
 // TODO: Delete this, see if you can use the C++ tinyobj
-LIBFUNC void             platform_file_data(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len);
-
-
-// Ending stuff
-#ifdef __cplusplus
-}
-#endif
+void             platform_file_data(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len);
