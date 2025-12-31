@@ -186,8 +186,10 @@ platform_window platform_window_init()
     0
   );
   ASSERT(window_success, "Failed to resize and open window.");
-  wind.width = window_w;
-  wind.height = window_h;
+  RECT client_rect;
+  GetClientRect(windstate->handle, &client_rect);
+  wind.width = client_rect.right;
+  wind.height = client_rect.bottom;
   wind.state = &windstate;
   return wind;
 }
