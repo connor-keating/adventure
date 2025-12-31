@@ -1,4 +1,3 @@
-#include "core.cpp"
 #include "application.h"
 
 #define STB_IMAGE_IMPLEMENTATION
