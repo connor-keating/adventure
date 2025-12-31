@@ -76,25 +76,6 @@ if %ERRORLEVEL% neq 0 (
 echo Building %plat_assembly% complete
 echo:
 
-:: Build application DLL
-
-echo %app2build% app compiling...
-clang++ ^
-%app_flags% -D_EXPORT -shared ^
-%includes% ^
-%app_src_dir%\%app2build%.cpp core.cpp render_dx11.cpp ^
--o ^
-%outdir%\%app2build%.dll ^
-%linker_flags% ^
--L%OUTDIR% ^
--l%plat_assembly%.lib
-
-if %ERRORLEVEL% neq 0 (
-    echo Build failed with errors!
-    exit /b %ERRORLEVEL%
-)
-echo Building %app2build% complete
-echo:
 
 :: Build application
 echo %assembly% compiling...
@@ -102,14 +83,14 @@ echo %assembly% compiling...
 clang++ ^
 %compiler_flags% ^
 %app_flags% ^
-main.cpp ^
+main.cpp core.cpp render_dx11.cpp %app_src_dir%\%app2build%.cpp ^
 -o ^
 %outdir%\%assembly%.exe ^
 %defines% ^
 %includes% ^
 %linker_flags% ^
 -L%OUTDIR% ^
--l%app2build%.lib
+-l%plat_assembly%.lib
 
 popd 
 
