@@ -14,7 +14,7 @@ struct platform_state
 
 
 // Internal global state
-global platform_state *state; // Global ptr to internal state
+global platform_state *windstate; // Global ptr to internal state
 
 
 // Unique windows functions not supposed to be loaded with the others.
@@ -30,8 +30,8 @@ internal LRESULT CALLBACK win32_message_callback(HWND window_handle, UINT messag
   {
     case WM_CLOSE:
     {
-      ShowWindow(state->handle, SW_HIDE);  // Hide window immediately
-      state->is_running = false;
+      ShowWindow(windstate->handle, SW_HIDE);  // Hide window immediately
+      windstate->is_running = false;
       PostQuitMessage(0);
       break;
     }
@@ -112,15 +112,15 @@ void platform_file_data(void* ctx, const char* filename, const int is_mtl, const
 
 void platform_init(arena *a)
 {
-  state = arena_push_struct(a, platform_state);
-  state->is_running = true;
+  windstate = arena_push_struct(a, platform_state);
+  windstate->is_running = true;
 }
 
 
 platform_window platform_window_init()
 {
   platform_window wind = {};
-  state->instance = GetModuleHandleA(0);
+  windstate->instance = GetModuleHandleA(0);
   i32 window_x = 50;
   i32 window_y = 90;
   i32 window_w = 50;
@@ -131,7 +131,7 @@ platform_window platform_window_init()
   window_class.cbSize = sizeof(window_class);
   window_class.style = CS_HREDRAW|CS_VREDRAW; // |CS_OWNDC;
   window_class.lpfnWndProc = win32_message_callback;
-  window_class.hInstance = state->instance;
+  window_class.hInstance = windstate->instance;
   window_class.hCursor = LoadCursor(0, IDC_ARROW);
   // window_class.hbrBackground = CreateSolidBrush(RGB(255, 0, 255)); // Magenta background
   window_class.hbrBackground = (HBRUSH)COLOR_WINDOW;
@@ -140,7 +140,7 @@ platform_window platform_window_init()
   ASSERT(window_id, "ERROR: Failed to register window.");
   
   // Create the window we described.
-  state->handle = CreateWindowExA(
+  windstate->handle = CreateWindowExA(
     WS_EX_CLIENTEDGE,            // style_extended: has list of possible values.    
     window_class.lpszClassName,  // class_name: null-terminated string.         
     window_name,                  // name: string window name to display in title bar.              
@@ -151,22 +151,22 @@ platform_window platform_window_init()
     window_h,                          // height: Window height in screen coordinates
     0,                          // window_parent: Handle to the parent window.
     0,                          // window_menu: Optional child window ID.
-    state->instance,      // window_handle: handle to this window's module.
+    windstate->instance,      // window_handle: handle to this window's module.
     0                          // window_data_pointer: Pointer to CREATESTRUCT var that sends a message to the window.
   );
-  ASSERT(state->handle, "ERROR: Failed to create window.");
+  ASSERT(windstate->handle, "ERROR: Failed to create window.");
 
   // Get monitor info and resize the window.
   MONITORINFO monitor_info = {};
   monitor_info.cbSize = sizeof(MONITORINFO);
-  HMONITOR monitor_handle = MonitorFromWindow(state->handle, MONITOR_DEFAULTTOPRIMARY);
+  HMONITOR monitor_handle = MonitorFromWindow(windstate->handle, MONITOR_DEFAULTTOPRIMARY);
   BOOL monitor_info_success = GetMonitorInfoA(monitor_handle, &monitor_info);
   ASSERT(monitor_info_success, "ERROR: Failed to get monitor info.");
   i32 monitor_width  = monitor_info.rcMonitor.right - monitor_info.rcMonitor.left;
   i32 monitor_height = monitor_info.rcMonitor.bottom - monitor_info.rcMonitor.top;
   // Calculate our desired window dimensions.
   // Get DPI scaling factor
-  u32 dpi = GetDpiForWindow(state->handle);
+  u32 dpi = GetDpiForWindow(windstate->handle);
   f32 scale_factor = dpi / 96.0f; // Scaling factor (1.0 at 96 DPI, 1.5 at 144 DPI, etc.)
   i32 client_w = MulDiv(monitor_width, 1, 2 * scale_factor);
   i32 client_h = MulDiv(monitor_height, 1, 2 * scale_factor);
@@ -177,7 +177,7 @@ platform_window platform_window_init()
   window_x = (monitor_width  - window_w) / 2;
   window_y = (monitor_height - window_h) / 2;
   BOOL window_success = SetWindowPos(
-    state->handle,
+    windstate->handle,
     HWND_TOP,
     window_x,
     window_y,
@@ -188,7 +188,7 @@ platform_window platform_window_init()
   ASSERT(window_success, "Failed to resize and open window.");
   wind.width = window_w;
   wind.height = window_h;
-  wind.state = &state;
+  wind.state = &windstate;
   return wind;
 }
 
@@ -196,8 +196,8 @@ platform_window platform_window_init()
 void platform_window_show()
 {
   i32 display_flags = SW_SHOW;
-  ShowWindow(state->handle, display_flags);
-  UpdateWindow(state->handle);
+  ShowWindow(windstate->handle, display_flags);
+  UpdateWindow(windstate->handle);
 }
 
 
@@ -205,7 +205,7 @@ void platform_window_size(platform_window *wind)
 {
   // Get window dimension
   RECT size;
-  GetClientRect(state->handle, &size);
+  GetClientRect(windstate->handle, &size);
   wind->width  = size.right;
   wind->height = size.bottom;
   if ((wind->width == 0) && (wind->height == 0))
@@ -217,7 +217,7 @@ void platform_window_size(platform_window *wind)
 
 bool platform_is_running()
 {
-  return state->is_running;
+  return windstate->is_running;
 }
 
 
@@ -225,7 +225,7 @@ void platform_message_process( platform_window *window, input_state *inputs )
 {
   MSG message = {};
   // This has to be in condition otherwise you'll process the message twice.
-  while (PeekMessageA(&message, state->handle, 0, 0, PM_REMOVE))
+  while (PeekMessageA(&message, windstate->handle, 0, 0, PM_REMOVE))
   {
     u32 vkcode = (u32) message.wParam;
     u32 message_id = message.message;
@@ -287,7 +287,7 @@ void platform_opengl_init()
 
   // Use first window to load OpenGL stuff
   {
-    HDC fakeDC = GetDC(state->handle);
+    HDC fakeDC = GetDC(windstate->handle);
     PIXELFORMATDESCRIPTOR pixelFormat = {0};
     pixelFormat.nSize = sizeof(pixelFormat);
     pixelFormat.nVersion = 1;
@@ -315,11 +315,11 @@ void platform_opengl_init()
     ASSERT(loading_failed == false, "ERROR: Failed to load OpenGL functions.");
     wglMakeCurrent(fakeDC, 0);
     wglDeleteContext(fakeRC);
-    ReleaseDC(state->handle, fakeDC);
-    DestroyWindow(state->handle);
-    UnregisterClassA("WINDOW_CLASS", state->instance);
-    state->handle = nullptr;
-    state->instance = nullptr;
+    ReleaseDC(windstate->handle, fakeDC);
+    DestroyWindow(windstate->handle);
+    UnregisterClassA("WINDOW_CLASS", windstate->instance);
+    windstate->handle = nullptr;
+    windstate->instance = nullptr;
   }
 
   // Create the real window
@@ -327,8 +327,8 @@ void platform_opengl_init()
     // Re-create the window
     platform_window_init();
     // Get the device context
-    state->render_context = GetDC(state->handle);
-    ASSERT(state->render_context != 0, "ERROR: Failed to get device context.");
+    windstate->render_context = GetDC(windstate->handle);
+    ASSERT(windstate->render_context != 0, "ERROR: Failed to get device context.");
     const int pixelAttribs[] =
     {
       WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
@@ -345,7 +345,7 @@ void platform_opengl_init()
     UINT numPixelFormats;
     int pixelFormat = 0;
     BOOL chosenPixelFormatARB = wglChoosePixelFormatARB(
-      state->render_context,
+      windstate->render_context,
       pixelAttribs,
       0, // Float List
       1, // Max Formats
@@ -354,8 +354,8 @@ void platform_opengl_init()
     );
     ASSERT(chosenPixelFormatARB != 0, "ERROR: Failed to wglChoosePixelFormatARB");
     PIXELFORMATDESCRIPTOR pixelFormatDescriptor = {0};
-    DescribePixelFormat(state->render_context, pixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pixelFormatDescriptor);
-    BOOL isPixelFormatSet = SetPixelFormat(state->render_context, pixelFormat, &pixelFormatDescriptor);
+    DescribePixelFormat(windstate->render_context, pixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pixelFormatDescriptor);
+    BOOL isPixelFormatSet = SetPixelFormat(windstate->render_context, pixelFormat, &pixelFormatDescriptor);
     ASSERT(isPixelFormatSet != 0, "ERROR: Failed to set the pixel format.");
     const int contextAttribs[] = {
         WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
@@ -366,9 +366,9 @@ void platform_opengl_init()
         WGL_CONTEXT_DEBUG_BIT_ARB,
         0 // Terminate the Array
     };
-    HGLRC renderingContext = wglCreateContextAttribsARB(state->render_context, 0, contextAttribs);
+    HGLRC renderingContext = wglCreateContextAttribsARB(windstate->render_context, 0, contextAttribs);
     ASSERT(renderingContext != 0, "ERROR: Failed to create rendering context.");
-    BOOL isContextSet = wglMakeCurrent(state->render_context, renderingContext);
+    BOOL isContextSet = wglMakeCurrent(windstate->render_context, renderingContext);
     ASSERT(isContextSet != 0, "ERROR: Failed to set the device and rendering context.");
   }
 }
@@ -376,13 +376,13 @@ void platform_opengl_init()
 
 void * platform_window_handle()
 {
-  return (void*)&state->handle;
+  return (void*)&windstate->handle;
 }
 
 
 void platform_swapbuffers()
 {
-  SwapBuffers(state->render_context);
+  SwapBuffers(windstate->render_context);
 }
 
 
@@ -572,7 +572,7 @@ void * platform_memory_alloc(void *mem_base, size_t mem_size)
 
 void platform_window_close()
 {
-  SendMessageA(state->handle, WM_CLOSE, 0, 0);
+  SendMessageA(windstate->handle, WM_CLOSE, 0, 0);
 }
 
 
