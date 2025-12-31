@@ -15,7 +15,7 @@ set mode=_DEBUG
 :: Go into source code directory
 pushd "src"
 
-set assembly=application
+set assembly=main
 set app_src_dir=..\apps
 set app_flags=-D_D3D -D%mode%
 set compiler_flags=-g -std=c++20 -Wvarargs -Wall -Werror -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-deprecated

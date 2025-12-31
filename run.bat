@@ -1,2 +1,2 @@
 @echo off
-call bin\application.exe
+call bin\main.exe
