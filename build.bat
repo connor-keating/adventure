@@ -99,7 +99,6 @@ echo:
 :: Build application
 echo %assembly% compiling...
 :: clang++ %compiler_flags% %app_flags% maintest.cpp %code_files% -o %outdir%\%assembly%.exe %defines% %includes% %linker_flags% -L%OUTDIR% -l%plat_assembly%.lib
-:: clang++ %compiler_flags% %app_flags% main.cpp render_dx11.cpp %app_src_dir%\%app2build%.cpp -o %outdir%\%assembly%.exe %defines% %includes% %linker_flags% -L%OUTDIR% -l%plat_assembly%.lib 
 clang++ ^
 %compiler_flags% ^
 %app_flags% ^
@@ -109,8 +108,8 @@ main.cpp ^
 %defines% ^
 %includes% ^
 %linker_flags% ^
--L%outdir% ^
--l%plat_assembly%.lib
+-L%OUTDIR% ^
+-l%app2build%.lib
 
 popd 
 

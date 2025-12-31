@@ -15,9 +15,9 @@
 extern "C" {
 #endif
 
-LIBFUNC bool app_is_running();
-LIBFUNC void app_init( arena *a );
-LIBFUNC void app_update( arena *a );
+LIBFUNC arena app_init();
+LIBFUNC void  app_update( arena *a );
+LIBFUNC bool  app_is_running();
 
 // Ending stuff
 #ifdef __cplusplus

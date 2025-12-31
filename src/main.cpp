@@ -1,5 +1,4 @@
 #include "core.cpp"
-#include "platform.h"
 #include "application.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -19,31 +18,9 @@ global bool is_running;
 
 // TODO: Why does app crash when I share it with discord?
 
-typedef void (*APP_INIT)(arena *a);
-typedef void (*APP_UPDATE)(arena *a);
-typedef bool (*APP_IS_RUNNING)();
-
-
 int main(int argc, char **argv)
 {
-  // Allocate all program memory upfront.
-  #if _DEBUG
-    void *memory_base = (void*)Terabytes(2);
-  #else
-    void *memory_base = 0;
-  #endif
-  size_t memory_size = (size_t) Gigabytes(5);
-  void *raw_memory = platform_memory_alloc(memory_base, memory_size);
-  arena memory = arena_init(raw_memory, memory_size);
-
-  // Load appliation data
-  const char* dll_file = "bin\\scratch.dll";
-  void *dll = platform_dll_load(dll_file);
-  APP_INIT       app_init       = (APP_INIT)       platform_dll_func_load( dll, "app_init");
-  APP_UPDATE     app_update     = (APP_UPDATE)     platform_dll_func_load( dll, "app_update");
-  APP_IS_RUNNING app_is_running = (APP_IS_RUNNING) platform_dll_func_load( dll, "app_is_running");
-
-  app_init( &memory );
+  arena memory = app_init();
   while ( app_is_running() )
   {
     app_update( &memory );

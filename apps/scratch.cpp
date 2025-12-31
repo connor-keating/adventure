@@ -51,8 +51,18 @@ bool app_is_running()
   return state->is_running;
 }
 
-void app_init(arena *memory)
+arena app_init()
 {
+  // Allocate all program memory upfront.
+  #if _DEBUG
+    void *memory_base = (void*)Terabytes(2);
+  #else
+    void *memory_base = 0;
+  #endif
+  size_t memory_size = (size_t) Gigabytes(5);
+  void *raw_memory = platform_memory_alloc(memory_base, memory_size);
+  arena app_memory = arena_init(raw_memory, memory_size);
+  arena *memory = &app_memory;
   // Create internal global state
   state = arena_push_struct(memory, appstate);
   state->is_running = false;
@@ -104,6 +114,7 @@ void app_init(arena *memory)
   shader_load( state->shader[0], PIXEL,  "shaders/simple.hlsl", "PSMain", "ps_5_0");
   // Start the window
   platform_window_show();
+  return app_memory;
 }
 
 
