@@ -671,7 +671,24 @@ void * platform_dll_func_load(void *dll, const char *func_name)
   return func_ptr;
 }
 
+
 void platform_sleep(u32 miliseconds)
 {
   Sleep(miliseconds);
+}
+
+
+void platform_cursor_client_position(f32 *xout, f32 *yout, f64 width, f64 height)
+{
+  f64 w_half  = width / 2;
+  f64 h_half = height / 2;
+  f32 xtemp = 0;
+  f32 ytemp = 0;
+  POINT p = {};
+  GetCursorPos( &p );
+  ScreenToClient(windstate->handle, &p);
+  xtemp = (f32)p.x;
+  ytemp = (f32)p.y;
+  *xout = myclamp(xtemp, 0.0f, width);
+  *yout = myclamp(ytemp, 0.0f, height);
 }

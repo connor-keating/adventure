@@ -7,8 +7,8 @@
 // Types
 struct platform_window
 {
-  f32 width;
-  f32 height;
+  f64 width;
+  f64 height;
   void *state;
 };
 
@@ -64,6 +64,7 @@ void             platform_clock_update(clock *c);
 void*            platform_dll_load(const char *filepath);
 void*            platform_dll_func_load(void *dll, const char *func_name);
 void             platform_sleep(u32 miliseconds);
+void             platform_cursor_client_position(f32 *xout, f32 *yout, f64 width, f64 height);
 
 // TODO: Delete this, see if you can use the C++ tinyobj
 void             platform_file_data(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len);

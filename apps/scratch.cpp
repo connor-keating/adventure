@@ -133,6 +133,9 @@ void app_update(arena *a)
   input_reset(state->inputs);
   // Read all platform messages for this frame
   platform_message_process(&state->window, state->inputs);
+  fvec2 cursor = {};
+  platform_cursor_client_position( &cursor.x, &cursor.y, state->window.width, state->window.height);
+  printf("Cursor = (%.0f, %.0f)\n", cursor.x, cursor.y);
   if (state->inputs[KEY_ESCAPE] == INPUT_DOWN)
   {
     platform_window_close();
