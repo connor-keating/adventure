@@ -82,31 +82,8 @@ arena app_init()
   // Initialize renderer
   render_init(memory);
   render_data_init( memory, MAX_COUNT_SHADERS );
-  // Begin render buffers
-  state->vbuffer_cpu = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(fvec4) );
-  state->ebuffer_cpu = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(u32) );
-  // Vertex stride: float4 position (16 bytes) + float2 texcoord (8 bytes) = 24 bytes
-  state->vbuffer_gpu = rbuffer_dynamic_init( memory, BUFF_VERTS, state->vbuffer_cpu.buffer, 24, state->vbuffer_cpu.length);
-  state->ebuffer_gpu = rbuffer_dynamic_init( memory, BUFF_ELEMS, state->ebuffer_cpu.buffer, sizeof(u32), state->ebuffer_cpu.length);
-  // Load UI thing
-  fvec4 colors[2] = {
-    fvec4_init(1.0f, 0.0f, 0.0f, 1.0f), // red
-    fvec4_init(0.0f, 1.0f, 0.0f, 1.0f), // green
-  };
-  rbuffer* color_buffer = rbuffer_init(memory, BUFF_VERTS, colors, sizeof(fvec4), sizeof(colors) );
-  rbuffer_vertex_set( 1, color_buffer );
+  // Renderer camera
   glm::mat4 identity = glm::mat4(1.0f);
-  glm::mat4 t1 = glm::translate( identity, glm::vec3( 0.0f, 2.0f, 0.0f) );
-  glm::mat4 t2 = glm::translate( identity, glm::vec3( 0.0f,-2.0f, 0.0f) );
-  glm::mat4 model1 = t1;
-  glm::mat4 model2 = t2;
-  glm::mat4 worlds[2] ={
-    model1,
-    model2
-  };
-  rbuffer* world_buffer = rbuffer_init(memory, BUFF_VERTS, worlds, sizeof(glm::mat4), sizeof(worlds) );
-  rbuffer_vertex_set( 2, world_buffer );
-  // Camera
   state->cam_ui_cpu.view = identity;
   f32 aspect = (f32)state->window.width / (f32)state->window.height;
   f32 half_height = 5.0f;
@@ -117,6 +94,36 @@ arena app_init()
   rbuffer_update( state->cam_ui_gpu, &state->cam_ui_cpu, sizeof(camera) );
   // Bind camera constant buffer to pixel shader
   render_constant_set( state->cam_ui_gpu, 0 );
+  // Begin render buffers
+  state->vbuffer_cpu = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(fvec4) );
+  state->ebuffer_cpu = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(u32) );
+  // Vertex stride: float4 position (16 bytes) + float2 texcoord (8 bytes) = 24 bytes
+  state->vbuffer_gpu = rbuffer_dynamic_init( memory, BUFF_VERTS, state->vbuffer_cpu.buffer, 24, state->vbuffer_cpu.length);
+  state->ebuffer_gpu = rbuffer_dynamic_init( memory, BUFF_ELEMS, state->ebuffer_cpu.buffer, sizeof(u32), state->ebuffer_cpu.length);
+  // Load UI thing
+  fvec4 colors[5] = {
+    fvec4_init(1.0f, 1.0f, 1.0f, 1.0f), // white
+    fvec4_init(1.0f, 0.0f, 0.0f, 1.0f), // red
+    fvec4_init(0.0f, 1.0f, 0.0f, 1.0f), // green
+    fvec4_init(0.0f, 0.0f, 1.0f, 1.0f), // blue
+    fvec4_init(1.0f, 0.0f, 1.0f, 1.0f), // color
+  };
+  rbuffer* color_buffer = rbuffer_init(memory, BUFF_VERTS, colors, sizeof(fvec4), sizeof(colors) );
+  rbuffer_vertex_set( 1, color_buffer );
+  glm::mat4 model1 = glm::translate( identity, glm::vec3( 0.0f, 0.0f, 0.0f) );                // white
+  glm::mat4 model2 = glm::translate( identity, glm::vec3( -half_width,  half_height, 0.0f) ); // red
+  glm::mat4 model3 = glm::translate( identity, glm::vec3(  half_width,  half_height, 0.0f) ); // green
+  glm::mat4 model4 = glm::translate( identity, glm::vec3( -half_width, -half_height, 0.0f) ); // blue
+  glm::mat4 model5 = glm::translate( identity, glm::vec3(  half_width, -half_height, 0.0f) ); // magenta
+  glm::mat4 worlds[5] ={
+    model1,
+    model2,
+    model3,
+    model4,
+    model5
+  };
+  rbuffer* world_buffer = rbuffer_init(memory, BUFF_VERTS, worlds, sizeof(glm::mat4), sizeof(worlds) );
+  rbuffer_vertex_set( 2, world_buffer );
   // Shaders
   state->shader[0] = shader_init( memory );
   shader_load( state->shader[0], VERTEX, "shaders/simple.hlsl", "VSMain", "vs_5_0");
@@ -163,7 +170,7 @@ void app_update(arena *a)
 
   render_draw_instances_elems( 
     uibox.count, 
-    2
+    5
   );
 
   // End frame
