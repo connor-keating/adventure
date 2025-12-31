@@ -1,21 +1,6 @@
 #include "application.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
-// Globals
-global bool is_running;
-
-
-#ifdef _OPENGL
-#include "render_opengl.cpp"
-#endif
-
-// Application layers
-// #include "text.cpp"
-// #include "data3d.cpp"
-
-// TODO: Why does app crash when I share it with discord?
 
 int main(int argc, char **argv)
 {
@@ -50,15 +35,6 @@ void input_reset(control_state *input_state)
   }
 }
 
-texture_ptr texture_read(const char *filename, arena *a)
-{
-  i32 test = platform_file_exists(filename);
-  i32 x, y, n;
-  i32 components_per_pixel = 4; // Force RGBA
-  unsigned char *data = stbi_load(filename, &x, &y, &n, components_per_pixel);
-  texture_ptr tex = texture2d_init( a, data, x, y, components_per_pixel);
-  return tex;
-}
 
 
 int main(int argc, char **argv)

@@ -6,6 +6,9 @@
 #include "render.h"
 #include "primitives.cpp"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #define MAX_COUNT_SHADERS 100
 #define MAX_COUNT_VERTEX  1000
 
@@ -44,6 +47,15 @@ internal void input_reset( input_state *map )
   }
 }
 
+internal void texture_read(const char *filename, arena *a)
+{
+  // TODO: This is broken but I'm keeping it for when I need it.
+  i32 test = platform_file_exists(filename);
+  i32 x, y, n;
+  i32 components_per_pixel = 4; // Force RGBA
+  unsigned char *data = stbi_load(filename, &x, &y, &n, components_per_pixel);
+  // texture_ptr tex = texture2d_init( a, data, x, y, components_per_pixel);
+}
 
 bool app_is_running()
 {
