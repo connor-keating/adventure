@@ -689,8 +689,8 @@ void platform_cursor_client_position(f32 *xout, f32 *yout, f64 width, f64 height
   POINT p = {};
   GetCursorPos( &p );
   ScreenToClient(windstate->handle, &p);
-  xtemp = (f32)p.x;
-  ytemp = (f32)p.y;
-  *xout = myclamp(xtemp, 0.0f, width);
-  *yout = myclamp(ytemp, 0.0f, height);
+  xtemp = (f32)p.x - w_half;
+  ytemp = ((f32)p.y*-1.0f) + h_half;
+  *xout = myclamp(xtemp, -w_half, w_half);
+  *yout = myclamp(ytemp, -h_half, h_half);
 }
