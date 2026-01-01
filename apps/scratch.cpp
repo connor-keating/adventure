@@ -31,6 +31,7 @@ struct appstate
   rbuffer        *vbuffer_gpu;
   rbuffer        *ebuffer_gpu;
   rbuffer        *cam_ui_gpu;
+  rbuffer*       world_buffer;
   input_state      inputs[KEY_COUNT];
   u64              shader[MAX_COUNT_SHADERS];
 };
@@ -122,9 +123,9 @@ arena app_init()
     model4,
     model5
   };
-  rbuffer* world_buffer = rbuffer_dynamic_init(memory, BUFF_VERTS, worlds, sizeof(glm::mat4), sizeof(worlds) );
-  rbuffer_update( world_buffer, worlds, sizeof(worlds) );
-  rbuffer_vertex_set( 2, world_buffer );
+  state->world_buffer = rbuffer_dynamic_init(memory, BUFF_VERTS, nullptr, sizeof(glm::mat4), sizeof(worlds) );
+  rbuffer_update( state->world_buffer, worlds, sizeof(worlds) );
+  rbuffer_vertex_set( 2, state->world_buffer );
   // Shaders
   state->shader[0] = shader_init( memory );
   shader_load( state->shader[0], VERTEX, "shaders/simple.hlsl", "VSMain", "vs_5_0");
