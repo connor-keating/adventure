@@ -87,7 +87,7 @@ arena app_init()
   glm::mat4 identity = glm::mat4(1.0f);
   state->cam_ui_cpu.view = identity;
   f32 aspect = (f32)state->window.width / (f32)state->window.height;
-  f32 half_height = state->window.height;
+  f32 half_height = 0.5f * state->window.height;
   f32 half_width = half_height * aspect;
   state->cam_ui_cpu.proj = glm::ortho( -half_width, half_width, -half_height, half_height, 0.0f, 1.0f );
   // state->cam_ui_cpu.proj = glm::ortho( -5.0f, 5.0f, -5.0f, 5.0f, 0.0f, 1.0f );
@@ -131,7 +131,6 @@ void app_update(arena *a)
   platform_message_process(&state->window, state->inputs);
   fvec2 cursor = {};
   platform_cursor_client_position( &cursor.x, &cursor.y, state->window.width, state->window.height);
-  printf("Cursor = (%.0f, %.0f)\n", cursor.x, cursor.y);
   if (state->inputs[KEY_ESCAPE] == INPUT_DOWN)
   {
     platform_window_close();
@@ -151,10 +150,10 @@ void app_update(arena *a)
   model3d uibox = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_uniform(0.0f) );
   // Locations
   f32 aspect = (f32)state->window.width / (f32)state->window.height;
-  f32 half_height = state->window.height;
+  f32 half_height = 0.5 * state->window.height;
   f32 half_width = half_height * aspect;
   glm::mat4 identity = glm::mat4(1.0f);
-  glm::mat4 model1 = glm::translate( identity, glm::vec3( 0.0f, 0.0f, 0.0f) ) * glm::scale(identity, glm::vec3(100.f));                // white
+  glm::mat4 model1 = glm::translate( identity, glm::vec3( cursor.x, cursor.y, 0.0f) ) * glm::scale(identity, glm::vec3(100.f));                // white
   glm::mat4 model2 = glm::translate( identity, glm::vec3( -half_width,  half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // red
   glm::mat4 model3 = glm::translate( identity, glm::vec3(  half_width,  half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // green
   glm::mat4 model4 = glm::translate( identity, glm::vec3( -half_width, -half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // blue
