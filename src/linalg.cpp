@@ -100,6 +100,13 @@ inline ivec2 ivec2_init(i32 x, i32 y)
 }
 
 
+inline fvec3 fvec3_init(f32 x, f32 y, f32 z)
+{
+  fvec3 v = {.array ={x, y, z} };
+  return v;
+}
+
+
 inline fvec4 fvec4_init( f32 x, f32 y, f32 z, f32 w )
 {
   fvec4 v = { .array = {x, y, z, w} };
