@@ -46,17 +46,26 @@ float4 PSMain(vertex_out input) : SV_TARGET
   // Corner radius (adjust this to change roundness)
   float cornerRadius = 0.4;
 
+  // Border thickness (adjust to make border thicker/thinner)
+  float borderThickness = 0.1;
+
   // Calculate signed distance field for rounded box
   float2 d = abs(p) - boxSize + cornerRadius;
   float dist = length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - cornerRadius;
 
-  // Use the SDF to create smooth edges
-  // smoothstep creates anti-aliased edge
-  float alpha = 1.0 - smoothstep(-0.01, 0.01, dist);
-
-  // Discard pixels outside the rounded box for sharp cutoff
-  // Or use alpha for blending
+  // Discard pixels outside the rounded box
   if (dist > 0.0) discard;
 
-  return float4(input.col.xyz, alpha);
+  // Calculate inner distance for border
+  float innerDist = dist + borderThickness;
+
+  // Determine if we're in the border region
+  float3 finalColor = input.col.xyz;
+  if (innerDist > 0.0)
+  {
+    // We're in the border region - use white
+    finalColor = float3(1.0, 1.0, 1.0);
+  }
+
+  return float4(finalColor, 1.0);
 }
