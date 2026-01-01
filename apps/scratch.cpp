@@ -122,7 +122,8 @@ arena app_init()
     model4,
     model5
   };
-  rbuffer* world_buffer = rbuffer_init(memory, BUFF_VERTS, worlds, sizeof(glm::mat4), sizeof(worlds) );
+  rbuffer* world_buffer = rbuffer_dynamic_init(memory, BUFF_VERTS, worlds, sizeof(glm::mat4), sizeof(worlds) );
+  rbuffer_update( world_buffer, worlds, sizeof(worlds) );
   rbuffer_vertex_set( 2, world_buffer );
   // Shaders
   state->shader[0] = shader_init( memory );
