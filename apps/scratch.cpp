@@ -172,11 +172,10 @@ void app_update(arena *a)
   f32 aspect = (f32)state->window.width / (f32)state->window.height;
   f32 half_height = 0.5 * state->window.height;
   f32 half_width = half_height * aspect;
-  ui_button( worlds, &ui_count, fvec3_init(cursor.x, cursor.y, 0.0f), fvec3_uniform(100.f) );
-  ui_button( worlds, &ui_count, fvec3_init(-half_width, half_height, 0.0f), fvec3_uniform(100.f) );
-  ui_button( worlds, &ui_count, fvec3_init(half_width, half_height, 0.0f), fvec3_uniform(100.f) );
-  ui_button( worlds, &ui_count, fvec3_init(-half_width,-half_height, 0.0f), fvec3_uniform(100.f) );
-  ui_button( worlds, &ui_count, fvec3_init( half_width,-half_height, 0.0f), fvec3_uniform(100.f) );
+  ui_button( worlds, &ui_count, fvec3_init(   cursor.x,    cursor.y, 0.0f), fvec3_uniform( 10.f) );
+  ui_button( worlds, &ui_count, fvec3_init(-150.0f, 200.0f, 0.0f), fvec3_uniform( 30.f) );
+  ui_button( worlds, &ui_count, fvec3_init( 0.0f,   200.0f, 0.0f), fvec3_uniform( 30.f) );
+  ui_button( worlds, &ui_count, fvec3_init( 150.0f, 200.0f, 0.0f), fvec3_uniform( 30.f) );
   // End of frame
   rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.length );
   rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.length );
