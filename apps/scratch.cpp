@@ -86,7 +86,7 @@ arena app_init()
   glm::mat4 identity = glm::mat4(1.0f);
   state->cam_ui_cpu.view = identity;
   f32 aspect = (f32)state->window.width / (f32)state->window.height;
-  f32 half_height = 5.0f;
+  f32 half_height = state->window.height;
   f32 half_width = half_height * aspect;
   state->cam_ui_cpu.proj = glm::ortho( -half_width, half_width, -half_height, half_height, 0.0f, 1.0f );
   // state->cam_ui_cpu.proj = glm::ortho( -5.0f, 5.0f, -5.0f, 5.0f, 0.0f, 1.0f );
@@ -110,11 +110,11 @@ arena app_init()
   };
   rbuffer* color_buffer = rbuffer_init(memory, BUFF_VERTS, colors, sizeof(fvec4), sizeof(colors) );
   rbuffer_vertex_set( 1, color_buffer );
-  glm::mat4 model1 = glm::translate( identity, glm::vec3( 0.0f, 0.0f, 0.0f) );                // white
-  glm::mat4 model2 = glm::translate( identity, glm::vec3( -half_width,  half_height, 0.0f) ); // red
-  glm::mat4 model3 = glm::translate( identity, glm::vec3(  half_width,  half_height, 0.0f) ); // green
-  glm::mat4 model4 = glm::translate( identity, glm::vec3( -half_width, -half_height, 0.0f) ); // blue
-  glm::mat4 model5 = glm::translate( identity, glm::vec3(  half_width, -half_height, 0.0f) ); // magenta
+  glm::mat4 model1 = glm::translate( identity, glm::vec3( 0.0f, 0.0f, 0.0f) ) * glm::scale(identity, glm::vec3(100.f));                // white
+  glm::mat4 model2 = glm::translate( identity, glm::vec3( -half_width,  half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // red
+  glm::mat4 model3 = glm::translate( identity, glm::vec3(  half_width,  half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // green
+  glm::mat4 model4 = glm::translate( identity, glm::vec3( -half_width, -half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // blue
+  glm::mat4 model5 = glm::translate( identity, glm::vec3(  half_width, -half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // magenta
   glm::mat4 worlds[5] ={
     model1,
     model2,
