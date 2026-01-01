@@ -1,6 +1,7 @@
 #include "application.h"
 
 #include "linalg.cpp"
+#include "collision.cpp"
 #include "input.h"
 #include "platform.h"
 #include "render.h"
@@ -38,6 +39,7 @@ struct appstate
 
 global appstate *state;
 
+
 internal void input_reset( input_state *map )
 {
   for (i32 i = 0; i < KEY_COUNT; ++i)
@@ -46,6 +48,7 @@ internal void input_reset( input_state *map )
     map[i] = (current == INPUT_RELEASED) ? INPUT_UP : current;
   }
 }
+
 
 internal void texture_read(const char *filename, arena *a)
 {
@@ -57,7 +60,8 @@ internal void texture_read(const char *filename, arena *a)
   // texture_ptr tex = texture2d_init( a, data, x, y, components_per_pixel);
 }
 
-internal bool ui_button(glm::mat4 *worlds, u32 *count, fvec3 pos, fvec3 scale)
+
+internal bool ui_button(glm::mat4 *worlds, u32 *count, fvec2 cursor, fvec3 pos, fvec3 scale)
 {
   glm::mat4 identity = glm::mat4(1.0f);
   glm::mat4 t = glm::translate( 
@@ -172,10 +176,10 @@ void app_update(arena *a)
   f32 aspect = (f32)state->window.width / (f32)state->window.height;
   f32 half_height = 0.5 * state->window.height;
   f32 half_width = half_height * aspect;
-  ui_button( worlds, &ui_count, fvec3_init(   cursor.x,    cursor.y, 0.0f), fvec3_uniform( 10.f) );
-  ui_button( worlds, &ui_count, fvec3_init(-150.0f, 200.0f, 0.0f), fvec3_uniform( 30.f) );
-  ui_button( worlds, &ui_count, fvec3_init( 0.0f,   200.0f, 0.0f), fvec3_uniform( 30.f) );
-  ui_button( worlds, &ui_count, fvec3_init( 150.0f, 200.0f, 0.0f), fvec3_uniform( 30.f) );
+  ui_button( worlds, &ui_count, cursor, fvec3_init(   cursor.x,    cursor.y, 0.0f), fvec3_uniform( 10.f) );
+  ui_button( worlds, &ui_count, cursor, fvec3_init(-150.0f, 200.0f, 0.0f), fvec3_uniform( 30.f) );
+  ui_button( worlds, &ui_count, cursor, fvec3_init( 0.0f,   200.0f, 0.0f), fvec3_uniform( 30.f) );
+  ui_button( worlds, &ui_count, cursor, fvec3_init( 150.0f, 200.0f, 0.0f), fvec3_uniform( 30.f) );
   // End of frame
   rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.length );
   rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.length );
