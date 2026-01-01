@@ -111,20 +111,7 @@ arena app_init()
   };
   rbuffer* color_buffer = rbuffer_init(memory, BUFF_VERTS, colors, sizeof(fvec4), sizeof(colors) );
   rbuffer_vertex_set( 1, color_buffer );
-  glm::mat4 model1 = glm::translate( identity, glm::vec3( 0.0f, 0.0f, 0.0f) ) * glm::scale(identity, glm::vec3(100.f));                // white
-  glm::mat4 model2 = glm::translate( identity, glm::vec3( -half_width,  half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // red
-  glm::mat4 model3 = glm::translate( identity, glm::vec3(  half_width,  half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // green
-  glm::mat4 model4 = glm::translate( identity, glm::vec3( -half_width, -half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // blue
-  glm::mat4 model5 = glm::translate( identity, glm::vec3(  half_width, -half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // magenta
-  glm::mat4 worlds[5] ={
-    model1,
-    model2,
-    model3,
-    model4,
-    model5
-  };
-  state->world_buffer = rbuffer_dynamic_init(memory, BUFF_VERTS, nullptr, sizeof(glm::mat4), sizeof(worlds) );
-  rbuffer_update( state->world_buffer, worlds, sizeof(worlds) );
+  state->world_buffer = rbuffer_dynamic_init(memory, BUFF_VERTS, nullptr, sizeof(glm::mat4), 5*sizeof(glm::mat4) );
   rbuffer_vertex_set( 2, state->world_buffer );
   // Shaders
   state->shader[0] = shader_init( memory );
@@ -162,9 +149,27 @@ void app_update(arena *a)
     printf( "Click.\n" );
   }
   model3d uibox = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_uniform(0.0f) );
+  // Locations
+  f32 aspect = (f32)state->window.width / (f32)state->window.height;
+  f32 half_height = state->window.height;
+  f32 half_width = half_height * aspect;
+  glm::mat4 identity = glm::mat4(1.0f);
+  glm::mat4 model1 = glm::translate( identity, glm::vec3( 0.0f, 0.0f, 0.0f) ) * glm::scale(identity, glm::vec3(100.f));                // white
+  glm::mat4 model2 = glm::translate( identity, glm::vec3( -half_width,  half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // red
+  glm::mat4 model3 = glm::translate( identity, glm::vec3(  half_width,  half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // green
+  glm::mat4 model4 = glm::translate( identity, glm::vec3( -half_width, -half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // blue
+  glm::mat4 model5 = glm::translate( identity, glm::vec3(  half_width, -half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // magenta
+  glm::mat4 worlds[5] ={
+    model1,
+    model2,
+    model3,
+    model4,
+    model5
+  };
   // End of frame
   rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.length );
   rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.length );
+  rbuffer_update( state->world_buffer, worlds, sizeof(worlds) );
   rbuffer_vertex_set( 0, state->vbuffer_gpu );
   rbuffer_index_set( state->ebuffer_gpu );
   shader_set( state->shader[0] );
