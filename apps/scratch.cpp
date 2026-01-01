@@ -57,6 +57,24 @@ internal void texture_read(const char *filename, arena *a)
   // texture_ptr tex = texture2d_init( a, data, x, y, components_per_pixel);
 }
 
+internal bool ui_button(glm::mat4 *worlds, u32 *count, fvec3 pos, fvec3 scale)
+{
+  glm::mat4 identity = glm::mat4(1.0f);
+  glm::mat4 t = glm::translate( 
+    identity, 
+    glm::vec3( pos.x, pos.y, pos.z )
+  );
+  glm::mat4 s = glm::scale( 
+    identity, 
+    glm::vec3(scale.x, scale.y, scale.z)
+  );
+  glm::mat4 world = t * s;
+  worlds[*count] = world;
+  (*count)++;
+  return false;
+}
+
+
 bool app_is_running()
 {
   return platform_is_running();
@@ -143,28 +161,22 @@ void app_update(arena *a)
   frame_init(frame_background.array);
 
   // Game logic
+  u32 ui_count = 0;
+  glm::mat4 worlds[5] = {};
+  model3d uibox = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_uniform(0.0f) );
   if (state->inputs[KEY_SELECT] == INPUT_RELEASED)
   {
     printf( "Click.\n" );
   }
-  model3d uibox = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_uniform(0.0f) );
   // Locations
   f32 aspect = (f32)state->window.width / (f32)state->window.height;
   f32 half_height = 0.5 * state->window.height;
   f32 half_width = half_height * aspect;
-  glm::mat4 identity = glm::mat4(1.0f);
-  glm::mat4 model1 = glm::translate( identity, glm::vec3( cursor.x, cursor.y, 0.0f) ) * glm::scale(identity, glm::vec3(100.f));                // white
-  glm::mat4 model2 = glm::translate( identity, glm::vec3( -half_width,  half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // red
-  glm::mat4 model3 = glm::translate( identity, glm::vec3(  half_width,  half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // green
-  glm::mat4 model4 = glm::translate( identity, glm::vec3( -half_width, -half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // blue
-  glm::mat4 model5 = glm::translate( identity, glm::vec3(  half_width, -half_height, 0.0f) ) * glm::scale(identity, glm::vec3(100.f)); // magenta
-  glm::mat4 worlds[5] ={
-    model1,
-    model2,
-    model3,
-    model4,
-    model5
-  };
+  ui_button( worlds, &ui_count, fvec3_init(cursor.x, cursor.y, 0.0f), fvec3_uniform(100.f) );
+  ui_button( worlds, &ui_count, fvec3_init(-half_width, half_height, 0.0f), fvec3_uniform(100.f) );
+  ui_button( worlds, &ui_count, fvec3_init(half_width, half_height, 0.0f), fvec3_uniform(100.f) );
+  ui_button( worlds, &ui_count, fvec3_init(-half_width,-half_height, 0.0f), fvec3_uniform(100.f) );
+  ui_button( worlds, &ui_count, fvec3_init( half_width,-half_height, 0.0f), fvec3_uniform(100.f) );
   // End of frame
   rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.length );
   rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.length );
@@ -176,7 +188,7 @@ void app_update(arena *a)
 
   render_draw_instances_elems( 
     uibox.count, 
-    5
+    ui_count
   );
 
   // End frame
