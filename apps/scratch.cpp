@@ -70,6 +70,11 @@ internal void texture_read(const char *filename, arena *a)
 
 internal bool ui_button(ui_data *buttons, u32 *count, fvec2 cursor, fvec3 pos, fvec3 scale)
 {
+  scale = fvec3_div(scale, 2.0f);
+  fvec2 point = fvec2_init(cursor.x, cursor.y);
+  fvec2 box_pos = fvec2_init(pos.x, pos.y);
+  fvec2 box_shape = fvec2_init(scale.x, scale.y);
+  buttons[*count].hot = (f32) point_in_rect( point, box_pos, box_shape );
   glm::mat4 identity = glm::mat4(1.0f);
   glm::mat4 t = glm::translate( 
     identity, 
@@ -184,9 +189,9 @@ void app_update(arena *a)
   f32 half_height = 0.5 * state->window.height;
   f32 half_width = half_height * aspect;
   ui_button( buttons, &ui_count, cursor, fvec3_init(   cursor.x,    cursor.y, 0.0f), fvec3_uniform( 10.f) );
-  ui_button( buttons, &ui_count, cursor, fvec3_init(-150.0f,   0.0f, 0.0f), fvec3_uniform( 30.f) );
-  ui_button( buttons, &ui_count, cursor, fvec3_init( 0.0f,     0.0f, 0.0f), fvec3_uniform( 30.f) );
-  ui_button( buttons, &ui_count, cursor, fvec3_init( 150.0f,   0.0f, 0.0f), fvec3_uniform( 30.f) );
+  ui_button( buttons, &ui_count, cursor, fvec3_init(-150.0f,   0.0f, 0.0f), fvec3_uniform( 100.f) );
+  ui_button( buttons, &ui_count, cursor, fvec3_init( 0.0f,     0.0f, 0.0f), fvec3_uniform( 100.f) );
+  ui_button( buttons, &ui_count, cursor, fvec3_init( 150.0f,   0.0f, 0.0f), fvec3_uniform( 100.f) );
   // End of frame
   rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.length );
   rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.length );
