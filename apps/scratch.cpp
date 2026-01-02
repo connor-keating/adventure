@@ -23,6 +23,13 @@ struct camera
 };
 
 
+struct ui_data
+{
+  glm::mat4 world;
+  f32 hot;
+};
+
+
 struct appstate
 {
   platform_window  window;
@@ -61,7 +68,7 @@ internal void texture_read(const char *filename, arena *a)
 }
 
 
-internal bool ui_button(glm::mat4 *worlds, u32 *count, fvec2 cursor, fvec3 pos, fvec3 scale)
+internal bool ui_button(ui_data *buttons, u32 *count, fvec2 cursor, fvec3 pos, fvec3 scale)
 {
   glm::mat4 identity = glm::mat4(1.0f);
   glm::mat4 t = glm::translate( 
@@ -72,8 +79,7 @@ internal bool ui_button(glm::mat4 *worlds, u32 *count, fvec2 cursor, fvec3 pos, 
     identity, 
     glm::vec3(scale.x, scale.y, scale.z)
   );
-  glm::mat4 world = t * s;
-  worlds[*count] = world;
+  buttons[*count].world = t*s;
   (*count)++;
   return false;
 }
@@ -134,7 +140,7 @@ arena app_init()
   };
   rbuffer* color_buffer = rbuffer_init(memory, BUFF_VERTS, colors, sizeof(fvec4), sizeof(colors) );
   rbuffer_vertex_set( 1, color_buffer );
-  state->world_buffer = rbuffer_dynamic_init(memory, BUFF_VERTS, nullptr, sizeof(glm::mat4), 5*sizeof(glm::mat4) );
+  state->world_buffer = rbuffer_dynamic_init(memory, BUFF_VERTS, nullptr, sizeof(ui_data), 5*sizeof(ui_data) );
   rbuffer_vertex_set( 2, state->world_buffer );
   // Shaders
   state->shader[0] = shader_init( memory );
@@ -167,7 +173,7 @@ void app_update(arena *a)
 
   // Game logic
   u32 ui_count = 0;
-  glm::mat4 worlds[5] = {};
+  ui_data buttons[5] = {};
   model3d uibox = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_uniform(0.0f) );
   if (state->inputs[KEY_SELECT] == INPUT_RELEASED)
   {
@@ -177,14 +183,14 @@ void app_update(arena *a)
   f32 aspect = (f32)state->window.width / (f32)state->window.height;
   f32 half_height = 0.5 * state->window.height;
   f32 half_width = half_height * aspect;
-  ui_button( worlds, &ui_count, cursor, fvec3_init(   cursor.x,    cursor.y, 0.0f), fvec3_uniform( 10.f) );
-  ui_button( worlds, &ui_count, cursor, fvec3_init(-150.0f,   0.0f, 0.0f), fvec3_uniform( 30.f) );
-  ui_button( worlds, &ui_count, cursor, fvec3_init( 0.0f,     0.0f, 0.0f), fvec3_uniform( 30.f) );
-  ui_button( worlds, &ui_count, cursor, fvec3_init( 150.0f,   0.0f, 0.0f), fvec3_uniform( 30.f) );
+  ui_button( buttons, &ui_count, cursor, fvec3_init(   cursor.x,    cursor.y, 0.0f), fvec3_uniform( 10.f) );
+  ui_button( buttons, &ui_count, cursor, fvec3_init(-150.0f,   0.0f, 0.0f), fvec3_uniform( 30.f) );
+  ui_button( buttons, &ui_count, cursor, fvec3_init( 0.0f,     0.0f, 0.0f), fvec3_uniform( 30.f) );
+  ui_button( buttons, &ui_count, cursor, fvec3_init( 150.0f,   0.0f, 0.0f), fvec3_uniform( 30.f) );
   // End of frame
   rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.length );
   rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.length );
-  rbuffer_update( state->world_buffer, worlds, sizeof(worlds) );
+  rbuffer_update( state->world_buffer, buttons, sizeof(buttons) );
   rbuffer_vertex_set( 0, state->vbuffer_gpu );
   rbuffer_index_set( state->ebuffer_gpu );
   shader_set( state->shader[0] );

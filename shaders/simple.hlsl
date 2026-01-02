@@ -2,10 +2,11 @@
 // Data types
 struct vertex_in
 { 
-  float4 pos :      POSITION0;
-  float2 tex :      TEXCOORD0;
-  float4 col :      COLOR0;
-  float4x4 world:   WORLD;
+  float4     pos: POSITION0;
+  float2     tex: TEXCOORD0;
+  float4     col: COLOR0;
+  float4x4 world: WORLD;
+  float      hot: HOT;
   uint id: SV_InstanceID;
 };
 
@@ -14,6 +15,7 @@ struct vertex_out
   float4 pos : SV_POSITION;
   float4 col : COLOR0;
   float2 pos_local : TEXCOORD0;
+  float  hot : HOT;
 };
 
 // Constant buffers
@@ -31,6 +33,7 @@ vertex_out VSMain(vertex_in input)
   o.col = input.col;
   // Remap range of tex to (-1, 1) in the box
   o.pos_local = input.tex * 2.0f - 1.0f;
+  o.hot = input.hot;
   return o;
 }
 
@@ -60,12 +63,12 @@ float4 PSMain(vertex_out input) : SV_TARGET
   float innerDist = dist + borderThickness;
 
   // Determine if we're in the border region
-  float3 finalColor = input.col.xyz;
+  float4 final_color = input.col;
   if (innerDist > 0.0)
   {
     // We're in the border region - use white
-    finalColor = float3(1.0, 1.0, 1.0);
+    final_color = float4(1.0, 1.0, 1.0, input.hot);
   }
 
-  return float4(finalColor, 1.0);
+  return final_color;
 }
