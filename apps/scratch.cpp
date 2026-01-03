@@ -191,19 +191,19 @@ void app_update(arena *a)
   f32 half_height = 0.5 * state->window.height;
   f32 half_width = half_height * aspect;
   ui_button( buttons, &ui_count, cursor, fvec3_init(   cursor.x,    cursor.y, 0.0f), fvec3_uniform( 10.f) );
-  bool red_clicked = ui_button( buttons, &ui_count, cursor, fvec3_init(-150.0f,   0.0f, 0.0f), fvec3_uniform( 100.f) );
+  bool red_clicked = ui_button( buttons, &ui_count, cursor, fvec3_init(-150.0f, 100.0f, 0.0f), fvec3_uniform( 60.f) );
   if (red_clicked)
   {
     red ^= 1;
     frame_background.x = red * 0.6f;
   }
-  bool grn_clicked = ui_button( buttons, &ui_count, cursor, fvec3_init( 0.0f,     0.0f, 0.0f), fvec3_uniform( 100.f) );
+  bool grn_clicked = ui_button( buttons, &ui_count, cursor, fvec3_init( 0.0f,   100.0f, 0.0f), fvec3_uniform( 60.f) );
   if (grn_clicked)
   {
     grn ^= 1;
     frame_background.y = grn * 0.6f;
   }
-  bool blu_clicked = ui_button( buttons, &ui_count, cursor, fvec3_init( 150.0f,   0.0f, 0.0f), fvec3_uniform( 100.f) );
+  bool blu_clicked = ui_button( buttons, &ui_count, cursor, fvec3_init( 150.0f, 100.0f, 0.0f), fvec3_uniform( 60.f) );
   if (blu_clicked)
   {
     blu ^= 1;
