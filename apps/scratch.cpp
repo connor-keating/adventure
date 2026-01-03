@@ -70,11 +70,17 @@ internal void texture_read(const char *filename, arena *a)
 
 internal bool ui_button(ui_data *buttons, u32 *count, fvec2 cursor, fvec3 pos, fvec3 scale)
 {
+  bool is_clicked = false;
   scale = fvec3_div(scale, 2.0f);
   fvec2 point = fvec2_init(cursor.x, cursor.y);
   fvec2 box_pos = fvec2_init(pos.x, pos.y);
   fvec2 box_shape = fvec2_init(scale.x, scale.y);
-  buttons[*count].hot = (f32) point_in_rect( point, box_pos, box_shape );
+  bool intersecting = point_in_rect( point, box_pos, box_shape );
+  buttons[*count].hot = (f32) intersecting;
+  if ( (intersecting) && (state->inputs[KEY_SELECT] == INPUT_RELEASED) )
+  {
+    is_clicked = true;
+  }
   glm::mat4 identity = glm::mat4(1.0f);
   glm::mat4 t = glm::translate( 
     identity, 
@@ -86,7 +92,7 @@ internal bool ui_button(ui_data *buttons, u32 *count, fvec2 cursor, fvec3 pos, f
   );
   buttons[*count].world = t*s;
   (*count)++;
-  return false;
+  return is_clicked;
 }
 
 
@@ -172,40 +178,47 @@ void app_update(arena *a)
   // Reset buffers
   arena_free_all( &state->vbuffer_cpu );
   arena_free_all( &state->ebuffer_cpu );
-  // Begin frame
-  fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
-  frame_init(frame_background.array);
-
   // Game logic
+  static fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
+  static i32 red = 0;
+  static i32 grn = 0;
+  static i32 blu = 0;
   u32 ui_count = 0;
   ui_data buttons[5] = {};
   model3d uibox = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_uniform(0.0f) );
-  if (state->inputs[KEY_SELECT] == INPUT_RELEASED)
-  {
-    printf( "Click.\n" );
-  }
   // Locations
   f32 aspect = (f32)state->window.width / (f32)state->window.height;
   f32 half_height = 0.5 * state->window.height;
   f32 half_width = half_height * aspect;
   ui_button( buttons, &ui_count, cursor, fvec3_init(   cursor.x,    cursor.y, 0.0f), fvec3_uniform( 10.f) );
-  ui_button( buttons, &ui_count, cursor, fvec3_init(-150.0f,   0.0f, 0.0f), fvec3_uniform( 100.f) );
-  ui_button( buttons, &ui_count, cursor, fvec3_init( 0.0f,     0.0f, 0.0f), fvec3_uniform( 100.f) );
-  ui_button( buttons, &ui_count, cursor, fvec3_init( 150.0f,   0.0f, 0.0f), fvec3_uniform( 100.f) );
-  // End of frame
-  rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.length );
+  bool red_clicked = ui_button( buttons, &ui_count, cursor, fvec3_init(-150.0f,   0.0f, 0.0f), fvec3_uniform( 100.f) );
+  if (red_clicked)
+  {
+    red ^= 1;
+    frame_background.x = red * 0.6f;
+  }
+  bool grn_clicked = ui_button( buttons, &ui_count, cursor, fvec3_init( 0.0f,     0.0f, 0.0f), fvec3_uniform( 100.f) );
+  if (grn_clicked)
+  {
+    grn ^= 1;
+    frame_background.y = grn * 0.6f;
+  }
+  bool blu_clicked = ui_button( buttons, &ui_count, cursor, fvec3_init( 150.0f,   0.0f, 0.0f), fvec3_uniform( 100.f) );
+  if (blu_clicked)
+  {
+    blu ^= 1;
+    frame_background.z = blu * 0.6f;
+  } rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.length );
   rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.length );
   rbuffer_update( state->world_buffer, buttons, sizeof(buttons) );
   rbuffer_vertex_set( 0, state->vbuffer_gpu );
   rbuffer_index_set( state->ebuffer_gpu );
   shader_set( state->shader[0] );
   // render_draw_instances( 3, 2 );
-
+  frame_init(frame_background.array);
   render_draw_instances_elems( 
     uibox.count, 
     ui_count
   );
-
-  // End frame
   frame_render();
 }
