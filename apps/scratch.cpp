@@ -217,9 +217,6 @@ void app_update(arena *a)
   shader_set( state->shader[0] );
   // render_draw_instances( 3, 2 );
   frame_init(frame_background.array);
-  render_draw_instances_elems( 
-    uibox.count, 
-    ui_count
-  );
+  render_draw_instances_elems( uibox.count, ui_count );
   frame_render();
 }
