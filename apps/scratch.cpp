@@ -208,7 +208,8 @@ void app_update(arena *a)
   {
     blu ^= 1;
     frame_background.z = blu * 0.6f;
-  } rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.length );
+  } 
+  rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.length );
   rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.length );
   rbuffer_update( state->world_buffer, buttons, sizeof(buttons) );
   rbuffer_vertex_set( 0, state->vbuffer_gpu );
