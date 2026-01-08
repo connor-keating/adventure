@@ -127,15 +127,14 @@ internal ID3D11InputLayout * render_vertex_description(ID3DBlob *vert_shader)
 {
   D3D11_INPUT_ELEMENT_DESC il[] =
   {
-  //{ "NAME", SemanticIdx, format, input_slot, byte offset, input class, instance step rate },
-    { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA,   0 },
-    { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, 16, D3D11_INPUT_PER_VERTEX_DATA,   0 },
-    { "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,  0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-    { "WORLD",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2,  0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-    { "WORLD",    1, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-    { "WORLD",    2, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-    { "WORLD",    3, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-    { "HOT",      0, DXGI_FORMAT_R32_FLOAT,          2, 64, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+    { .SemanticName="POSITION", .SemanticIndex=0, .Format=DXGI_FORMAT_R32G32B32A32_FLOAT, .InputSlot=0, .AlignedByteOffset= 0, .InputSlotClass=D3D11_INPUT_PER_VERTEX_DATA,   .InstanceDataStepRate=0 },
+    { .SemanticName="TEXCOORD", .SemanticIndex=0, .Format=DXGI_FORMAT_R32G32_FLOAT,       .InputSlot=0, .AlignedByteOffset=16, .InputSlotClass=D3D11_INPUT_PER_VERTEX_DATA,   .InstanceDataStepRate=0 },
+    { .SemanticName="COLOR",    .SemanticIndex=0, .Format=DXGI_FORMAT_R32G32B32A32_FLOAT, .InputSlot=1, .AlignedByteOffset= 0, .InputSlotClass=D3D11_INPUT_PER_INSTANCE_DATA, .InstanceDataStepRate=1 },
+    { .SemanticName="WORLD",    .SemanticIndex=0, .Format=DXGI_FORMAT_R32G32B32A32_FLOAT, .InputSlot=2, .AlignedByteOffset= 0, .InputSlotClass=D3D11_INPUT_PER_INSTANCE_DATA, .InstanceDataStepRate=1 },
+    { .SemanticName="WORLD",    .SemanticIndex=1, .Format=DXGI_FORMAT_R32G32B32A32_FLOAT, .InputSlot=2, .AlignedByteOffset=16, .InputSlotClass=D3D11_INPUT_PER_INSTANCE_DATA, .InstanceDataStepRate=1 },
+    { .SemanticName="WORLD",    .SemanticIndex=2, .Format=DXGI_FORMAT_R32G32B32A32_FLOAT, .InputSlot=2, .AlignedByteOffset=32, .InputSlotClass=D3D11_INPUT_PER_INSTANCE_DATA, .InstanceDataStepRate=1 },
+    { .SemanticName="WORLD",    .SemanticIndex=3, .Format=DXGI_FORMAT_R32G32B32A32_FLOAT, .InputSlot=2, .AlignedByteOffset=48, .InputSlotClass=D3D11_INPUT_PER_INSTANCE_DATA, .InstanceDataStepRate=1 },
+    { .SemanticName="HOT",      .SemanticIndex=0, .Format=DXGI_FORMAT_R32_FLOAT,          .InputSlot=2, .AlignedByteOffset=64, .InputSlotClass=D3D11_INPUT_PER_INSTANCE_DATA, .InstanceDataStepRate=1 },
   };
   /*
     { "WORLD",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0,  D3D11_INPUT_PER_INSTANCE_DATA, 1 },
