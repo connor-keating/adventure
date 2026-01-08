@@ -9,15 +9,12 @@ if not exist %outdir% mkdir %outdir%
 :: What are you building? Ex. apps/file.cpp -> app2build=file
 set app2build=scratch
 
-:: Mode - _DEBUG or _PRODUCTION
-set mode=_DEBUG
-
 :: Go into source code directory
 pushd "src"
 
 set assembly=main
 set app_src_dir=..\apps
-set app_flags=-D_D3D -D%mode%
+set app_flags=-D_D3D -D_DEBUG
 set compiler_flags=-g -std=c++20 -Wvarargs -Wall -Werror -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-deprecated
 set includes=-I. -I..\external -I%app_src_dir%
 set linker_flags=-luser32 -lgdi32 -lwinmm -ld3d11 -ldxgi -lopengl32 -ld3dcompiler
