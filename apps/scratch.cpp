@@ -6,6 +6,7 @@
 #include "platform.h"
 #include "render.h"
 #include "primitives.cpp"
+#include "app_data.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -32,16 +33,17 @@ struct ui_data
 
 struct appstate
 {
-  platform_window  window;
-  camera           cam_ui_cpu;
-  arena           vbuffer_cpu; // Vertex buffer
-  arena           ebuffer_cpu; // Element buffer
-  rbuffer        *vbuffer_gpu;
-  rbuffer        *ebuffer_gpu;
-  rbuffer        *cam_ui_gpu;
-  rbuffer*       world_buffer;
-  input_state      inputs[KEY_COUNT];
-  u64              shader[MAX_COUNT_SHADERS];
+  platform_window     window;
+  camera              cam_ui_cpu;
+  glm::mat4           world_cpu;
+  arena               vbuffer_cpu; // Vertex buffer
+  arena               ebuffer_cpu; // Element buffer
+  rbuffer            *vbuffer_gpu;
+  rbuffer            *ebuffer_gpu;
+  rbuffer            *cam_ui_gpu;
+  rbuffer            *world_gpu;
+  input_state         inputs[KEY_COUNT];
+  u64                 shader[MAX_COUNT_SHADERS];
 };
 
 global appstate *state;
@@ -135,28 +137,21 @@ arena app_init()
   rbuffer_update( state->cam_ui_gpu, &state->cam_ui_cpu, sizeof(camera) );
   // Bind camera constant buffer to pixel shader
   render_constant_set( state->cam_ui_gpu, 0 );
+  // Initialize world transform (identity matrix by default)
+  state->world_cpu = glm::mat4(1.0f);
+  state->world_gpu = rbuffer_dynamic_init( memory, BUFF_CONST, &state->world_cpu, 0, sizeof(glm::mat4) );
+  rbuffer_update( state->world_gpu, &state->world_cpu, sizeof(glm::mat4) );
+  render_constant_set( state->world_gpu, 1 );
   // Begin render buffers
-  state->vbuffer_cpu = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(fvec4) );
+  state->vbuffer_cpu = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(vertex1) );
   state->ebuffer_cpu = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(u32) );
   // Vertex stride: float4 position (16 bytes) + float2 texcoord (8 bytes) = 24 bytes
-  state->vbuffer_gpu = rbuffer_dynamic_init( memory, BUFF_VERTS, state->vbuffer_cpu.buffer, 24, state->vbuffer_cpu.length);
+  state->vbuffer_gpu = rbuffer_dynamic_init( memory, BUFF_VERTS, state->vbuffer_cpu.buffer, sizeof(vertex1), state->vbuffer_cpu.length);
   state->ebuffer_gpu = rbuffer_dynamic_init( memory, BUFF_ELEMS, state->ebuffer_cpu.buffer, sizeof(u32), state->ebuffer_cpu.length);
-  // Load UI thing
-  fvec4 colors[5] = {
-    fvec4_init(1.0f, 1.0f, 1.0f, 1.0f), // white
-    fvec4_init(1.0f, 0.0f, 0.0f, 1.0f), // red
-    fvec4_init(0.0f, 1.0f, 0.0f, 1.0f), // green
-    fvec4_init(0.0f, 0.0f, 1.0f, 1.0f), // blue
-    fvec4_init(1.0f, 0.0f, 1.0f, 1.0f), // color
-  };
-  rbuffer* color_buffer = rbuffer_init(memory, BUFF_VERTS, colors, sizeof(fvec4), sizeof(colors) );
-  rbuffer_vertex_set( 1, color_buffer );
-  state->world_buffer = rbuffer_dynamic_init(memory, BUFF_VERTS, nullptr, sizeof(ui_data), 5*sizeof(ui_data) );
-  rbuffer_vertex_set( 2, state->world_buffer );
   // Shaders
   state->shader[0] = shader_init( memory );
-  shader_load( state->shader[0], VERTEX, "shaders/simple.hlsl", "VSMain", "vs_5_0");
-  shader_load( state->shader[0], PIXEL,  "shaders/simple.hlsl", "PSMain", "ps_5_0");
+  shader_load( state->shader[0], VERTEX, "shaders/simple2.hlsl", "VSMain", "vs_5_0");
+  shader_load( state->shader[0], PIXEL,  "shaders/simple2.hlsl", "PSMain", "ps_5_0");
   // Start the window
   platform_window_show();
   return app_memory;
@@ -181,42 +176,28 @@ void app_update(arena *a)
   // Game logic
   static fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
   static i32 red = 0;
-  static i32 grn = 0;
-  static i32 blu = 0;
   u32 ui_count = 0;
   ui_data buttons[5] = {};
-  model3d uibox = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_uniform(0.0f) );
+  model3d uibox = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
   // Locations
   f32 aspect = (f32)state->window.width / (f32)state->window.height;
   f32 half_height = 0.5 * state->window.height;
   f32 half_width = half_height * aspect;
-  ui_button( buttons, &ui_count, cursor, fvec3_init(   cursor.x,    cursor.y, 0.0f), fvec3_uniform( 10.f) );
-  bool red_clicked = ui_button( buttons, &ui_count, cursor, fvec3_init(-150.0f, 100.0f, 0.0f), fvec3_uniform( 60.f) );
-  if (red_clicked)
-  {
-    red ^= 1;
-    frame_background.x = red * 0.6f;
-  }
-  bool grn_clicked = ui_button( buttons, &ui_count, cursor, fvec3_init( 0.0f,   100.0f, 0.0f), fvec3_uniform( 60.f) );
-  if (grn_clicked)
-  {
-    grn ^= 1;
-    frame_background.y = grn * 0.6f;
-  }
-  bool blu_clicked = ui_button( buttons, &ui_count, cursor, fvec3_init( 150.0f, 100.0f, 0.0f), fvec3_uniform( 60.f) );
-  if (blu_clicked)
-  {
-    blu ^= 1;
-    frame_background.z = blu * 0.6f;
-  } 
+  // Update world transform matrix (scale the box)
+  glm::mat4 world = glm::mat4(1.0f);
+  world = glm::scale(world, glm::vec3(60.0f, 60.0f, 1.0f));  // Scale to 200x200 pixels
+  state->world_cpu = world;
+  rbuffer_update( state->world_gpu, &state->world_cpu, sizeof(glm::mat4) );
+  render_constant_set( state->world_gpu, 1 );
+
+  // Update vertex and element buffers
   rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.length );
   rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.length );
-  rbuffer_update( state->world_buffer, buttons, sizeof(buttons) );
   rbuffer_vertex_set( 0, state->vbuffer_gpu );
   rbuffer_index_set( state->ebuffer_gpu );
   shader_set( state->shader[0] );
-  // render_draw_instances( 3, 2 );
   frame_init(frame_background.array);
-  render_draw_instances_elems( uibox.count, ui_count );
+  u32 elem_count = state->ebuffer_cpu.offset_new / sizeof(u32);
+  render_draw_elems( elem_count, 0, 0 );
   frame_render();
 }
