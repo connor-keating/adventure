@@ -127,6 +127,12 @@ internal ID3D11InputLayout * render_vertex_description(ID3DBlob *vert_shader)
 {
   D3D11_INPUT_ELEMENT_DESC il[] =
   {
+    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+  };
+  /*
+  {
     { .SemanticName="POSITION", .SemanticIndex=0, .Format=DXGI_FORMAT_R32G32B32A32_FLOAT, .InputSlot=0, .AlignedByteOffset= 0, .InputSlotClass=D3D11_INPUT_PER_VERTEX_DATA,   .InstanceDataStepRate=0 },
     { .SemanticName="TEXCOORD", .SemanticIndex=0, .Format=DXGI_FORMAT_R32G32_FLOAT,       .InputSlot=0, .AlignedByteOffset=16, .InputSlotClass=D3D11_INPUT_PER_VERTEX_DATA,   .InstanceDataStepRate=0 },
     { .SemanticName="COLOR",    .SemanticIndex=0, .Format=DXGI_FORMAT_R32G32B32A32_FLOAT, .InputSlot=1, .AlignedByteOffset= 0, .InputSlotClass=D3D11_INPUT_PER_INSTANCE_DATA, .InstanceDataStepRate=1 },
@@ -136,17 +142,13 @@ internal ID3D11InputLayout * render_vertex_description(ID3DBlob *vert_shader)
     { .SemanticName="WORLD",    .SemanticIndex=3, .Format=DXGI_FORMAT_R32G32B32A32_FLOAT, .InputSlot=2, .AlignedByteOffset=48, .InputSlotClass=D3D11_INPUT_PER_INSTANCE_DATA, .InstanceDataStepRate=1 },
     { .SemanticName="HOT",      .SemanticIndex=0, .Format=DXGI_FORMAT_R32_FLOAT,          .InputSlot=2, .AlignedByteOffset=64, .InputSlotClass=D3D11_INPUT_PER_INSTANCE_DATA, .InstanceDataStepRate=1 },
   };
+  */
   /*
     { "WORLD",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0,  D3D11_INPUT_PER_INSTANCE_DATA, 1 },
     { "WORLD",    1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
     { "WORLD",    2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
     { "WORLD",    3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
   D3D11_INPUT_ELEMENT_DESC il[] =
-  {
-    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-  };
   */
   ID3D11InputLayout* layout = nullptr;
   renderer->device->CreateInputLayout(
@@ -622,15 +624,9 @@ void render_draw( u32 count )
 }
 
 
-void render_draw_elems(rbuffer* vbuffer, rbuffer* ebuffer, u64 shader_index, u32 count, u32 elem_start, u32 vert_start)
+void render_draw_elems( u32 count, u32 elem_start, u32 vert_start )
 {
-  shaders s = rdata->s[shader_index];
-  renderer->context->IASetVertexBuffers(0, 1, &vbuffer->buffer, &vbuffer->stride, &vbuffer->offset);
-  renderer->context->IASetIndexBuffer(ebuffer->buffer, DXGI_FORMAT_R32_UINT, 0);
-  renderer->context->IASetInputLayout(s.vertex_in);
   renderer->context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  renderer->context->VSSetShader(s.vertex, 0, 0);
-  renderer->context->PSSetShader(s.pixel, 0, 0);
   // renderer->context->RSSetState(renderer->rasterizer_default);
   renderer->context->DrawIndexed(count, elem_start, vert_start);
 }
@@ -669,10 +665,10 @@ void render_draw_ui( u32 count )
 }
 
 
-void render_draw_ui_elems(rbuffer* vbuffer, rbuffer* ebuffer, u64 shader_index, u32 count, u32 elem_start, u32 vert_start)
+void render_draw_ui_elems(u32 count, u32 elem_start, u32 vert_start)
 {
   renderer->context->OMSetDepthStencilState(renderer->depth_stencil_disabled, 0);
-  render_draw_elems( vbuffer, ebuffer, shader_index, count, elem_start, vert_start );
+  render_draw_elems(  count, elem_start, vert_start );
   renderer->context->OMSetDepthStencilState(renderer->depth_stencil_enabled, 0);
 }
 
