@@ -7,20 +7,12 @@ model3d primitive_box2d( arena *vbuffer, arena *ebuffer, fvec4 color )
   // Initialize output
   model3d output = {};
   // Vertices
-  f32 verts[24] = {
-    // position               // Texture
-    -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-     1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-     1.0f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-    -1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-  };
-  /*
   f32 verts[36] = {
-    // position          // color (RGBA)              // Texture
-    -1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f, // low left
-     1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f,  1.0f, 0.0f, // low right
-     1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f,  1.0f, 1.0f, // top right
-    -1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f,  0.0f, 1.0f, // top left
+    // position          // color (RGBA)          // Texture 
+    -1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f,  // low left
+     1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f,  1.0f, 0.0f,  // low right
+     1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f,  1.0f, 1.0f,  // top right
+    -1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // top left
   };
   // Set the color
   {
@@ -45,7 +37,6 @@ model3d primitive_box2d( arena *vbuffer, arena *ebuffer, fvec4 color )
     verts[32] = color.z;
     verts[33] = color.w;
   }
-  */
   u32 elems[6] = {
     0, 1, 2, // tri 1
     0, 2, 3, // tri 2
