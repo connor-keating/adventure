@@ -60,7 +60,7 @@ void       render_constant_set( rbuffer* b, u32 slot );
 void       render_text_init(arena *a);
 
 void       render_draw( u32 count );
-void       render_draw_elems(rbuffer* vbuffer, rbuffer* ebuffer, u64 shader_index, u32 count, u32 elem_start, u32 vert_start);
+void       render_draw_elems( u32 count, u32 elem_start, u32 vert_start);
 void       render_draw_instances( u32 vertex_count, u32 instance_count);
 void       render_draw_instances_elems( u32 elem_count, u32 instance_count );
 void       render_draw_ui( u32 count );
