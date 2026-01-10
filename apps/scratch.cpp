@@ -66,7 +66,7 @@ internal void texture_read(const char *filename, arena *a)
 internal bool ui_button( fvec2 cursor, fvec3 pos, fvec3 scale)
 {
   bool is_clicked = false;
-  primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
+  primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, color );
   fvec2 box_pos   = fvec2_init(pos.x, pos.y);
   fvec2 box_shape = fvec2_init(scale.x, scale.y);
   bool intersecting = point_in_rect( cursor, box_pos, box_shape );
@@ -168,7 +168,13 @@ void app_update(arena *a)
   // Game logic
   static fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
   static i32 red = 0;
-  bool red_pressed = ui_button( cursor, fvec3_init(0.0f, 0.0f, 0.0f), fvec3_init(60.0f, 60.0f, 1.0f) );
+  bool red_pressed = ui_button( 
+    cursor, 
+    fvec3_init(-300.0f, 0.0f, 0.0f), 
+    fvec3_init(60.0f, 60.0f, 1.0f), 
+    fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) 
+  );
+  // bool red_pressed = ui_button( cursor, fvec3_init( 300.0f, 0.0f, 0.0f), fvec3_init(60.0f, 60.0f, 1.0f) );
   if (red_pressed)
   {
     red ^= 1;
