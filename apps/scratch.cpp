@@ -67,7 +67,6 @@ internal bool ui_button( fvec2 cursor, fvec3 pos, fvec3 scale)
 {
   bool is_clicked = false;
   primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
-  scale           = fvec3_div(scale, 2.0f);
   fvec2 box_pos   = fvec2_init(pos.x, pos.y);
   fvec2 box_shape = fvec2_init(scale.x, scale.y);
   bool intersecting = point_in_rect( cursor, box_pos, box_shape );
