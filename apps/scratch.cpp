@@ -11,8 +11,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#define MAX_COUNT_SHADERS 100
-#define MAX_COUNT_VERTEX  1000
+#define MAX_COUNT_SHADERS  100
+#define MAX_COUNT_VERTEX   1000
+#define MAX_COUNT_ENTITIES 100
 
 
 struct camera
@@ -21,6 +22,16 @@ struct camera
   glm::mat4 proj;            // 64 bytes
   glm::vec3 pos;                 // 12 bytes
   f32 _padding;                  // 4 bytes → pad to 16-byte multiple
+};
+
+
+struct entities
+{
+  u64 total;
+  u64 vert_start[MAX_COUNT_ENTITIES];
+  u64 elem_start[MAX_COUNT_ENTITIES];
+  u64 elem_count[MAX_COUNT_ENTITIES];
+  glm::mat4 world_transforms[MAX_COUNT_ENTITIES];
 };
 
 
@@ -37,9 +48,20 @@ struct appstate
   rbuffer            *world_gpu;
   input_state         inputs[KEY_COUNT];
   u64                 shader[MAX_COUNT_SHADERS];
+  entities            entity;
 };
 
 global appstate *state;
+
+
+internal void entity_load(entity e, glm::mat4 world)
+{
+  state->entity.vert_start[state->entity.total] = e.vert_start;
+  state->entity.elem_start[state->entity.total] = e.elem_start;
+  state->entity.elem_count[state->entity.total] = e.count;
+  state->entity.world_transforms[state->entity.total] = world;
+  state->entity.total++;
+}
 
 
 internal void input_reset( input_state *map )
@@ -63,10 +85,10 @@ internal void texture_read(const char *filename, arena *a)
 }
 
 
-internal bool ui_button( fvec2 cursor, fvec3 pos, fvec3 scale)
+internal bool ui_button( fvec2 cursor, fvec3 pos, fvec3 scale, fvec4 color)
 {
   bool is_clicked = false;
-  primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, color );
+  entity button = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, color );
   fvec2 box_pos   = fvec2_init(pos.x, pos.y);
   fvec2 box_shape = fvec2_init(scale.x, scale.y);
   bool intersecting = point_in_rect( cursor, box_pos, box_shape );
@@ -83,9 +105,7 @@ internal bool ui_button( fvec2 cursor, fvec3 pos, fvec3 scale)
     identity, 
     glm::vec3(scale.x, scale.y, scale.z)
   );
-  state->world_cpu = t*s;
-  // Update world transform matrix 
-  rbuffer_update( state->world_gpu, &state->world_cpu, sizeof(glm::mat4) );
+  entity_load( button, (t*s) );
   return is_clicked;
 }
 
@@ -165,6 +185,8 @@ void app_update(arena *a)
   // Reset buffers
   arena_free_all( &state->vbuffer_cpu );
   arena_free_all( &state->ebuffer_cpu );
+  // Reset entity count
+  state->entity.total = 0;
   // Game logic
   static fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
   static i32 red = 0;
@@ -174,7 +196,12 @@ void app_update(arena *a)
     fvec3_init(60.0f, 60.0f, 1.0f), 
     fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) 
   );
-  // bool red_pressed = ui_button( cursor, fvec3_init( 300.0f, 0.0f, 0.0f), fvec3_init(60.0f, 60.0f, 1.0f) );
+  bool grn_pressed = ui_button( 
+    cursor, 
+    fvec3_init( 300.0f, 0.0f, 0.0f), 
+    fvec3_init(60.0f, 60.0f, 1.0f), 
+    fvec4_init(0.0f, 1.0f, 0.0f, 1.0f) 
+  );
   if (red_pressed)
   {
     red ^= 1;
@@ -188,7 +215,11 @@ void app_update(arena *a)
   rbuffer_index_set( state->ebuffer_gpu );
   shader_set( state->shader[0] );
   frame_init(frame_background.array);
-  u32 elem_count = state->ebuffer_cpu.offset_new / sizeof(u32);
-  render_draw_elems( elem_count, 0, 0 );
+  // Draw everything
+  // Update world transform matrix 
+  rbuffer_update( state->world_gpu, &state->entity.world_transforms[0], sizeof(glm::mat4) );
+  render_draw_elems( state->entity.elem_count[0], state->entity.elem_start[0], state->entity.vert_start[0] );
+  rbuffer_update( state->world_gpu, &state->entity.world_transforms[1], sizeof(glm::mat4) );
+  render_draw_elems( state->entity.elem_count[1], state->entity.elem_start[1], state->entity.vert_start[1] );
   frame_render();
 }
