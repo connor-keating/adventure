@@ -37,12 +37,6 @@ struct vert_texture
   f32 x, y, z, u, v;
 };
 
-struct model3d
-{
-  u64 vert_start;
-  u64 elem_start;
-  u64 count;
-};
 
 void       render_init(arena *a);
 void       render_data_init( arena *a, u64 shader_count );
