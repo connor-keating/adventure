@@ -1,11 +1,17 @@
-#include "render.h"
 #include "app_data.h"
 
 
-model3d primitive_box2d( arena *vbuffer, arena *ebuffer, fvec4 color )
+struct entity
+{
+  u64 vert_start;
+  u64 elem_start;
+  u64 count;
+};
+
+entity primitive_box2d( arena *vbuffer, arena *ebuffer, fvec4 color )
 {
   // Initialize output
-  model3d output = {};
+  entity output = {};
   // Vertices
   f32 verts[36] = {
     // position          // color (RGBA)          // Texture 
@@ -44,7 +50,7 @@ model3d primitive_box2d( arena *vbuffer, arena *ebuffer, fvec4 color )
   // Get and set vertex and element starting position in arena
   u32 vert_count = ARRAY_COUNT(verts);
   u32 elem_count = ARRAY_COUNT(elems);
-  u32 verts_loaded_count = vbuffer->offset_new / sizeof(f32);
+  u32 verts_loaded_count = vbuffer->offset_new / sizeof(vertex1);
   u32 elems_loaded_count = ebuffer->offset_new / sizeof(u32);
   output.vert_start = verts_loaded_count;
   output.elem_start = elems_loaded_count;
