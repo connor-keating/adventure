@@ -39,7 +39,6 @@ struct appstate
 {
   platform_window     window;
   camera              cam_ui_cpu;
-  glm::mat4           world_cpu;
   arena               vbuffer_cpu; // Vertex buffer
   arena               ebuffer_cpu; // Element buffer
   rbuffer            *vbuffer_gpu;
@@ -150,9 +149,7 @@ arena app_init()
   // Bind camera constant buffer to pixel shader
   render_constant_set( state->cam_ui_gpu, 0 );
   // Initialize world transform (identity matrix by default)
-  state->world_cpu = glm::mat4(1.0f);
-  state->world_gpu = rbuffer_dynamic_init( memory, BUFF_CONST, &state->world_cpu, 0, sizeof(glm::mat4) );
-  rbuffer_update( state->world_gpu, &state->world_cpu, sizeof(glm::mat4) );
+  state->world_gpu = rbuffer_dynamic_init( memory, BUFF_CONST, nullptr, 0, sizeof(glm::mat4) );
   render_constant_set( state->world_gpu, 1 );
   // Begin render buffers
   state->vbuffer_cpu = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(vertex1) );
