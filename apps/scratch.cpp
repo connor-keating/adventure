@@ -24,13 +24,6 @@ struct camera
 };
 
 
-struct ui_data
-{
-  glm::mat4 world;
-  f32 hot;
-};
-
-
 struct appstate
 {
   platform_window     window;
@@ -70,15 +63,14 @@ internal void texture_read(const char *filename, arena *a)
 }
 
 
-internal bool ui_button(ui_data *buttons, u32 *count, fvec2 cursor, fvec3 pos, fvec3 scale)
+internal bool ui_button( fvec2 cursor, fvec3 pos, fvec3 scale)
 {
   bool is_clicked = false;
-  scale = fvec3_div(scale, 2.0f);
-  fvec2 point = fvec2_init(cursor.x, cursor.y);
-  fvec2 box_pos = fvec2_init(pos.x, pos.y);
+  primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
+  scale           = fvec3_div(scale, 2.0f);
+  fvec2 box_pos   = fvec2_init(pos.x, pos.y);
   fvec2 box_shape = fvec2_init(scale.x, scale.y);
-  bool intersecting = point_in_rect( point, box_pos, box_shape );
-  buttons[*count].hot = (f32) intersecting;
+  bool intersecting = point_in_rect( cursor, box_pos, box_shape );
   if ( (intersecting) && (state->inputs[KEY_SELECT] == INPUT_RELEASED) )
   {
     is_clicked = true;
@@ -92,8 +84,9 @@ internal bool ui_button(ui_data *buttons, u32 *count, fvec2 cursor, fvec3 pos, f
     identity, 
     glm::vec3(scale.x, scale.y, scale.z)
   );
-  buttons[*count].world = t*s;
-  (*count)++;
+  state->world_cpu = t*s;
+  // Update world transform matrix 
+  rbuffer_update( state->world_gpu, &state->world_cpu, sizeof(glm::mat4) );
   return is_clicked;
 }
 
@@ -176,20 +169,13 @@ void app_update(arena *a)
   // Game logic
   static fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
   static i32 red = 0;
-  u32 ui_count = 0;
-  ui_data buttons[5] = {};
-  model3d uibox = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
-  // Locations
-  f32 aspect = (f32)state->window.width / (f32)state->window.height;
-  f32 half_height = 0.5 * state->window.height;
-  f32 half_width = half_height * aspect;
-  // Update world transform matrix (scale the box)
-  glm::mat4 world = glm::mat4(1.0f);
-  world = glm::scale(world, glm::vec3(60.0f, 60.0f, 1.0f));  // Scale to 200x200 pixels
-  state->world_cpu = world;
-  rbuffer_update( state->world_gpu, &state->world_cpu, sizeof(glm::mat4) );
+  bool red_pressed = ui_button( cursor, fvec3_init(0.0f, 0.0f, 0.0f), fvec3_init(60.0f, 60.0f, 1.0f) );
+  if (red_pressed)
+  {
+    red ^= 1;
+    frame_background.x = 0.4 * red;
+  }
   render_constant_set( state->world_gpu, 1 );
-
   // Update vertex and element buffers
   rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.length );
   rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.length );
