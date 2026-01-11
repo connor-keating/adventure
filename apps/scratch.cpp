@@ -6,7 +6,7 @@
 #include "platform.h"
 #include "render.h"
 #include "primitives.cpp"
-#include "app_data.h"
+#include "render_boundary.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -18,10 +18,10 @@
 
 struct camera
 {
-  glm::mat4 view;            // 64 bytes
-  glm::mat4 proj;            // 64 bytes
-  glm::vec3 pos;                 // 12 bytes
-  f32 _padding;                  // 4 bytes → pad to 16-byte multiple
+  glm::mat4 view;  // 64 bytes
+  glm::mat4 proj;  // 64 bytes
+  glm::vec3 pos;   // 12 bytes
+  f32 _padding;    // 4 bytes → pad to 16-byte multiple
 };
 
 
@@ -43,6 +43,7 @@ struct appstate
   arena               ebuffer_cpu; // Element buffer
   rbuffer            *vbuffer_gpu;
   rbuffer            *ebuffer_gpu;
+  rbuffer            *uibuffer_gpu;
   rbuffer            *cam_ui_gpu;
   rbuffer            *cam_game_gpu;
   rbuffer            *world_gpu;
