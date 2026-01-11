@@ -1,5 +1,13 @@
 struct out_vertex { float4 pos : SV_POSITION; float4 col : COL; };
 
+cbuffer camera : register(b0)
+{
+  float4x4 view;
+  float4x4 proj;
+  float3   pos;
+  float    _pad;
+};
+
 static const float2 square[6] = {
   float2(-1.0f, -1.0f),  // Triangle 1
   float2( 1.0f, -1.0f),
@@ -10,7 +18,7 @@ static const float2 square[6] = {
 };
 out_vertex VSMain(uint vid : SV_VERTEXID)
 {
-  float4 pos = float4(square[vid], 0.0f, 1.0f);
+  float4 pos = mul( proj, float4(square[vid], 0.0f, 1.0f) );
   out_vertex output = { 
     pos,
     float4(1.0f, 1.0f, 1.0f, 1.0f)
