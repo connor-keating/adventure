@@ -7,36 +7,15 @@ entity primitive_box2d( arena *vbuffer, arena *ebuffer, fvec4 color )
   // Initialize output
   entity output = {};
   // Vertices
-  f32 verts[28] = {
-    // position          // color (RGBA)       
-    -1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f, 
-     1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f, 
-     1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f,
-    -1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f
-  };
-  // Set the color
-  {
-    // Color vertex 1
-    verts[3] = color.x;
-    verts[4] = color.y;
-    verts[5] = color.z;
-    verts[6] = color.w;
-    // Color vertex 2
-    verts[10] = color.x;
-    verts[11] = color.y;
-    verts[12] = color.z;
-    verts[13] = color.w;
-    // Color vertex 3
-    verts[17] = color.x;
-    verts[18] = color.y;
-    verts[19] = color.z;
-    verts[20] = color.w;
-    // Color vertex 4
-    verts[24] = color.x;
-    verts[25] = color.y;
-    verts[26] = color.z;
-    verts[27] = color.w;
-  }
+  vertex1 verts[4] = {};
+  verts[0].pos = fvec3_init(-1.0f, -1.0f, 0.0f);
+  verts[1].pos = fvec3_init( 1.0f, -1.0f, 0.0f);
+  verts[2].pos = fvec3_init( 1.0f,  1.0f, 0.0f);
+  verts[3].pos = fvec3_init(-1.0f,  1.0f, 0.0f);
+  verts[0].col = fvec4_init( color.x, color.y, color.z, color.w);
+  verts[1].col = fvec4_init( color.x, color.y, color.z, color.w);
+  verts[2].col = fvec4_init( color.x, color.y, color.z, color.w);
+  verts[3].col = fvec4_init( color.x, color.y, color.z, color.w);
   u32 elems[6] = {
     0, 1, 2, // tri 1
     0, 2, 3, // tri 2
@@ -50,8 +29,8 @@ entity primitive_box2d( arena *vbuffer, arena *ebuffer, fvec4 color )
   output.elem_start = elems_loaded_count;
   output.count = elem_count; 
   // Load data into arena
-  f32 *vtemp = arena_push_array( vbuffer, vert_count, f32 );
-  u32 *etemp = arena_push_array( ebuffer, elem_count, u32 );
+  vertex1 *vtemp = arena_push_array( vbuffer, vert_count, vertex1 );
+  u32     *etemp = arena_push_array( ebuffer, elem_count, u32 );
   memcpy( vtemp, verts, sizeof(verts) );
   memcpy( etemp, elems, sizeof(elems) );
   return output;
