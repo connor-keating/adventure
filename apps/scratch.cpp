@@ -145,11 +145,11 @@ arena app_init()
   state->ebuffer_gpu = rbuffer_dynamic_init( memory, BUFF_ELEMS, state->ebuffer_cpu.buffer, sizeof(u32), state->ebuffer_cpu.length);
   // Shaders
   state->shader[0] = shader_init( memory );
-  shader_load( state->shader[0], VERTEX, "shaders/game.hlsl", "VSMain", "vs_5_0");
-  shader_load( state->shader[0], PIXEL,  "shaders/game.hlsl", "PSMain", "ps_5_0");
+  shader_load( state->shader[0], VERTEX, "shaders/ui.hlsl", "VSMain", "vs_5_0");
+  shader_load( state->shader[0], PIXEL,  "shaders/ui.hlsl", "PSMain", "ps_5_0");
   state->shader[1] = shader_init( memory );
-  shader_load( state->shader[1], VERTEX, "shaders/ui.hlsl", "VSMain", "vs_5_0");
-  shader_load( state->shader[1], PIXEL,  "shaders/ui.hlsl", "PSMain", "ps_5_0");
+  shader_load( state->shader[1], VERTEX, "shaders/game.hlsl", "VSMain", "vs_5_0");
+  shader_load( state->shader[1], PIXEL,  "shaders/game.hlsl", "PSMain", "ps_5_0");
   // Cameras
   state->cam_ui_gpu   = rbuffer_dynamic_init( memory, BUFF_CONST, nullptr, 0, sizeof(camera) );
   state->cam_game_gpu = rbuffer_dynamic_init( memory, BUFF_CONST, nullptr, 0, sizeof(camera) );
@@ -219,11 +219,13 @@ void app_update(arena *a)
   rbuffer_vertex_set( 0, state->vbuffer_gpu );
   // Set index buffer
   rbuffer_index_set( state->ebuffer_gpu );
-  // Set shader
-  shader_set( state->shader[0] );
-  // Draw
-  render_draw_elems( 18, 0, 0 );
+  // Draw geometry
   shader_set( state->shader[1] );
+  render_draw_elems( 18, 0, 0 );
+  // Draw UI
+  render_constant_set( state->cam_ui_gpu, 0 );
+  rbuffer_update( state->cam_ui_gpu, &uicam, sizeof(uicam) );
+  shader_set( state->shader[0] );
   render_draw(6);
   frame_render();
 }
