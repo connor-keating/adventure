@@ -135,6 +135,11 @@ internal ID3D11InputLayout * render_vertex_description(ID3DBlob *vert_shader, ve
       D3D11_INPUT_ELEMENT_DESC il[] =
       {
         { .SemanticName="COLOR",    .SemanticIndex=0, .Format=DXGI_FORMAT_R32G32B32A32_FLOAT, .InputSlot=0, .AlignedByteOffset= 0, .InputSlotClass=D3D11_INPUT_PER_INSTANCE_DATA, .InstanceDataStepRate=1 },
+        { .SemanticName="WORLD",    .SemanticIndex=0, .Format=DXGI_FORMAT_R32G32B32A32_FLOAT, .InputSlot=0, .AlignedByteOffset=16, .InputSlotClass=D3D11_INPUT_PER_INSTANCE_DATA, .InstanceDataStepRate=1 },
+        { .SemanticName="WORLD",    .SemanticIndex=1, .Format=DXGI_FORMAT_R32G32B32A32_FLOAT, .InputSlot=0, .AlignedByteOffset=32, .InputSlotClass=D3D11_INPUT_PER_INSTANCE_DATA, .InstanceDataStepRate=1 },
+        { .SemanticName="WORLD",    .SemanticIndex=2, .Format=DXGI_FORMAT_R32G32B32A32_FLOAT, .InputSlot=0, .AlignedByteOffset=48, .InputSlotClass=D3D11_INPUT_PER_INSTANCE_DATA, .InstanceDataStepRate=1 },
+        { .SemanticName="WORLD",    .SemanticIndex=3, .Format=DXGI_FORMAT_R32G32B32A32_FLOAT, .InputSlot=0, .AlignedByteOffset=64, .InputSlotClass=D3D11_INPUT_PER_INSTANCE_DATA, .InstanceDataStepRate=1 },
+
       };
       descrip = il;
       descrip_count = _countof(il);break;

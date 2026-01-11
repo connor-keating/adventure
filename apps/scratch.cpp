@@ -28,6 +28,7 @@ struct camera
 struct uidata
 {
   glm::vec4 col;
+  glm::mat4 world;
 };
 
 
@@ -192,6 +193,7 @@ void app_update(arena *a)
   // Reset buffers
   arena_free_all( &state->vbuffer_cpu );
   arena_free_all( &state->ebuffer_cpu );
+  arena_free_all( &state->uibuffer_cpu );
   // Reset entity count
   state->entity.total = 0;
   // Game logic
@@ -225,6 +227,7 @@ void app_update(arena *a)
   // Add UI elements
   uidata *test = arena_push_struct(&state->uibuffer_cpu, uidata);
   test->col = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
+  test->world = identity * glm::scale(glm::mat4(1.0f), glm::vec3(50.0f));
   // Update vertex and element buffers
   rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.offset_new );
   rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.offset_new );

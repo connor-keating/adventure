@@ -1,7 +1,8 @@
 struct in_vertex 
 {
-  uint vid: SV_VERTEXID;
-  float4 color: COLOR0;
+  uint     vid  : SV_VERTEXID;
+  float4   color: COLOR0;
+  float4x4 world: WORLD;
 };
 
 
@@ -30,7 +31,7 @@ static const float2 square[6] = {
 
 out_vertex VSMain(in_vertex input)
 {
-  float4 pos = mul( proj, float4(square[input.vid], 0.0f, 1.0f) );
+  float4 pos = mul( proj, mul( input.world, float4(square[input.vid], 0.0f, 1.0f) ) );
   out_vertex output = {
     pos,
     input.color
