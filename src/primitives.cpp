@@ -1,24 +1,18 @@
 #include "app_data.h"
 
 
-struct entity
-{
-  u64 vert_start;
-  u64 elem_start;
-  u64 count;
-};
 
 entity primitive_box2d( arena *vbuffer, arena *ebuffer, fvec4 color )
 {
   // Initialize output
   entity output = {};
   // Vertices
-  f32 verts[36] = {
-    // position          // color (RGBA)          // Texture 
-    -1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f,  // low left
-     1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f,  1.0f, 0.0f,  // low right
-     1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f,  1.0f, 1.0f,  // top right
-    -1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // top left
+  f32 verts[28] = {
+    // position          // color (RGBA)       
+    -1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f, 
+     1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f, 
+     1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f,
+    -1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 0.0f, 1.0f
   };
   // Set the color
   {
@@ -28,20 +22,20 @@ entity primitive_box2d( arena *vbuffer, arena *ebuffer, fvec4 color )
     verts[5] = color.z;
     verts[6] = color.w;
     // Color vertex 2
-    verts[12] = color.x;
-    verts[13] = color.y;
-    verts[14] = color.z;
-    verts[15] = color.w;
+    verts[10] = color.x;
+    verts[11] = color.y;
+    verts[12] = color.z;
+    verts[13] = color.w;
     // Color vertex 3
-    verts[21] = color.x;
-    verts[22] = color.y;
-    verts[23] = color.z;
-    verts[24] = color.w;
+    verts[17] = color.x;
+    verts[18] = color.y;
+    verts[19] = color.z;
+    verts[20] = color.w;
     // Color vertex 4
-    verts[30] = color.x;
-    verts[31] = color.y;
-    verts[32] = color.z;
-    verts[33] = color.w;
+    verts[24] = color.x;
+    verts[25] = color.y;
+    verts[26] = color.z;
+    verts[27] = color.w;
   }
   u32 elems[6] = {
     0, 1, 2, // tri 1
