@@ -227,7 +227,7 @@ void app_update(arena *a)
   // Add UI elements
   uidata *test = arena_push_struct(&state->uibuffer_cpu, uidata);
   test->col = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
-  test->world = identity * glm::scale(glm::mat4(1.0f), glm::vec3(50.0f));
+  test->world = glm::translate(identity, glm::vec3(-half_width+50.0f+5.0f, half_height-50.0f-5.0f, 0.0f)) * glm::scale(identity, glm::vec3(50.0f));
   // Update vertex and element buffers
   rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.offset_new );
   rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.offset_new );
@@ -240,7 +240,8 @@ void app_update(arena *a)
   rbuffer_index_set( state->ebuffer_gpu );
   // Draw geometry
   shader_set( state->shader[1] );
-  render_draw_elems( 18, 0, 0 );
+  u32 elem_count = state->ebuffer_cpu.offset_new / sizeof(u32);
+  render_draw_elems( elem_count, 0, 0 );
   // Draw UI
   rbuffer_vertex_set( 0, state->uibuffer_gpu );
   render_constant_set( state->cam_ui_gpu, 0 );
