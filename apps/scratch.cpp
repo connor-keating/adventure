@@ -174,7 +174,7 @@ void app_update(arena *a)
   state->entity.total = 0;
   // Game logic
   static fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
-  entity uibox = primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
+  entity uibox = primitive_pyramid( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
   // Set the UI camera
   f32 aspect = (f32)state->window.width / (f32)state->window.height;
   f32 half_height = 0.5f * state->window.height;
