@@ -1,33 +1,24 @@
+struct out_vertex { float4 pos : SV_POSITION; float4 col : COL; };
 
-struct vertex_in  { float3 pos : POSITION0; float4 col : COLOR0; };
-struct vertex_out { float4 pos : SV_POSITION; float4 col : COLOR; };
-
-cbuffer camera : register(b0)
-{
-  float4x4 view;
-  float4x4 proj;
-  float3   pos;
-  float    _pad;
+static const float2 square[6] = {
+  float2(-1.0f, -1.0f),  // Triangle 1
+  float2( 1.0f, -1.0f),
+  float2( 1.0f,  1.0f),
+  float2( 1.0f,  1.0f),  // Triangle 2
+  float2(-1.0f,  1.0f),
+  float2(-1.0f, -1.0f)
 };
-
-cbuffer transform : register(b1)
+out_vertex VSMain(uint vid : SV_VERTEXID)
 {
-  float4x4 world;
-};
-
-
-vertex_out VSMain( vertex_in input )
-{ 
-  float4 world_position = mul(world, float4(input.pos, 1.0f));
-  float4 out_position = mul(proj, mul(view, world_position) );
-  vertex_out output = { 
-    out_position,
-    input.col
+  float4 pos = float4(square[vid], 0.0f, 1.0f);
+  out_vertex output = { 
+    pos,
+    float4(1.0f, 1.0f, 1.0f, 1.0f)
   };
   return output;
 }
 
-float4 PSMain(vertex_out input) : SV_TARGET 
+float4 PSMain(out_vertex input) : SV_TARGET 
 { 
   return input.col;
 }
