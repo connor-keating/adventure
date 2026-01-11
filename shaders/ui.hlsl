@@ -1,4 +1,15 @@
-struct out_vertex { float4 pos : SV_POSITION; float4 col : COL; };
+struct in_vertex 
+{
+  uint vid: SV_VERTEXID;
+  float4 color: COLOR0;
+};
+
+
+struct out_vertex 
+{ 
+  float4 pos : SV_POSITION;
+  float4 col : COL;
+};
 
 cbuffer camera : register(b0)
 {
@@ -16,12 +27,13 @@ static const float2 square[6] = {
   float2(-1.0f,  1.0f),
   float2(-1.0f, -1.0f)
 };
-out_vertex VSMain(uint vid : SV_VERTEXID)
+
+out_vertex VSMain(in_vertex input)
 {
-  float4 pos = mul( proj, float4(square[vid], 0.0f, 1.0f) );
-  out_vertex output = { 
+  float4 pos = mul( proj, float4(square[input.vid], 0.0f, 1.0f) );
+  out_vertex output = {
     pos,
-    float4(1.0f, 1.0f, 1.0f, 1.0f)
+    input.color
   };
   return output;
 }

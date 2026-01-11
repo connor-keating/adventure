@@ -25,6 +25,12 @@ struct camera
 };
 
 
+struct uidata
+{
+  glm::vec4 col;
+};
+
+
 struct entities
 {
   u64 total;
@@ -43,6 +49,7 @@ struct appstate
   arena               ebuffer_cpu; // Element buffer
   rbuffer            *vbuffer_gpu;
   rbuffer            *ebuffer_gpu;
+  arena               uibuffer_cpu; // Vertex buffer
   rbuffer            *uibuffer_gpu;
   rbuffer            *cam_ui_gpu;
   rbuffer            *cam_game_gpu;
@@ -139,15 +146,18 @@ arena app_init()
   render_init(memory);
   render_data_init( memory, MAX_COUNT_SHADERS );
   // Begin render buffers
-  state->vbuffer_cpu = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(vertex1) );
-  state->ebuffer_cpu = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(u32) );
+  state->vbuffer_cpu  = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(vertex1) );
+  state->ebuffer_cpu  = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(u32) );
+  state->uibuffer_cpu = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(uidata) );
   // Vertex stride: float4 position (16 bytes) + float2 texcoord (8 bytes) = 24 bytes
   state->vbuffer_gpu = rbuffer_dynamic_init( memory, BUFF_VERTS, state->vbuffer_cpu.buffer, sizeof(vertex1), state->vbuffer_cpu.length);
   state->ebuffer_gpu = rbuffer_dynamic_init( memory, BUFF_ELEMS, state->ebuffer_cpu.buffer, sizeof(u32), state->ebuffer_cpu.length);
+  state->uibuffer_gpu = rbuffer_dynamic_init( memory, BUFF_VERTS, state->uibuffer_cpu.buffer, sizeof(uidata), state->uibuffer_cpu.length);
   // Shaders
   state->shader[0] = shader_init( memory );
   shader_load( state->shader[0], VERTEX, "shaders/ui.hlsl", "VSMain", "vs_5_0");
   shader_load( state->shader[0], PIXEL,  "shaders/ui.hlsl", "PSMain", "ps_5_0");
+  rbuffer_vertex_describe(0, VERTEX_UI);
   state->shader[1] = shader_init( memory );
   shader_load( state->shader[1], VERTEX, "shaders/game.hlsl", "VSMain", "vs_5_0");
   shader_load( state->shader[1], PIXEL,  "shaders/game.hlsl", "PSMain", "ps_5_0");
@@ -212,9 +222,13 @@ void app_update(arena *a)
   glm::vec3 rotation_axis = glm::vec3(0.0f, 1.0f, 0.0f); // Y-axis
   glm::mat4 pyramid_world = glm::rotate(glm::mat4(1.0f), angle, rotation_axis);
   rbuffer_update( state->world_gpu, &pyramid_world, sizeof(identity) );
+  // Add UI elements
+  uidata *test = arena_push_struct(&state->uibuffer_cpu, uidata);
+  test->col = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
   // Update vertex and element buffers
   rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.offset_new );
   rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.offset_new );
+  rbuffer_update( state->uibuffer_gpu, state->uibuffer_cpu.buffer, state->uibuffer_cpu.offset_new );
   // Begin frame rendering
   frame_init(frame_background.array);
   // Set vertex buffer
@@ -225,9 +239,10 @@ void app_update(arena *a)
   shader_set( state->shader[1] );
   render_draw_elems( 18, 0, 0 );
   // Draw UI
+  rbuffer_vertex_set( 0, state->uibuffer_gpu );
   render_constant_set( state->cam_ui_gpu, 0 );
   rbuffer_update( state->cam_ui_gpu, &uicam, sizeof(uicam) );
   shader_set( state->shader[0] );
-  render_draw(6);
+  render_draw_instances(6, 1);
   frame_render();
 }

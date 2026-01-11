@@ -132,7 +132,12 @@ internal ID3D11InputLayout * render_vertex_description(ID3DBlob *vert_shader, ve
   {
     case (VERTEX_UI):
     {
-      break;
+      D3D11_INPUT_ELEMENT_DESC il[] =
+      {
+        { .SemanticName="COLOR",    .SemanticIndex=0, .Format=DXGI_FORMAT_R32G32B32A32_FLOAT, .InputSlot=0, .AlignedByteOffset= 0, .InputSlotClass=D3D11_INPUT_PER_INSTANCE_DATA, .InstanceDataStepRate=1 },
+      };
+      descrip = il;
+      descrip_count = _countof(il);break;
     };
     case (VERTEX_WORLD):
     {
