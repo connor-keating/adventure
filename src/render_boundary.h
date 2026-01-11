@@ -1,5 +1,16 @@
 #pragma once
 
+#include "core.h"
+#include "linalg.h"
+
+
+enum vertex_type
+{
+  VERTEX_UI,
+  VERTEX_WORLD
+};
+
+
 struct entity
 {
   u64 vert_start;

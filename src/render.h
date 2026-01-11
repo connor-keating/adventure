@@ -2,6 +2,7 @@
 
 #include "core.h"
 #include "platform.h"
+#include "render_boundary.h"
 
 
 // You define these internally.
@@ -48,7 +49,7 @@ void       rbuffer_close( rbuffer* b );
 rbuffer*   rbuffer_dynamic_init(arena *a, buffer_type t, void *data, u32 stride, u32 byte_count);
 void       rbuffer_update(rbuffer* buffer, void* data, u32 byte_count);
 void       rbuffer_vertex_set( u32 slot_start, rbuffer *buffer );
-void       rbuffer_vertex_describe( u64 shader_index );
+void       rbuffer_vertex_describe( u64 shader_index, vertex_type vtype );
 void       rbuffer_index_set( rbuffer *b );
 void       render_constant_set( rbuffer* b, u32 slot );
 

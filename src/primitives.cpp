@@ -1,3 +1,4 @@
+#include "linalg.h"
 #include "render_boundary.h"
 
 

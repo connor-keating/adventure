@@ -124,12 +124,28 @@ internal void debug_objects()
 #endif
 
 
-internal ID3D11InputLayout * render_vertex_description(ID3DBlob *vert_shader)
+internal ID3D11InputLayout * render_vertex_description(ID3DBlob *vert_shader, vertex_type vtype)
 {
-  D3D11_INPUT_ELEMENT_DESC il[] =
+  D3D11_INPUT_ELEMENT_DESC *descrip;
+  size_t descrip_count = 0;
+  switch(vtype)
   {
-    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    case (VERTEX_UI):
+    {
+      break;
+    };
+    case (VERTEX_WORLD):
+    {
+      D3D11_INPUT_ELEMENT_DESC il[] =
+      {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+      };
+      descrip = il;
+      descrip_count = _countof(il);
+      break;
+    };
+    default: ASSERT(false, "Unexpected vertex type.");
   };
   /*
   {
@@ -152,8 +168,8 @@ internal ID3D11InputLayout * render_vertex_description(ID3DBlob *vert_shader)
   */
   ID3D11InputLayout* layout = nullptr;
   renderer->device->CreateInputLayout(
-    il, 
-    _countof(il),
+    descrip, 
+    descrip_count,
     vert_shader->GetBufferPointer(),
     vert_shader->GetBufferSize(),
     &layout
@@ -540,10 +556,10 @@ void rbuffer_vertex_set( u32 slot_start, rbuffer *b )
 }
 
 
-void rbuffer_vertex_describe( u64 shader_index )
+void rbuffer_vertex_describe( u64 shader_index, vertex_type vtype )
 {
   shaders *s = &rdata->s[shader_index];
-  s->vertex_in = render_vertex_description(s->vertex_blob);
+  s->vertex_in = render_vertex_description(s->vertex_blob, vtype);
 }
 
 

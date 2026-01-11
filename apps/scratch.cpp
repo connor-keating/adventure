@@ -1,6 +1,6 @@
 #include "application.h"
 
-#include "linalg.cpp"
+#include "linalg.h"
 #include "collision.cpp"
 #include "input.h"
 #include "platform.h"
@@ -151,7 +151,7 @@ arena app_init()
   state->shader[1] = shader_init( memory );
   shader_load( state->shader[1], VERTEX, "shaders/game.hlsl", "VSMain", "vs_5_0");
   shader_load( state->shader[1], PIXEL,  "shaders/game.hlsl", "PSMain", "ps_5_0");
-  rbuffer_vertex_describe(1);
+  rbuffer_vertex_describe(1, VERTEX_WORLD);
   // Cameras
   state->cam_ui_gpu   = rbuffer_dynamic_init( memory, BUFF_CONST, nullptr, 0, sizeof(camera) );
   state->cam_game_gpu = rbuffer_dynamic_init( memory, BUFF_CONST, nullptr, 0, sizeof(camera) );
