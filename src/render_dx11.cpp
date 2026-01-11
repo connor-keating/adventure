@@ -19,6 +19,7 @@ struct shaders
 {
   ID3D11VertexShader *vertex;
   ID3D11InputLayout  *vertex_in;
+  ID3DBlob           *vertex_blob;
   ID3D11PixelShader  *pixel;
 };
 
@@ -539,6 +540,13 @@ void rbuffer_vertex_set( u32 slot_start, rbuffer *b )
 }
 
 
+void rbuffer_vertex_describe( u64 shader_index )
+{
+  shaders *s = &rdata->s[shader_index];
+  s->vertex_in = render_vertex_description(s->vertex_blob);
+}
+
+
 void rbuffer_index_set( rbuffer *b )
 {
   renderer->context->IASetIndexBuffer(b->buffer, DXGI_FORMAT_R32_UINT, 0 );
@@ -953,8 +961,8 @@ void shader_load( u64 shader_index, shader_type t, const char *file, const char 
   {
     case (VERTEX):
     {
+      s->vertex_blob = blob;
       renderer->device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &s->vertex);
-      s->vertex_in = render_vertex_description(blob);
       break;
     }
     case (PIXEL):
