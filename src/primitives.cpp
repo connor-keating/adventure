@@ -41,20 +41,35 @@ entity primitive_pyramid( arena *vbuffer, arena *ebuffer, fvec4 color )
 {
   // Initialize output
   entity output = {};
-  // Vertices
-  vertex1 verts[4] = {};
-  verts[0].pos = fvec3_init(-1.0f, -1.0f, 0.0f);
-  verts[1].pos = fvec3_init( 1.0f, -1.0f, 0.0f);
-  verts[2].pos = fvec3_init( 1.0f,  1.0f, 0.0f);
-  verts[3].pos = fvec3_init(-1.0f,  1.0f, 0.0f);
-  verts[0].col = fvec4_init( 1.0f, 0.0f, 0.0f, 1.0f);
-  verts[1].col = fvec4_init( 0.0f, 1.0f, 0.0f, 1.0f);
-  verts[2].col = fvec4_init( 0.0f, 0.0f, 1.0f, 1.0f);
-  verts[3].col = fvec4_init( 1.0f, 1.0f, 0.0f, 1.0f);
-  u32 elems[6] = {
-    0, 1, 2, // tri 1
-    0, 2, 3, // tri 2
+  // Vertices: 4 base corners + 1 apex
+  vertex1 verts[5] = {};
+  // Base vertices (Y = -1)
+  verts[0].pos = fvec3_init(-1.0f, -1.0f, -1.0f);  // back-left
+  verts[1].pos = fvec3_init( 1.0f, -1.0f, -1.0f);  // back-right
+  verts[2].pos = fvec3_init( 1.0f, -1.0f,  1.0f);  // front-right
+  verts[3].pos = fvec3_init(-1.0f, -1.0f,  1.0f);  // front-left
+  // Apex (Y = 1)
+  verts[4].pos = fvec3_init( 0.0f,  1.0f,  0.0f);  // top
+
+  // Colors
+  verts[0].col = fvec4_init( 1.0f, 0.0f, 0.0f, 1.0f);  // red
+  verts[1].col = fvec4_init( 0.0f, 1.0f, 0.0f, 1.0f);  // green
+  verts[2].col = fvec4_init( 0.0f, 0.0f, 1.0f, 1.0f);  // blue
+  verts[3].col = fvec4_init( 1.0f, 1.0f, 0.0f, 1.0f);  // yellow
+  verts[4].col = fvec4_init( 1.0f, 1.0f, 1.0f, 1.0f);  // white
+
+  // Elements: 4 triangular sides + 2 base triangles (CCW when viewed from outside)
+  u32 elems[18] = {
+    // Base (looking up from below, CCW)
+    0, 2, 1,  // base tri 1
+    0, 3, 2,  // base tri 2
+    // Side faces (looking from outside, CCW)
+    0, 1, 4,  // back face
+    1, 2, 4,  // right face
+    2, 3, 4,  // front face
+    3, 0, 4,  // left face
   };
+
   // Get and set vertex and element starting position in arena
   u32 vert_count = ARRAY_COUNT(verts);
   u32 elem_count = ARRAY_COUNT(elems);
@@ -62,7 +77,7 @@ entity primitive_pyramid( arena *vbuffer, arena *ebuffer, fvec4 color )
   u32 elems_loaded_count = ebuffer->offset_new / sizeof(u32);
   output.vert_start = verts_loaded_count;
   output.elem_start = elems_loaded_count;
-  output.count = elem_count; 
+  output.count = elem_count;
   // Load data into arena
   vertex1 *vtemp = arena_push_array( vbuffer, vert_count, vertex1 );
   u32     *etemp = arena_push_array( ebuffer, elem_count, u32 );
