@@ -192,7 +192,7 @@ void app_update(arena *a)
   uicam.proj = glm::ortho( -half_width, half_width, -half_height, half_height, 0.0f, 1.0f );
   uicam.pos  = glm::vec3(0.0f, 0.0f, 0.0f);
   camera game_cam = {};
-  game_cam.pos = glm::vec3(0.0f, 0.0f, -3.0f);
+  game_cam.pos = glm::vec3(0.0f, 2.0f, -3.0f);
   game_cam.view = glm::lookAt(game_cam.pos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
   game_cam.proj = glm::perspective( 45.0f, aspect, 0.1f, 100.0f);
   render_constant_set( state->cam_game_gpu, 0 );
