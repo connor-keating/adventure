@@ -10,10 +10,16 @@ cbuffer camera : register(b0)
   float    _pad;
 };
 
+cbuffer transform : register(b1)
+{
+  float4x4 world;
+};
+
 
 vertex_out VSMain( vertex_in input )
 { 
-  float4 out_position = mul(proj, mul(view, float4(input.pos, 1.0f) ));
+  float4 world_position = mul(world, float4(input.pos, 1.0f));
+  float4 out_position = mul(proj, mul(view, world_position) );
   vertex_out output = { 
     out_position,
     input.col
