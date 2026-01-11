@@ -149,6 +149,8 @@ arena app_init()
   // Cameras
   state->cam_ui_gpu   = rbuffer_dynamic_init( memory, BUFF_CONST, nullptr, 0, sizeof(camera) );
   state->cam_game_gpu = rbuffer_dynamic_init( memory, BUFF_CONST, nullptr, 0, sizeof(camera) );
+  // Transform
+  state->world_gpu = rbuffer_dynamic_init( memory, BUFF_CONST, nullptr, 0, sizeof(glm::mat4) );
   // Start the window
   platform_window_show();
   return app_memory;
@@ -190,6 +192,9 @@ void app_update(arena *a)
   game_cam.proj = glm::perspective( 45.0f, aspect, 0.1f, 100.0f);
   render_constant_set( state->cam_game_gpu, 0 );
   rbuffer_update( state->cam_game_gpu, &game_cam, sizeof(game_cam) );
+  // Update world transform
+  render_constant_set(state->world_gpu, 1);
+  rbuffer_update( state->world_gpu, &identity, sizeof(identity) );
   // Update vertex and element buffers
   rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.offset_new );
   rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.offset_new );
@@ -202,6 +207,6 @@ void app_update(arena *a)
   // Set shader
   shader_set( state->shader[0] );
   // Draw
-  render_draw_elems( 6, 0, 0 );
+  render_draw_elems( 18, 0, 0 );
   frame_render();
 }
