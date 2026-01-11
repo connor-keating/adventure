@@ -38,6 +38,7 @@ struct entities
 struct appstate
 {
   platform_window     window;
+  clock               timer;
   arena               vbuffer_cpu; // Vertex buffer
   arena               ebuffer_cpu; // Element buffer
   rbuffer            *vbuffer_gpu;
@@ -152,13 +153,17 @@ arena app_init()
   // Transform
   state->world_gpu = rbuffer_dynamic_init( memory, BUFF_CONST, nullptr, 0, sizeof(glm::mat4) );
   // Start the window
+  state->timer = platform_clock_init(60.0f);
   platform_window_show();
+  platform_clock_reset(&state->timer);
   return app_memory;
 }
 
 
 void app_update(arena *a)
 {
+  // Tick
+  platform_clock_update(&state->timer);
   // Reset input from last frame...
   input_reset(state->inputs);
   // Read all platform messages for this frame
@@ -194,7 +199,14 @@ void app_update(arena *a)
   rbuffer_update( state->cam_game_gpu, &game_cam, sizeof(game_cam) );
   // Update world transform
   render_constant_set(state->world_gpu, 1);
-  rbuffer_update( state->world_gpu, &identity, sizeof(identity) );
+  static f32 angle = 0.0f;
+  f32 angle_velocity = PI/4.0f;
+  angle += angle_velocity * state->timer.delta; // rad += (rad/s)*s
+  // wrap angle so it doesn't explode
+  if (angle > 2.0*PI) angle -= 2.0*PI;
+  glm::vec3 rotation_axis = glm::vec3(0.0f, 1.0f, 0.0f); // Y-axis
+  glm::mat4 pyramid_world = glm::rotate(glm::mat4(1.0f), angle, rotation_axis);
+  rbuffer_update( state->world_gpu, &pyramid_world, sizeof(identity) );
   // Update vertex and element buffers
   rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.offset_new );
   rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.offset_new );
