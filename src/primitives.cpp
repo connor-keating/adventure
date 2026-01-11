@@ -37,6 +37,40 @@ entity primitive_box2d( arena *vbuffer, arena *ebuffer, fvec4 color )
 }
 
 
+entity primitive_pyramid( arena *vbuffer, arena *ebuffer, fvec4 color )
+{
+  // Initialize output
+  entity output = {};
+  // Vertices
+  vertex1 verts[4] = {};
+  verts[0].pos = fvec3_init(-1.0f, -1.0f, 0.0f);
+  verts[1].pos = fvec3_init( 1.0f, -1.0f, 0.0f);
+  verts[2].pos = fvec3_init( 1.0f,  1.0f, 0.0f);
+  verts[3].pos = fvec3_init(-1.0f,  1.0f, 0.0f);
+  verts[0].col = fvec4_init( 1.0f, 0.0f, 0.0f, 1.0f);
+  verts[1].col = fvec4_init( 0.0f, 1.0f, 0.0f, 1.0f);
+  verts[2].col = fvec4_init( 0.0f, 0.0f, 1.0f, 1.0f);
+  verts[3].col = fvec4_init( 1.0f, 1.0f, 0.0f, 1.0f);
+  u32 elems[6] = {
+    0, 1, 2, // tri 1
+    0, 2, 3, // tri 2
+  };
+  // Get and set vertex and element starting position in arena
+  u32 vert_count = ARRAY_COUNT(verts);
+  u32 elem_count = ARRAY_COUNT(elems);
+  u32 verts_loaded_count = vbuffer->offset_new / sizeof(vertex1);
+  u32 elems_loaded_count = ebuffer->offset_new / sizeof(u32);
+  output.vert_start = verts_loaded_count;
+  output.elem_start = elems_loaded_count;
+  output.count = elem_count; 
+  // Load data into arena
+  vertex1 *vtemp = arena_push_array( vbuffer, vert_count, vertex1 );
+  u32     *etemp = arena_push_array( ebuffer, elem_count, u32 );
+  memcpy( vtemp, verts, sizeof(verts) );
+  memcpy( etemp, elems, sizeof(elems) );
+  return output;
+}
+
 void primitive_box3d( arena *vbuffer, arena *ebuffer )
 {
   // Vertices
