@@ -26,7 +26,7 @@ echo %assembly% compiling...
 clang++ ^
 %compiler_flags% ^
 %app_flags% ^
-main.cpp core.cpp platform_win32.cpp render_dx11.cpp %app_src_dir%\%app2build%.cpp ^
+main.cpp core.cpp linalg.cpp platform_win32.cpp render_dx11.cpp %app_src_dir%\%app2build%.cpp ^
 -o ^
 %outdir%\%assembly%.exe ^
 %defines% ^
