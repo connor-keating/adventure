@@ -145,8 +145,11 @@ arena app_init()
   state->ebuffer_gpu = rbuffer_dynamic_init( memory, BUFF_ELEMS, state->ebuffer_cpu.buffer, sizeof(u32), state->ebuffer_cpu.length);
   // Shaders
   state->shader[0] = shader_init( memory );
-  shader_load( state->shader[0], VERTEX, "shaders/ui.hlsl", "VSMain", "vs_5_0");
-  shader_load( state->shader[0], PIXEL,  "shaders/ui.hlsl", "PSMain", "ps_5_0");
+  shader_load( state->shader[0], VERTEX, "shaders/game.hlsl", "VSMain", "vs_5_0");
+  shader_load( state->shader[0], PIXEL,  "shaders/game.hlsl", "PSMain", "ps_5_0");
+  state->shader[1] = shader_init( memory );
+  shader_load( state->shader[1], VERTEX, "shaders/tri.hlsl", "VSMain", "vs_5_0");
+  shader_load( state->shader[1], PIXEL,  "shaders/tri.hlsl", "PSMain", "ps_5_0");
   // Cameras
   state->cam_ui_gpu   = rbuffer_dynamic_init( memory, BUFF_CONST, nullptr, 0, sizeof(camera) );
   state->cam_game_gpu = rbuffer_dynamic_init( memory, BUFF_CONST, nullptr, 0, sizeof(camera) );
@@ -220,5 +223,7 @@ void app_update(arena *a)
   shader_set( state->shader[0] );
   // Draw
   render_draw_elems( 18, 0, 0 );
+  shader_set( state->shader[1] );
+  render_draw(3);
   frame_render();
 }
