@@ -198,7 +198,8 @@ void app_update(arena *a)
   state->entity.total = 0;
   // Game logic
   static fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
-  entity uibox = primitive_pyramid( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
+  entity player = primitive_pyramid( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
+  entity grid =   primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
   // Set the UI camera
   f32 aspect = (f32)state->window.width / (f32)state->window.height;
   f32 half_height = 0.5f * state->window.height;
@@ -223,7 +224,9 @@ void app_update(arena *a)
   if (angle > 2.0*PI) angle -= 2.0*PI;
   glm::vec3 rotation_axis = glm::vec3(0.0f, 1.0f, 0.0f); // Y-axis
   glm::mat4 pyramid_world = glm::rotate(glm::mat4(1.0f), angle, rotation_axis);
-  rbuffer_update( state->world_gpu, &pyramid_world, sizeof(identity) );
+  glm::vec3 grid_axis = glm::vec3(1.0f, 0.0f, 0.0f);
+  glm::mat4 grid_world = glm::rotate( identity,-80.0f, grid_axis);
+  rbuffer_update( state->world_gpu, &grid_world, sizeof(grid_world) );
   // Add UI elements
   uidata *test = arena_push_struct(&state->uibuffer_cpu, uidata);
   test->col = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
@@ -241,7 +244,8 @@ void app_update(arena *a)
   // Draw geometry
   shader_set( state->shader[1] );
   u32 elem_count = state->ebuffer_cpu.offset_new / sizeof(u32);
-  render_draw_elems( elem_count, 0, 0 );
+  // render_draw_elems( elem_count, 0, 0 );
+  render_draw_elems( grid.count, grid.elem_start, grid.vert_start );
   // Draw UI
   rbuffer_vertex_set( 0, state->uibuffer_gpu );
   render_constant_set( state->cam_ui_gpu, 0 );
