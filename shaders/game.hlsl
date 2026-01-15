@@ -33,5 +33,6 @@ vertex_out VSMain( vertex_in input )
 float4 PSMain(vertex_out input) : SV_TARGET
 {
   float4 texColor = mainTexture.Sample(mainSampler, input.texcoord);
-  return texColor * input.col;
+  // If color alpha is 0, use raw texture; otherwise blend with color
+  return (input.col.a == 0.0f) ? texColor : texColor * input.col;
 }
