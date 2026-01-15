@@ -83,14 +83,15 @@ internal void input_reset( input_state *map )
 }
 
 
-internal void texture_read(const char *filename, arena *a)
+internal texture* texture2d_read(const char *filename, arena *a)
 {
   // TODO: This is broken but I'm keeping it for when I need it.
   i32 test = platform_file_exists(filename);
   i32 x, y, n;
   i32 components_per_pixel = 4; // Force RGBA
   unsigned char *data = stbi_load(filename, &x, &y, &n, components_per_pixel);
-  // texture_ptr tex = texture2d_init( a, data, x, y, components_per_pixel);
+  texture *texture = texture2d_init(a, data, x, y, components_per_pixel);
+  return texture;
 }
 
 
@@ -168,6 +169,9 @@ arena app_init()
   state->cam_game_gpu = rbuffer_dynamic_init( memory, BUFF_CONST, nullptr, 0, sizeof(camera) );
   // Transform
   state->world_gpu = rbuffer_dynamic_init( memory, BUFF_CONST, nullptr, 0, sizeof(glm::mat4) );
+  // Floor texture
+  texture *floor = texture2d_read( "assets/stadium.bmp", memory );
+  texture_bind(floor, 0);
   // Start the window
   state->timer = platform_clock_init(60.0f);
   platform_window_show();
