@@ -30,7 +30,8 @@ vertex_out VSMain( vertex_in input )
   return output;
 }
 
-float4 PSMain(vertex_out input) : SV_TARGET 
-{ 
-  return mainTexture.Sample(mainSampler, input.texcoord);
+float4 PSMain(vertex_out input) : SV_TARGET
+{
+  float4 texColor = mainTexture.Sample(mainSampler, input.texcoord);
+  return texColor * input.col;
 }
