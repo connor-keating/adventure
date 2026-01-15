@@ -24,7 +24,8 @@ union vertex1
   {
     fvec3 pos;
     fvec4 col;
+    fvec2 tex;
   };
-  f32 data[7];
+  f32 data[9];
 };
 

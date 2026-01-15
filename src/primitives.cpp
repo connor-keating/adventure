@@ -9,14 +9,21 @@ entity primitive_box2d( arena *vbuffer, arena *ebuffer, fvec4 color )
   entity output = {};
   // Vertices
   vertex1 verts[4] = {};
+  // Position
   verts[0].pos = fvec3_init(-1.0f, -1.0f, 0.0f);
   verts[1].pos = fvec3_init( 1.0f, -1.0f, 0.0f);
   verts[2].pos = fvec3_init( 1.0f,  1.0f, 0.0f);
   verts[3].pos = fvec3_init(-1.0f,  1.0f, 0.0f);
+  // Colors
   verts[0].col = fvec4_init(1.0f, 0.0f, 0.0f, 1.0f);
   verts[1].col = fvec4_init(0.0f, 1.0f, 0.0f, 1.0f);
   verts[2].col = fvec4_init(0.0f, 0.0f, 1.0f, 1.0f);
   verts[3].col = fvec4_init(1.0f, 0.0f, 1.0f, 1.0f);
+  // Texture (UV) coordinates
+  verts[0].tex = fvec2_init(0.0f, 0.0f);
+  verts[1].tex = fvec2_init(1.0f, 0.0f);
+  verts[2].tex = fvec2_init(1.0f, 1.0f);
+  verts[3].tex = fvec2_init(0.0f, 1.0f);
   u32 elems[6] = {
     0, 1, 2, // tri 1
     0, 2, 3, // tri 2
