@@ -8,6 +8,8 @@
 #include "primitives.cpp"
 #include "render_boundary.h"
 
+#include "text.cpp"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -48,8 +50,10 @@ struct appstate
   clock               timer;
   arena               vbuffer_cpu; // Vertex buffer
   arena               ebuffer_cpu; // Element buffer
+  arena               tbuffer_cpu; // Text buffer
   rbuffer            *vbuffer_gpu;
   rbuffer            *ebuffer_gpu;
+  rbuffer            *tbuffer_gpu;
   arena               uibuffer_cpu; // Vertex buffer
   rbuffer            *uibuffer_gpu;
   rbuffer            *cam_ui_gpu;
@@ -150,10 +154,12 @@ arena app_init()
   // Begin render buffers
   state->vbuffer_cpu  = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(vertex1) );
   state->ebuffer_cpu  = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(u32) );
+  state->tbuffer_cpu  = text_buffer_init( memory, MAX_COUNT_VERTEX );
   state->uibuffer_cpu = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(uidata) );
   // Vertex stride: float4 position (16 bytes) + float2 texcoord (8 bytes) = 24 bytes
   state->vbuffer_gpu = rbuffer_dynamic_init( memory, BUFF_VERTS, state->vbuffer_cpu.buffer, sizeof(vertex1), state->vbuffer_cpu.length);
   state->ebuffer_gpu = rbuffer_dynamic_init( memory, BUFF_ELEMS, state->ebuffer_cpu.buffer, sizeof(u32), state->ebuffer_cpu.length);
+  state->tbuffer_gpu = text_gpu_init( memory, state->tbuffer_cpu.buffer, MAX_COUNT_VERTEX );
   state->uibuffer_gpu = rbuffer_dynamic_init( memory, BUFF_VERTS, state->uibuffer_cpu.buffer, sizeof(uidata), state->uibuffer_cpu.length);
   // Shaders
   state->shader[0] = shader_init( memory );
@@ -164,6 +170,10 @@ arena app_init()
   shader_load( state->shader[1], VERTEX, "shaders/game.hlsl", "VSMain", "vs_5_0");
   shader_load( state->shader[1], PIXEL,  "shaders/game.hlsl", "PSMain", "ps_5_0");
   rbuffer_vertex_describe(1, VERTEX_WORLD);
+  state->shader[2] = shader_init( memory );
+  shader_load( state->shader[2], VERTEX, "shaders/text.hlsl", "VSMain", "vs_5_0");
+  shader_load( state->shader[2], PIXEL,  "shaders/text.hlsl", "PSMain", "ps_5_0");
+  rbuffer_vertex_describe(2, VERTEX_WORLD);
   // Cameras
   state->cam_ui_gpu   = rbuffer_dynamic_init( memory, BUFF_CONST, nullptr, 0, sizeof(camera) );
   state->cam_game_gpu = rbuffer_dynamic_init( memory, BUFF_CONST, nullptr, 0, sizeof(camera) );
@@ -172,6 +182,11 @@ arena app_init()
   // Floor texture
   texture *floor = texture2d_read( "assets/stadium.bmp", memory );
   texture_bind(floor, 0);
+  // Text
+  const char *font_file = "C:\\WINDOWS\\Fonts\\arial.ttf";
+  // Create the char atlas bitmap image
+  texture *atlas = text_init( memory, font_file );
+  texture_bind(atlas, 1);
   // Start the window
   state->timer = platform_clock_init(60.0f);
   platform_window_show();
@@ -197,6 +212,7 @@ void app_update(arena *a)
   // Reset buffers
   arena_free_all( &state->vbuffer_cpu );
   arena_free_all( &state->ebuffer_cpu );
+  arena_free_all( &state->tbuffer_cpu );
   arena_free_all( &state->uibuffer_cpu );
   // Reset entity count
   state->entity.total = 0;
@@ -204,6 +220,9 @@ void app_update(arena *a)
   static fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
   entity player = primitive_pyramid( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
   entity grid =   primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 0.0f) );
+  glm::vec3 tpos = glm::vec3(0.0f, 0.0f, 0.0f);
+  f32 text_scale = 2.0f / state->window.height; // NDC
+  text_add( &state->tbuffer_cpu, "TEXT!", 5, state->window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
   // Set the UI camera
   f32 aspect = (f32)state->window.width / (f32)state->window.height;
   f32 half_height = 0.5f * state->window.height;
@@ -238,6 +257,7 @@ void app_update(arena *a)
   // Update vertex and element buffers
   rbuffer_update( state->vbuffer_gpu, state->vbuffer_cpu.buffer, state->vbuffer_cpu.offset_new );
   rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.offset_new );
+  rbuffer_update( state->tbuffer_gpu, state->tbuffer_cpu.buffer, state->tbuffer_cpu.offset_new );
   rbuffer_update( state->uibuffer_gpu, state->uibuffer_cpu.buffer, state->uibuffer_cpu.offset_new );
   // Begin frame rendering
   frame_init(frame_background.array);
@@ -256,5 +276,10 @@ void app_update(arena *a)
   rbuffer_update( state->cam_ui_gpu, &uicam, sizeof(uicam) );
   shader_set( state->shader[0] );
   render_draw_instances(6, 1);
+  // Draw text
+  rbuffer_vertex_set( 0, state->tbuffer_gpu );
+  shader_set( state->shader[2] );
+  u32 text_vert_count = text_count(&state->tbuffer_cpu);
+  render_draw(text_vert_count);
   frame_render();
 }
