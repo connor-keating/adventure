@@ -1,6 +1,6 @@
 
-Texture2D    gTex  : register(t0);
-SamplerState gSamp : register(s0);
+Texture2D    gTex  : register(t1);
+SamplerState gSamp : register(s1);
 
 struct VSIn {
   float3 pos   : POSITION;
