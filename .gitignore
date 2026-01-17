@@ -1,11 +1,12 @@
+# Whitelist style
+*
+!*/
+
 # Directories
-bin/
-stash/
-assets/
-backup/
-glm/
-.ignore/
+!src/**
+!apps/**
+!shaders/**
+!external/*
 
 # Files
-scratch.h
-*.md
+.gitignore
