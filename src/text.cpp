@@ -36,7 +36,8 @@ stbtt_aligned_quad quads_aligned[CHAR_COUNT];
 
 arena text_buffer_init(arena *parent, u32 vertex_count)
 {
-  arena a = subarena_init( parent, vertex_count * sizeof(char_vertex) );
+  size_t byte_count = vertex_count * sizeof(char_vertex);
+  arena a = subarena_init( parent, byte_count );
   return a;
 }
 
