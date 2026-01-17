@@ -36,7 +36,7 @@ stbtt_aligned_quad quads_aligned[CHAR_COUNT];
 
 arena text_buffer_init(arena *parent, u32 vertex_count)
 {
-  arena a = subarena_for(parent, vertex_count, char_vertex);
+  arena a = subarena_init( parent, vertex_count * sizeof(char_vertex) );
   return a;
 }
 
@@ -103,28 +103,22 @@ char_atlas text_atlas_init(arena *memory, const char * font_file)
 }
 
 
-texture_ptr text_init(arena *memory, const char * font_file)
+texture * text_init(arena *memory, const char * font_file)
 {
   // Create the char atlas bitmap image
   char_atlas atlas = text_atlas_init(memory, font_file);
   // Upload it to GPU texture
-  texture_ptr font_texture = texture2d_init(memory, atlas.image, atlas.width, atlas.height, 1);
+  texture *font_texture = texture2d_init(memory, atlas.image, atlas.width, atlas.height, 1);
   return font_texture;
 }
 
 
 
-rbuffer_ptr text_gpu_init(arena *a, void *cpu_buffer, u32 vert_count)
+rbuffer * text_gpu_init(arena *a, void *cpu_buffer, u32 vert_count)
 {
   // Render stuff
   size_t text_vert_max = vert_count * sizeof(char_vertex); 
-  rbuffer_ptr buffer = render_buffer_dynamic_init(
-    a,
-    BUFF_VERTS,
-    cpu_buffer,
-    sizeof(f32)*9,
-    text_vert_max
-  );
+  rbuffer *buffer = rbuffer_dynamic_init(a, BUFF_VERTS, cpu_buffer, sizeof(char_vertex), text_vert_max);
   // TODO: Fix OpenGL implementation.
   /*
   render_buffer buffer = render_buffer_dynamic_init(nullptr, text_vert_max);
