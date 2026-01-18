@@ -201,7 +201,7 @@ void text_add(arena *a, const char *text, u32 length, i32 window_height, glm::ve
 
 
 
-u32 text_count(arena *a)
+u32 text_vertex_count(arena *a)
 {
   u32 vertex_count = (u32) a->offset_new / sizeof(char_vertex);
   return vertex_count;

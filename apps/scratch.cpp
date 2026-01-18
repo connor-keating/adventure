@@ -283,7 +283,7 @@ void app_update(arena *a)
   render_constant_set( state->world_gpu, 0 );
   rbuffer_update( state->world_gpu, &uicam.proj, sizeof(uicam.proj) );
   shader_set( state->shader[2] );
-  u32 text_vert_count = text_count(&state->tbuffer_cpu);
+  u32 text_vert_count = text_vertex_count(&state->tbuffer_cpu);
   render_draw_ui(text_vert_count);
   frame_render();
 }
