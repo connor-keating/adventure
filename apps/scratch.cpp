@@ -220,8 +220,8 @@ void app_update(arena *a)
   static fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
   entity player = primitive_pyramid( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
   entity grid =   primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 0.0f) );
-  glm::vec3 tpos = glm::vec3(0.0f, 0.0f, 0.0f);
-  f32 text_scale = 2.0f / state->window.height; // NDC
+  glm::vec3 tpos = glm::vec3(0.0f, 50.0f, 0.0f);
+  f32 text_scale = 1.0f; // 2.0f / state->window.height; // NDC
   text_add( &state->tbuffer_cpu, "TEXT!", 5, state->window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
   // Set the UI camera
   f32 aspect = (f32)state->window.width / (f32)state->window.height;
@@ -278,6 +278,8 @@ void app_update(arena *a)
   render_draw_instances(6, 1);
   // Draw text
   rbuffer_vertex_set( 0, state->tbuffer_gpu );
+  render_constant_set( state->world_gpu, 0 );
+  rbuffer_update( state->world_gpu, &uicam.proj, sizeof(uicam.proj) );
   shader_set( state->shader[2] );
   u32 text_vert_count = text_count(&state->tbuffer_cpu);
   render_draw(text_vert_count);

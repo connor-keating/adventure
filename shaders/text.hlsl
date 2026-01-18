@@ -2,6 +2,7 @@
 Texture2D    gTex  : register(t1);
 SamplerState gSamp : register(s1);
 
+
 struct VSIn {
   float3 pos   : POSITION;
   float4 color : COLOR0;
@@ -14,10 +15,16 @@ struct VSOut {
   float2 uv    : TEXCOORD0;
 };
 
+// Constant buffer
+cbuffer camera : register(b0)
+{
+  float4x4 projection;
+};
+
 VSOut VSMain(VSIn i)
 {
   VSOut o;
-  o.pos = float4(i.pos, 1.0);
+  o.pos = mul( projection, float4(i.pos, 1.0) );
   o.color = i.color;
   o.uv  = i.uv;
   return o;
