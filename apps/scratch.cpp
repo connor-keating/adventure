@@ -15,6 +15,7 @@
 
 #define MAX_COUNT_SHADERS  100
 #define MAX_COUNT_VERTEX   1000
+#define MAX_COUNT_TEXT     10000
 #define MAX_COUNT_ENTITIES 100
 
 
@@ -154,12 +155,12 @@ arena app_init()
   // Begin render buffers
   state->vbuffer_cpu  = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(vertex1) );
   state->ebuffer_cpu  = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(u32) );
-  state->tbuffer_cpu  = text_buffer_init( memory, MAX_COUNT_VERTEX );
+  state->tbuffer_cpu  = text_buffer_init( memory, MAX_COUNT_TEXT );
   state->uibuffer_cpu = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(uidata) );
   // Vertex stride: float4 position (16 bytes) + float2 texcoord (8 bytes) = 24 bytes
   state->vbuffer_gpu = rbuffer_dynamic_init( memory, BUFF_VERTS, state->vbuffer_cpu.buffer, sizeof(vertex1), state->vbuffer_cpu.length);
   state->ebuffer_gpu = rbuffer_dynamic_init( memory, BUFF_ELEMS, state->ebuffer_cpu.buffer, sizeof(u32), state->ebuffer_cpu.length);
-  state->tbuffer_gpu = text_gpu_init( memory, state->tbuffer_cpu.buffer, MAX_COUNT_VERTEX );
+  state->tbuffer_gpu = text_gpu_init( memory, state->tbuffer_cpu.buffer, MAX_COUNT_TEXT );
   state->uibuffer_gpu = rbuffer_dynamic_init( memory, BUFF_VERTS, state->uibuffer_cpu.buffer, sizeof(uidata), state->uibuffer_cpu.length);
   // Shaders
   state->shader[0] = shader_init( memory );
@@ -224,11 +225,17 @@ void app_update(arena *a)
   static fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
   entity player = primitive_pyramid( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
   entity grid =   primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 0.0f) );
-  glm::vec3 title_pos = glm::vec3(0.0f, half_height-50.f, 0.0f);
-  glm::vec3 button_pos = glm::vec3(-half_width+5.0f, half_height-50.0f-5.0f, 0.0f);
+  glm::vec3 test_pos1 = glm::vec3( -half_width, half_height-100.f, 0.0f);
+  glm::vec3 test_pos2 = glm::vec3( -half_width, half_height-200.f, 0.0f);
+  glm::vec3 test_pos3 = glm::vec3( -half_width, half_height-300.f, 0.0f);
+  glm::vec3 test_pos4 = glm::vec3( -half_width, half_height-400.f, 0.0f);
   f32 text_scale = 1.0f; // 2.0f / state->window.height; // NDC
-  text_add( &state->tbuffer_cpu, "TITLE!", 6, state->window.height, title_pos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
-  text_add( &state->tbuffer_cpu, "button", 6, state->window.height, button_pos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
+  const char *string = "the quick brown fox jumped over the lazy dog.";
+  u64 str_length = string_length(string);
+  text_add( &state->tbuffer_cpu, string, str_length, state->window.height, test_pos1, 2.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
+  text_add( &state->tbuffer_cpu, string, str_length, state->window.height, test_pos2, 1.5f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
+  text_add( &state->tbuffer_cpu, string, str_length, state->window.height, test_pos3, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
+  text_add( &state->tbuffer_cpu, string, str_length, state->window.height, test_pos4, 0.5f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
   // Set the UI camera
   camera uicam = {};
   uicam.view = identity;
@@ -271,13 +278,13 @@ void app_update(arena *a)
   shader_set( state->shader[1] );
   u32 elem_count = state->ebuffer_cpu.offset_new / sizeof(u32);
   // render_draw_elems( elem_count, 0, 0 );
-  render_draw_elems( grid.count, grid.elem_start, grid.vert_start );
+  // render_draw_elems( grid.count, grid.elem_start, grid.vert_start );
   // Draw UI
   rbuffer_vertex_set( 0, state->uibuffer_gpu );
   render_constant_set( state->cam_ui_gpu, 0 );
   rbuffer_update( state->cam_ui_gpu, &uicam, sizeof(uicam) );
   shader_set( state->shader[0] );
-  render_draw_instances(6, 1);
+  // render_draw_instances(6, 1);
   // Draw text
   rbuffer_vertex_set( 0, state->tbuffer_gpu );
   render_constant_set( state->world_gpu, 0 );
