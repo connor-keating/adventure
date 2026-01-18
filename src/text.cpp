@@ -22,9 +22,9 @@ struct char_vertex
 struct char_atlas
 {
   u8 *image;
-  u32 width     = 512;
-  u32 height    = 512;
-  f32 char_size = 64.0f;
+  u32 width     = 1024;
+  u32 height    = 1024;
+  f32 char_size = 128.0f;
 };
 
 
