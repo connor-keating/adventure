@@ -26,7 +26,7 @@ int is_power_of_two(u64 x)
 }
 
 
-u32 string_length(const char *array)
+u64 string_length(const char *array)
 {
   ASSERT(array, "ERROR: Input a valid string.");
   u32 counter = 0;
@@ -34,9 +34,9 @@ u32 string_length(const char *array)
   while (counter < limit)
   {
     char index = array[counter];
-    counter++;
-    // Putting this last means the length includes the null terminator.
+    // Putting this check here excludes the null terminator.
     if (index == '\0') break;
+    counter++;
   }
   return counter;
 }

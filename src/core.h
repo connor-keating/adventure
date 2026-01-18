@@ -156,7 +156,7 @@ struct string
 
 int is_power_of_two(u64 x);
 
-u32 string_length(char* array);
+u64 string_length(const char* array);
 string string_init(const char *array);
 
 
