@@ -217,17 +217,19 @@ void app_update(arena *a)
   // Reset entity count
   state->entity.total = 0;
   // Game logic
-  static fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
-  entity player = primitive_pyramid( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
-  entity grid =   primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 0.0f) );
-  glm::vec3 tpos = glm::vec3(0.0f, 50.0f, 0.0f);
-  f32 text_scale = 1.0f; // 2.0f / state->window.height; // NDC
-  text_add( &state->tbuffer_cpu, "TEXT!", 5, state->window.height, tpos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
-  // Set the UI camera
   f32 aspect = (f32)state->window.width / (f32)state->window.height;
   f32 half_height = 0.5f * state->window.height;
   f32 half_width = half_height * aspect;
   glm::mat4 identity = glm::mat4(1.0f);
+  static fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
+  entity player = primitive_pyramid( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
+  entity grid =   primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 0.0f) );
+  glm::vec3 title_pos = glm::vec3(0.0f, half_height-50.f, 0.0f);
+  glm::vec3 button_pos = glm::vec3(-half_width+5.0f, half_height-50.0f-5.0f, 0.0f);
+  f32 text_scale = 1.0f; // 2.0f / state->window.height; // NDC
+  text_add( &state->tbuffer_cpu, "TITLE!", 6, state->window.height, title_pos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
+  text_add( &state->tbuffer_cpu, "button", 6, state->window.height, button_pos, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
+  // Set the UI camera
   camera uicam = {};
   uicam.view = identity;
   uicam.proj = glm::ortho( -half_width, half_width, -half_height, half_height, 0.0f, 1.0f );
@@ -282,6 +284,6 @@ void app_update(arena *a)
   rbuffer_update( state->world_gpu, &uicam.proj, sizeof(uicam.proj) );
   shader_set( state->shader[2] );
   u32 text_vert_count = text_count(&state->tbuffer_cpu);
-  render_draw(text_vert_count);
+  render_draw_ui(text_vert_count);
   frame_render();
 }
