@@ -232,10 +232,10 @@ void app_update(arena *a)
   f32 text_scale = 1.0f; // 2.0f / state->window.height; // NDC
   const char *string = "the quick brown fox jumped over the lazy dog.";
   u64 str_length = string_length(string);
-  text_add( &state->tbuffer_cpu, string, str_length, state->window.height, test_pos1, 2.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
-  text_add( &state->tbuffer_cpu, string, str_length, state->window.height, test_pos2, 1.5f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
-  text_add( &state->tbuffer_cpu, string, str_length, state->window.height, test_pos3, 1.0f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
-  text_add( &state->tbuffer_cpu, string, str_length, state->window.height, test_pos4, 0.5f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
+  text_add( &state->tbuffer_cpu, string, str_length, state->window.height, test_pos1, 1.00f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
+  text_add( &state->tbuffer_cpu, string, str_length, state->window.height, test_pos2, 0.75f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
+  text_add( &state->tbuffer_cpu, string, str_length, state->window.height, test_pos3, 0.50f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
+  text_add( &state->tbuffer_cpu, string, str_length, state->window.height, test_pos4, 0.25f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
   // Set the UI camera
   camera uicam = {};
   uicam.view = identity;
