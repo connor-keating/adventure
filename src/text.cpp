@@ -167,7 +167,7 @@ void text_add(arena *a, const char *text, u32 length, i32 window_height, glm::ve
     };
     glm::vec2 glyph_bounds_sw = {
       pos_local.x + (char_pack.xoff * pixel_scale * size),
-      pos_local.y + (char_pack.yoff + char_pack.y1 - char_pack.y0) * pixel_scale * size
+      pos_local.y - (char_pack.yoff + char_pack.y1 - char_pack.y0) * pixel_scale * size
     };
     // The order of vertices of a quad goes top-left, top-right, bottom-left, bottom-right
     glm::vec2 glyph_vertices[4]; 
