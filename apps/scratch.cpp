@@ -21,8 +21,8 @@
 enum shader_names
 {
   SHADER_UI,
-  SHADER_GEOMETRY,
   SHADER_TEXT,
+  SHADER_GEOMETRY,
   SHADER_COUNT,
 };
 
