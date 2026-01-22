@@ -230,12 +230,9 @@ void app_update(arena *a)
   glm::vec3 test_pos3 = glm::vec3( -half_width, half_height-300.f, 0.0f);
   glm::vec3 test_pos4 = glm::vec3( -half_width, half_height-400.f, 0.0f);
   f32 text_scale = 1.0f; // 2.0f / state->window.height; // NDC
-  const char *string = "the quick brown fox jumped over the lazy dog.";
+  const char *string = "Title";
   u64 str_length = string_length(string);
   text_add( &state->tbuffer_cpu, string, str_length, state->window.height, test_pos1, 1.00f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
-  text_add( &state->tbuffer_cpu, string, str_length, state->window.height, test_pos2, 0.75f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
-  text_add( &state->tbuffer_cpu, string, str_length, state->window.height, test_pos3, 0.50f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
-  text_add( &state->tbuffer_cpu, string, str_length, state->window.height, test_pos4, 0.25f, {1.0f, 1.0f, 1.0f, 1.0f}, text_scale);
   // Set the UI camera
   camera uicam = {};
   uicam.view = identity;
@@ -277,14 +274,14 @@ void app_update(arena *a)
   // Draw geometry
   shader_set( state->shader[1] );
   u32 elem_count = state->ebuffer_cpu.offset_new / sizeof(u32);
-  // render_draw_elems( elem_count, 0, 0 );
-  // render_draw_elems( grid.count, grid.elem_start, grid.vert_start );
+  // render_draw_elems( elem_count, 0, 0 ); // This draws everything in the buffer as if its all connected
+  render_draw_elems( grid.count, grid.elem_start, grid.vert_start );
   // Draw UI
   rbuffer_vertex_set( 0, state->uibuffer_gpu );
   render_constant_set( state->cam_ui_gpu, 0 );
   rbuffer_update( state->cam_ui_gpu, &uicam, sizeof(uicam) );
   shader_set( state->shader[0] );
-  // render_draw_instances(6, 1);
+  render_draw_instances(6, 1);
   // Draw text
   rbuffer_vertex_set( 0, state->tbuffer_gpu );
   render_constant_set( state->world_gpu, 0 );
