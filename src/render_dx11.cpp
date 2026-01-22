@@ -58,7 +58,6 @@ struct render_state
 struct render_data
 {
   shaders *s; // Array of shaders. Length set by app.
-  u64 shader_first_available;
 };
 
 global render_state *renderer;
@@ -944,15 +943,6 @@ void texture_bind(texture *tex, u32 slot)
 {
   renderer->context->PSSetShaderResources(slot, 1, &tex->view);
   renderer->context->PSSetSamplers(slot, 1, &tex->sampler);
-}
-
-
-u64 shader_init(arena *a)
-{
-  // Init output
-  u64 available = rdata->shader_first_available;
-  rdata->shader_first_available++;
-  return available;
 }
 
 
