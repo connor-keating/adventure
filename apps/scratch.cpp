@@ -23,6 +23,7 @@ enum shader_names
   SHADER_UI,
   SHADER_TEXT,
   SHADER_GEOMETRY,
+  SHADER_GRID,
   SHADER_COUNT,
 };
 
@@ -173,9 +174,9 @@ arena app_init()
   shader_load( SHADER_UI, VERTEX, "shaders/ui.hlsl", "VSMain", "vs_5_0");
   shader_load( SHADER_UI, PIXEL,  "shaders/ui.hlsl", "PSMain", "ps_5_0");
   rbuffer_vertex_describe(SHADER_UI, VERTEX_UI);
-  shader_load( SHADER_GEOMETRY, VERTEX, "shaders/game.hlsl", "VSMain", "vs_5_0");
-  shader_load( SHADER_GEOMETRY, PIXEL,  "shaders/game.hlsl", "PSMain", "ps_5_0");
-  rbuffer_vertex_describe(SHADER_GEOMETRY, VERTEX_WORLD);
+  shader_load( SHADER_GRID, VERTEX, "shaders/grid.hlsl", "VSMain", "vs_5_0");
+  shader_load( SHADER_GRID, PIXEL,  "shaders/grid.hlsl", "PSMain", "ps_5_0");
+  rbuffer_vertex_describe(SHADER_GRID, VERTEX_WORLD);
   shader_load( SHADER_TEXT, VERTEX, "shaders/text.hlsl", "VSMain", "vs_5_0");
   shader_load( SHADER_TEXT, PIXEL,  "shaders/text.hlsl", "PSMain", "ps_5_0");
   rbuffer_vertex_describe(SHADER_TEXT, VERTEX_WORLD);
@@ -276,7 +277,7 @@ void app_update(arena *a)
   // Set index buffer
   rbuffer_index_set( state->ebuffer_gpu );
   // Draw geometry
-  shader_set( SHADER_GEOMETRY );
+  shader_set( SHADER_GRID );
   u32 elem_count = state->ebuffer_cpu.offset_new / sizeof(u32);
   // render_draw_elems( elem_count, 0, 0 ); // This draws everything in the buffer as if its all connected
   render_draw_elems( grid.count, grid.elem_start, grid.vert_start );
