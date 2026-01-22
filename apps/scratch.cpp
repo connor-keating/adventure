@@ -13,10 +13,18 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#define MAX_COUNT_SHADERS  100
 #define MAX_COUNT_VERTEX   1000
 #define MAX_COUNT_TEXT     10000
 #define MAX_COUNT_ENTITIES 100
+
+
+enum shader_names
+{
+  SHADER_UI,
+  SHADER_GEOMETRY,
+  SHADER_TEXT,
+  SHADER_COUNT,
+};
 
 
 struct camera
@@ -61,7 +69,6 @@ struct appstate
   rbuffer            *cam_game_gpu;
   rbuffer            *world_gpu;
   input_state         inputs[KEY_COUNT];
-  u64                 shader[MAX_COUNT_SHADERS];
   entities            entity;
 };
 
@@ -151,7 +158,7 @@ arena app_init()
   state->window = platform_window_init();
   // Initialize renderer
   render_init(memory);
-  render_data_init( memory, MAX_COUNT_SHADERS );
+  render_data_init( memory, SHADER_COUNT );
   // Begin render buffers
   state->vbuffer_cpu  = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(vertex1) );
   state->ebuffer_cpu  = subarena_init( memory, MAX_COUNT_VERTEX * sizeof(u32) );
@@ -163,18 +170,15 @@ arena app_init()
   state->tbuffer_gpu = text_gpu_init( memory, state->tbuffer_cpu.buffer, MAX_COUNT_TEXT );
   state->uibuffer_gpu = rbuffer_dynamic_init( memory, BUFF_VERTS, state->uibuffer_cpu.buffer, sizeof(uidata), state->uibuffer_cpu.length);
   // Shaders
-  state->shader[0] = shader_init( memory );
-  shader_load( state->shader[0], VERTEX, "shaders/ui.hlsl", "VSMain", "vs_5_0");
-  shader_load( state->shader[0], PIXEL,  "shaders/ui.hlsl", "PSMain", "ps_5_0");
-  rbuffer_vertex_describe(0, VERTEX_UI);
-  state->shader[1] = shader_init( memory );
-  shader_load( state->shader[1], VERTEX, "shaders/game.hlsl", "VSMain", "vs_5_0");
-  shader_load( state->shader[1], PIXEL,  "shaders/game.hlsl", "PSMain", "ps_5_0");
-  rbuffer_vertex_describe(1, VERTEX_WORLD);
-  state->shader[2] = shader_init( memory );
-  shader_load( state->shader[2], VERTEX, "shaders/text.hlsl", "VSMain", "vs_5_0");
-  shader_load( state->shader[2], PIXEL,  "shaders/text.hlsl", "PSMain", "ps_5_0");
-  rbuffer_vertex_describe(2, VERTEX_WORLD);
+  shader_load( SHADER_UI, VERTEX, "shaders/ui.hlsl", "VSMain", "vs_5_0");
+  shader_load( SHADER_UI, PIXEL,  "shaders/ui.hlsl", "PSMain", "ps_5_0");
+  rbuffer_vertex_describe(SHADER_UI, VERTEX_UI);
+  shader_load( SHADER_GEOMETRY, VERTEX, "shaders/game.hlsl", "VSMain", "vs_5_0");
+  shader_load( SHADER_GEOMETRY, PIXEL,  "shaders/game.hlsl", "PSMain", "ps_5_0");
+  rbuffer_vertex_describe(SHADER_GEOMETRY, VERTEX_WORLD);
+  shader_load( SHADER_TEXT, VERTEX, "shaders/text.hlsl", "VSMain", "vs_5_0");
+  shader_load( SHADER_TEXT, PIXEL,  "shaders/text.hlsl", "PSMain", "ps_5_0");
+  rbuffer_vertex_describe(SHADER_TEXT, VERTEX_WORLD);
   // Cameras
   state->cam_ui_gpu   = rbuffer_dynamic_init( memory, BUFF_CONST, nullptr, 0, sizeof(camera) );
   state->cam_game_gpu = rbuffer_dynamic_init( memory, BUFF_CONST, nullptr, 0, sizeof(camera) );
@@ -272,7 +276,7 @@ void app_update(arena *a)
   // Set index buffer
   rbuffer_index_set( state->ebuffer_gpu );
   // Draw geometry
-  shader_set( state->shader[1] );
+  shader_set( SHADER_GEOMETRY );
   u32 elem_count = state->ebuffer_cpu.offset_new / sizeof(u32);
   // render_draw_elems( elem_count, 0, 0 ); // This draws everything in the buffer as if its all connected
   render_draw_elems( grid.count, grid.elem_start, grid.vert_start );
@@ -280,13 +284,13 @@ void app_update(arena *a)
   rbuffer_vertex_set( 0, state->uibuffer_gpu );
   render_constant_set( state->cam_ui_gpu, 0 );
   rbuffer_update( state->cam_ui_gpu, &uicam, sizeof(uicam) );
-  shader_set( state->shader[0] );
+  shader_set( SHADER_UI );
   render_draw_instances(6, 1);
   // Draw text
   rbuffer_vertex_set( 0, state->tbuffer_gpu );
   render_constant_set( state->world_gpu, 0 );
   rbuffer_update( state->world_gpu, &uicam.proj, sizeof(uicam.proj) );
-  shader_set( state->shader[2] );
+  shader_set( SHADER_TEXT );
   u32 text_vert_count = text_vertex_count(&state->tbuffer_cpu);
   render_draw_ui(text_vert_count);
   frame_render();
