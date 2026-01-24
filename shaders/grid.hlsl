@@ -1,5 +1,16 @@
-struct vertex_in  { float3 pos : POSITION0; float4 col : COLOR0; float2 texcoord : TEXCOORD0; };
-struct vertex_out { float4 pos : SV_POSITION; float2 uv : TEXCOORD0; };
+struct vertex_in
+{ 
+  float3 pos : POSITION0;
+  float4 col : COLOR0;
+  float2 texcoord : TEXCOORD0;
+};
+
+struct vertex_out
+{ 
+  float4 pos : SV_POSITION;
+  float2 uv : TEXCOORD0;
+  float3 world_pos : WORLD0;
+};
 
 cbuffer camera : register(b0)
 {
@@ -50,6 +61,36 @@ float4 grid_local(float cell_count, float line_width, float2 pos)
   return color;
 }
 
+float4 grid_world(float3 world_pos)
+{
+  // Constants
+  float thin_width = 0.02f;   // Thin line thickness in world units
+  float thick_width = 0.04f;  // Major line thickness in world units
+  float major_spacing = 5.0f; // Major lines every N units
+  float4 line_thick_color = float4(1.0f, 1.0f, 1.0f, 1.0f);
+  float4 line_thin_color = float4(0.5f, 0.5f, 0.5f, 1.0f);
+  float4 cell_color = float4(0.0f, 0.0f, 0.0f, 1.0f);
+
+  // Distance to nearest grid line (1 unit spacing)
+  float2 dist_to_line = abs(world_pos.xz - round(world_pos.xz));
+
+  // Distance to nearest major grid line (N unit spacing)
+  float2 major_pos = world_pos.xz / major_spacing;
+  float2 dist_to_major = abs(major_pos - round(major_pos)) * major_spacing;
+
+  // Determine color based on proximity to lines
+  float4 color = cell_color;
+  if (dist_to_line.x < thin_width || dist_to_line.y < thin_width)
+  {
+    color = line_thin_color;
+  }
+  if (dist_to_major.x < thick_width || dist_to_major.y < thick_width)
+  {
+    color = line_thick_color;
+  }
+
+  return color;
+}
 
 vertex_out VSMain( vertex_in input )
 {
@@ -57,16 +98,14 @@ vertex_out VSMain( vertex_in input )
   float4 out_position = mul(proj, mul(view, world_position));
   vertex_out output = {
     out_position,
-    input.texcoord
+    input.texcoord,
+    world_position.xyz
   };
   return output;
 }
 
 float4 PSMain(vertex_out input) : SV_TARGET
 {
-  // Settings: 10x10 grid, major lines every 2 cells
-  float grid_count = 10.0f;
-  float line_width = 0.02f;
-  float4 color = grid_local(grid_count, line_width, input.uv);
+  float4 color = grid_world(input.world_pos);
   return color;
 }
