@@ -254,15 +254,22 @@ void app_update(arena *a)
   rbuffer_update( state->cam_game_gpu, &game_cam, sizeof(game_cam) );
   // Update world transform
   render_constant_set(state->world_gpu, 1);
-  static f32 angle = 0.0f;
-  f32 angle_velocity = PI/4.0f;
-  angle += angle_velocity * state->timer.delta; // rad += (rad/s)*s
-  // wrap angle so it doesn't explode
-  if (angle > 2.0*PI) angle -= 2.0*PI;
+  static f32 theta = 0.0f;
+  f32 theta_velocity = PI/4.0f;
+  theta += theta_velocity * state->timer.delta; // rad += (rad/s)*s
+  // wrap theta so it doesn't explode
+  if (theta > 2.0*PI) theta -= 2.0*PI;
   glm::vec3 rotation_axis = glm::vec3(0.0f, 1.0f, 0.0f); // Y-axis
   glm::mat4 pyramid_world = identity;
-  pyramid_world =  glm::rotate(identity, angle, rotation_axis) * pyramid_world;
-  pyramid_world =  glm::translate(identity, glm::vec3(-5.0f, 0.0f, 0.0f)) * pyramid_world;
+  pyramid_world = glm::rotate(identity, theta, rotation_axis) * pyramid_world;
+  pyramid_world = glm::rotate(identity, PI, glm::vec3(1.0f, 0.0f, 0.0f) ) * pyramid_world;
+  // Translate the pyramid in a circle (XZ)
+  f32 radius = 5.0f;
+  f32 angle = -theta;
+  glm::vec2 position = glm::vec2(0.0f);
+  position.x = radius * sinf(angle);
+  position.y = radius * cosf(angle);
+  pyramid_world =  glm::translate(identity, glm::vec3(position.x, 1.0f, position.y)) * pyramid_world;
   glm::mat4 grid_world = identity;  // Ground plane already in XZ, no transform needed
   // Add UI elements
   uidata *test = arena_push_struct(&state->uibuffer_cpu, uidata);
