@@ -260,7 +260,9 @@ void app_update(arena *a)
   // wrap angle so it doesn't explode
   if (angle > 2.0*PI) angle -= 2.0*PI;
   glm::vec3 rotation_axis = glm::vec3(0.0f, 1.0f, 0.0f); // Y-axis
-  glm::mat4 pyramid_world = glm::rotate(glm::mat4(1.0f), angle, rotation_axis);
+  glm::mat4 pyramid_world = identity;
+  pyramid_world =  glm::rotate(identity, angle, rotation_axis) * pyramid_world;
+  pyramid_world =  glm::translate(identity, glm::vec3(-5.0f, 0.0f, 0.0f)) * pyramid_world;
   glm::mat4 grid_world = identity;  // Ground plane already in XZ, no transform needed
   // Add UI elements
   uidata *test = arena_push_struct(&state->uibuffer_cpu, uidata);
