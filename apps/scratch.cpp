@@ -177,6 +177,9 @@ arena app_init()
   shader_load( SHADER_GRID, VERTEX, "shaders/grid.hlsl", "VSMain", "vs_5_0");
   shader_load( SHADER_GRID, PIXEL,  "shaders/grid.hlsl", "PSMain", "ps_5_0");
   rbuffer_vertex_describe(SHADER_GRID, VERTEX_WORLD);
+  shader_load( SHADER_GEOMETRY, VERTEX, "shaders/game.hlsl", "VSMain", "vs_5_0");
+  shader_load( SHADER_GEOMETRY, PIXEL,  "shaders/game.hlsl", "PSMain", "ps_5_0");
+  rbuffer_vertex_describe(SHADER_GEOMETRY, VERTEX_WORLD);
   shader_load( SHADER_TEXT, VERTEX, "shaders/text.hlsl", "VSMain", "vs_5_0");
   shader_load( SHADER_TEXT, PIXEL,  "shaders/text.hlsl", "PSMain", "ps_5_0");
   rbuffer_vertex_describe(SHADER_TEXT, VERTEX_WORLD);
@@ -244,7 +247,7 @@ void app_update(arena *a)
   uicam.proj = glm::ortho( -half_width, half_width, -half_height, half_height, 0.0f, 1.0f );
   uicam.pos  = glm::vec3(0.0f, 0.0f, 0.0f);
   camera game_cam = {};
-  game_cam.pos = glm::vec3(0.0f, 2.0f, -3.0f);
+  game_cam.pos = glm::vec3( -8.0f, 8.0f, -8.0f);
   game_cam.view = glm::lookAt(game_cam.pos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
   game_cam.proj = glm::perspective( 45.0f, aspect, 0.1f, 100.0f);
   render_constant_set( state->cam_game_gpu, 0 );
@@ -259,7 +262,6 @@ void app_update(arena *a)
   glm::vec3 rotation_axis = glm::vec3(0.0f, 1.0f, 0.0f); // Y-axis
   glm::mat4 pyramid_world = glm::rotate(glm::mat4(1.0f), angle, rotation_axis);
   glm::mat4 grid_world = identity;  // Ground plane already in XZ, no transform needed
-  rbuffer_update( state->world_gpu, &grid_world, sizeof(grid_world) );
   // Add UI elements
   uidata *test = arena_push_struct(&state->uibuffer_cpu, uidata);
   test->col = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
@@ -277,9 +279,11 @@ void app_update(arena *a)
   rbuffer_index_set( state->ebuffer_gpu );
   // Draw geometry
   shader_set( SHADER_GRID );
-  u32 elem_count = state->ebuffer_cpu.offset_new / sizeof(u32);
-  // render_draw_elems( elem_count, 0, 0 ); // This draws everything in the buffer as if its all connected
+  rbuffer_update( state->world_gpu, &grid_world, sizeof(grid_world) );
   render_draw_elems( grid.count, grid.elem_start, grid.vert_start );
+  shader_set( SHADER_GEOMETRY );
+  rbuffer_update( state->world_gpu, &pyramid_world, sizeof(pyramid_world) );
+  render_draw_elems( player.count, player.elem_start, player.vert_start );
   // Draw UI
   rbuffer_vertex_set( 0, state->uibuffer_gpu );
   render_constant_set( state->cam_ui_gpu, 0 );
