@@ -229,7 +229,7 @@ void app_update(arena *a)
   glm::mat4 identity = glm::mat4(1.0f);
   static fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
   entity player = primitive_pyramid( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
-  entity grid =   primitive_box2d( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 0.0f) );
+  entity grid =   primitive_ground_plane( &state->vbuffer_cpu, &state->ebuffer_cpu, 100.0f );  // 100x100 unit ground
   glm::vec3 test_pos1 = glm::vec3( -half_width, half_height-100.f, 0.0f);
   glm::vec3 test_pos2 = glm::vec3( -half_width, half_height-200.f, 0.0f);
   glm::vec3 test_pos3 = glm::vec3( -half_width, half_height-300.f, 0.0f);
@@ -258,8 +258,7 @@ void app_update(arena *a)
   if (angle > 2.0*PI) angle -= 2.0*PI;
   glm::vec3 rotation_axis = glm::vec3(0.0f, 1.0f, 0.0f); // Y-axis
   glm::mat4 pyramid_world = glm::rotate(glm::mat4(1.0f), angle, rotation_axis);
-  glm::vec3 grid_axis = glm::vec3(1.0f, 0.0f, 0.0f);
-  glm::mat4 grid_world = glm::rotate( identity,-80.0f, grid_axis);
+  glm::mat4 grid_world = identity;  // Ground plane already in XZ, no transform needed
   rbuffer_update( state->world_gpu, &grid_world, sizeof(grid_world) );
   // Add UI elements
   uidata *test = arena_push_struct(&state->uibuffer_cpu, uidata);
