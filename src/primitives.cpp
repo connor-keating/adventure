@@ -159,6 +159,15 @@ entity primitive_box3d( arena *vbuffer, arena *ebuffer )
   verts[5].col = fvec4_init(1.0f, 0.0f, 1.0f, 1.0f);
   verts[6].col = fvec4_init(0.0f, 1.0f, 1.0f, 1.0f);
   verts[7].col = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
+  // UV (mapping X→U, Y→V)
+  verts[0].tex = fvec2_init(0.0f, 0.0f);
+  verts[1].tex = fvec2_init(1.0f, 1.0f);
+  verts[2].tex = fvec2_init(0.0f, 1.0f);
+  verts[3].tex = fvec2_init(1.0f, 0.0f);
+  verts[4].tex = fvec2_init(1.0f, 1.0f);
+  verts[5].tex = fvec2_init(1.0f, 0.0f);
+  verts[6].tex = fvec2_init(0.0f, 0.0f);
+  verts[7].tex = fvec2_init(0.0f, 1.0f);
   // Elements
   u32 elems[36] = {
     0, 1, 2, // tri 1
