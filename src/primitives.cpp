@@ -137,38 +137,59 @@ entity primitive_pyramid( arena *vbuffer, arena *ebuffer, fvec4 color )
   return output;
 }
 
-void primitive_box3d( arena *vbuffer, arena *ebuffer )
+entity primitive_box3d( arena *vbuffer, arena *ebuffer )
 {
+  entity output = {};
   // Vertices
-  f32 verts[] = {
-      // positions      // color fvec4           // tex fvec2
-    -1.0f,-1.0f,-1.0f,  0.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f,
-     1.0f,-1.0f,-1.0f,  1.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f,
-     1.0f, 1.0f,-1.0f,  0.0f, 1.0f, 0.0f, 1.0f,  0.0f, 0.0f,
-    -1.0f, 1.0f,-1.0f,  0.0f, 0.0f, 1.0f, 1.0f,  0.0f, 0.0f,
-    -1.0f,-1.0f, 1.0f,  1.0f, 1.0f, 0.0f, 1.0f,  0.0f, 0.0f,
-     1.0f,-1.0f, 1.0f,  1.0f, 0.0f, 1.0f, 1.0f,  0.0f, 0.0f,
-     1.0f, 1.0f, 1.0f,  0.0f, 1.0f, 1.0f, 1.0f,  0.0f, 0.0f,
-    -1.0f, 1.0f, 1.0f,  1.0f, 1.0f, 1.0f, 1.0f,  0.0f, 0.0f,
-  };
+  vertex1 verts[8] = {};
+  verts[0].pos = fvec3_init(-1.0f, -1.0f, -1.0f);
+  verts[1].pos = fvec3_init( 1.0f,  1.0f, -1.0f);
+  verts[2].pos = fvec3_init(-1.0f,  1.0f, -1.0f);
+  verts[3].pos = fvec3_init( 1.0f, -1.0f, -1.0f);
+  verts[4].pos = fvec3_init( 1.0f,  1.0f,  1.0f);
+  verts[5].pos = fvec3_init( 1.0f, -1.0f,  1.0f);
+  verts[6].pos = fvec3_init(-1.0f, -1.0f,  1.0f);
+  verts[7].pos = fvec3_init(-1.0f,  1.0f,  1.0f);
+  // Colors
+  verts[0].col = fvec4_init(1.0f, 1.0f, 1.0f, 1.0f);
+  verts[1].col = fvec4_init(1.0f, 0.0f, 0.0f, 1.0f);
+  verts[2].col = fvec4_init(0.0f, 1.0f, 0.0f, 1.0f);
+  verts[3].col = fvec4_init(0.0f, 0.0f, 1.0f, 1.0f);
+  verts[4].col = fvec4_init(1.0f, 1.0f, 0.0f, 1.0f);
+  verts[5].col = fvec4_init(1.0f, 0.0f, 1.0f, 1.0f);
+  verts[6].col = fvec4_init(0.0f, 1.0f, 1.0f, 1.0f);
+  verts[7].col = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
   // Elements
-  u32 elems[] = {
-    0,1, 1,2, 2,3, 3,0,        // bottom
-    4,5, 5,6, 6,7, 7,4,        // top
-    0,4, 1,5, 2,6, 3,7         // verticals
+  u32 elems[36] = {
+    0, 1, 2, // tri 1
+    0, 3, 1, // tri 2
+    1, 3, 4, // tri 3
+    3, 5, 4, // tri 4
+    4, 5, 6, // tri 5
+    4, 6, 7, // tri 6
+    7, 0, 2, // tri 7
+    0, 7, 6, // tri 8
+    // Top
+    1, 4, 2,
+    4, 7, 2,
+    // Bottom
+    0, 6, 3,
+    3, 6, 5,
   };
-  u32 vert_count = sizeof(verts) / ( sizeof(vertex1) );
+  // Get and set vertex and element starting position in arena
+  u32 vert_count = ARRAY_COUNT(verts);
   u32 elem_count = ARRAY_COUNT(elems);
-  vertex1 *vertices = arena_push_array(vbuffer, vert_count, vertex1);
-  u32     *elements = arena_push_array(ebuffer, elem_count, u32);
-  memcpy(vertices, verts, sizeof(verts));
-  memcpy(elements, elems, sizeof(elems));
-  /*
-  f32 *vtemp = arena_push_array( vbuffer, 216, f32 );
-  u32 *etemp = arena_push_array( ebuffer,  36, u32 );
+  u32 verts_loaded_count = vbuffer->offset_new / sizeof(vertex1);
+  u32 elems_loaded_count = ebuffer->offset_new / sizeof(u32);
+  output.vert_start = verts_loaded_count;
+  output.elem_start = elems_loaded_count;
+  output.count = elem_count;
+  // Load data into arena
+  vertex1 *vtemp = arena_push_array( vbuffer, vert_count, vertex1 );
+  u32     *etemp = arena_push_array( ebuffer, elem_count, u32 );
   memcpy( vtemp, verts, sizeof(verts) );
   memcpy( etemp, elems, sizeof(elems) );
-  */
+  return output;
 }
 
 void primitive_quad_fullscreen( arena *vbuffer, arena *ebuffer )
