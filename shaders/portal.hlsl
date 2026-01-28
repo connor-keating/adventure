@@ -1,4 +1,6 @@
 
+#define PI 	3.14159265358979323846f
+
 struct vertex_in  { float3 pos : POSITION0; float4 col : COLOR0; float2 texcoord : TEXCOORD0; };
 struct vertex_out { float4 pos : SV_POSITION; float4 col : COLOR; float2 texcoord : TEXCOORD0; };
 
@@ -35,13 +37,13 @@ float4 PSMain(vertex_out input) : SV_TARGET
   float2 uv = input.texcoord;
 
   // Two colors to blend between
-  float4 color1 = float4(0.2f, 0.0f, 0.8f, 1.0f);  // purple
+  float4 color1 = float4(0.2f, 0.0f, 0.8f, 0.0f);  // purple
   float4 color2 = float4(0.0f, 0.8f, 0.8f, 1.0f);  // cyan
 
   // Sin wave along Y axis (frequency controls number of bands)
-  float frequency = 10.0f;
+  float frequency = 5.0f;
   float speed = 0.5f;
-  float wave = sin((uv.y - dt * speed) * frequency * 3.14159f);
+  float wave = sin((uv.y - dt * speed) * frequency * PI);
 
   // Map from [-1, 1] to [0, 1] for blending
   float blend = wave * 0.5f + 0.5f;
