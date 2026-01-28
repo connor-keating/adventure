@@ -7,7 +7,7 @@ cbuffer camera : register(b0)
   float4x4 view;
   float4x4 proj;
   float3   pos;
-  float    _pad;
+  float    dt;
 };
 
 cbuffer transform : register(b1)
@@ -33,6 +33,20 @@ vertex_out VSMain( vertex_in input )
 float4 PSMain(vertex_out input) : SV_TARGET
 {
   float2 uv = input.texcoord;
-  float4 color = float4(uv.x, uv.y, 0.0f, 1.0f);
+
+  // Two colors to blend between
+  float4 color1 = float4(0.2f, 0.0f, 0.8f, 1.0f);  // purple
+  float4 color2 = float4(0.0f, 0.8f, 0.8f, 1.0f);  // cyan
+
+  // Sin wave along Y axis (frequency controls number of bands)
+  float frequency = 10.0f;
+  float speed = 0.5f;
+  float wave = sin((uv.y - dt * speed) * frequency * 3.14159f);
+
+  // Map from [-1, 1] to [0, 1] for blending
+  float blend = wave * 0.5f + 0.5f;
+
+  // Lerp between the two colors
+  float4 color = lerp(color1, color2, blend);
   return color;
 }
