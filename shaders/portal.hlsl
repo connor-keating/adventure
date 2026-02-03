@@ -37,7 +37,7 @@ float4 PSMain(vertex_out input) : SV_TARGET
   float2 uv = input.texcoord;
 
   // Two colors to blend between
-  float4 color1 = float4(0.2f, 0.0f, 0.8f, 0.0f);  // purple
+  float4 color1 = float4(1.0f, 1.0f, 1.0f, 1.0f);  // purple
   float4 color2 = float4(0.0f, 0.8f, 0.8f, 1.0f);  // cyan
 
   // Sin wave along Y axis (frequency controls number of bands)

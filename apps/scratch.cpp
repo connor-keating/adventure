@@ -24,6 +24,7 @@ enum shader_names
   SHADER_TEXT,
   SHADER_GEOMETRY,
   SHADER_GRID,
+  SHADER_PORTAL,
   SHADER_COUNT,
 };
 
@@ -33,7 +34,7 @@ struct camera
   glm::mat4 view;  // 64 bytes
   glm::mat4 proj;  // 64 bytes
   glm::vec3 pos;   // 12 bytes
-  f32 _padding;    // 4 bytes → pad to 16-byte multiple
+  f32 delta_time;  // 4 bytes (needed padding, so adding delta time is convenient here.)
 };
 
 
@@ -180,6 +181,9 @@ arena app_init()
   shader_load( SHADER_GEOMETRY, VERTEX, "shaders/game.hlsl", "VSMain", "vs_5_0");
   shader_load( SHADER_GEOMETRY, PIXEL,  "shaders/game.hlsl", "PSMain", "ps_5_0");
   rbuffer_vertex_describe(SHADER_GEOMETRY, VERTEX_WORLD);
+  shader_load( SHADER_PORTAL, VERTEX, "shaders/portal.hlsl", "VSMain", "vs_5_0");
+  shader_load( SHADER_PORTAL, PIXEL,  "shaders/portal.hlsl", "PSMain", "ps_5_0");
+  rbuffer_vertex_describe(SHADER_PORTAL, VERTEX_WORLD);
   shader_load( SHADER_TEXT, VERTEX, "shaders/text.hlsl", "VSMain", "vs_5_0");
   shader_load( SHADER_TEXT, PIXEL,  "shaders/text.hlsl", "PSMain", "ps_5_0");
   rbuffer_vertex_describe(SHADER_TEXT, VERTEX_WORLD);
@@ -232,7 +236,8 @@ void app_update(arena *a)
   glm::mat4 identity = glm::mat4(1.0f);
   static fvec4 frame_background = fvec4_init(0.0f, 0.0f, 0.0f, 1.0f);
   entity player = primitive_pyramid( &state->vbuffer_cpu, &state->ebuffer_cpu, fvec4_init(1.0f, 0.0f, 0.0f, 1.0f) );
-  entity grid =   primitive_ground_plane( &state->vbuffer_cpu, &state->ebuffer_cpu, 100.0f );  // 100x100 unit ground
+  entity grid = primitive_ground_plane( &state->vbuffer_cpu, &state->ebuffer_cpu, 100.0f );  // 100x100 unit ground
+  entity portal = primitive_box3d( &state->vbuffer_cpu, &state->ebuffer_cpu );
   glm::vec3 test_pos1 = glm::vec3( -half_width, half_height-100.f, 0.0f);
   glm::vec3 test_pos2 = glm::vec3( -half_width, half_height-200.f, 0.0f);
   glm::vec3 test_pos3 = glm::vec3( -half_width, half_height-300.f, 0.0f);
@@ -246,16 +251,25 @@ void app_update(arena *a)
   uicam.view = identity;
   uicam.proj = glm::ortho( -half_width, half_width, -half_height, half_height, 0.0f, 1.0f );
   uicam.pos  = glm::vec3(0.0f, 0.0f, 0.0f);
+  uicam.delta_time = state->timer.delta;
   camera game_cam = {};
-  game_cam.pos = glm::vec3( -8.0f, 8.0f, -8.0f);
+  game_cam.pos = glm::vec3(  0.0f, 0.0f, -6.0f);
   game_cam.view = glm::lookAt(game_cam.pos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
   game_cam.proj = glm::perspective( 45.0f, aspect, 0.1f, 100.0f);
+  // Phase accumulation for shader animation (wraps at 2π to avoid precision loss)
+  constexpr f32 TWO_PI = 6.28318530718f;
+  static f32 wave_phase = 0.0f;
+  wave_phase += state->timer.delta;
+  if (wave_phase > TWO_PI) {
+    wave_phase -= TWO_PI;
+  }
+  game_cam.delta_time = wave_phase;
   render_constant_set( state->cam_game_gpu, 0 );
   rbuffer_update( state->cam_game_gpu, &game_cam, sizeof(game_cam) );
   // Update world transform
   render_constant_set(state->world_gpu, 1);
   static f32 theta = 0.0f;
-  f32 theta_velocity = PI/4.0f;
+  f32 theta_velocity =  PI/2.0f;
   theta += theta_velocity * state->timer.delta; // rad += (rad/s)*s
   // wrap theta so it doesn't explode
   if (theta > 2.0*PI) theta -= 2.0*PI;
@@ -270,6 +284,12 @@ void app_update(arena *a)
   position.x = radius * sinf(angle);
   position.y = radius * cosf(angle);
   pyramid_world =  glm::translate(identity, glm::vec3(position.x, 1.0f, position.y)) * pyramid_world;
+  // Portal position
+  glm::mat4 portal_world = identity;
+  portal_world *= glm::scale(identity, glm::vec3(1.0f, 2.0f, 1.0f));
+  // portal_world *= glm::rotate(identity, theta, rotation_axis);
+  // portal_world *= glm::translate(identity, glm::vec3(0.0f, 1.1f, 0.0f));
+  // Ground plane
   glm::mat4 grid_world = identity;  // Ground plane already in XZ, no transform needed
   // Add UI elements
   uidata *test = arena_push_struct(&state->uibuffer_cpu, uidata);
@@ -280,6 +300,7 @@ void app_update(arena *a)
   rbuffer_update( state->ebuffer_gpu, state->ebuffer_cpu.buffer, state->ebuffer_cpu.offset_new );
   rbuffer_update( state->tbuffer_gpu, state->tbuffer_cpu.buffer, state->tbuffer_cpu.offset_new );
   rbuffer_update( state->uibuffer_gpu, state->uibuffer_cpu.buffer, state->uibuffer_cpu.offset_new );
+  render_constant_set(state->world_gpu, 2);
   // Begin frame rendering
   frame_init(frame_background.array);
   // Set vertex buffer
@@ -289,22 +310,25 @@ void app_update(arena *a)
   // Draw geometry
   shader_set( SHADER_GRID );
   rbuffer_update( state->world_gpu, &grid_world, sizeof(grid_world) );
-  render_draw_elems( grid.count, grid.elem_start, grid.vert_start );
+  // render_draw_elems( grid.count, grid.elem_start, grid.vert_start );
   shader_set( SHADER_GEOMETRY );
   rbuffer_update( state->world_gpu, &pyramid_world, sizeof(pyramid_world) );
-  render_draw_elems( player.count, player.elem_start, player.vert_start );
+  // render_draw_elems( player.count, player.elem_start, player.vert_start );
+  shader_set( SHADER_PORTAL );
+  rbuffer_update( state->world_gpu, &portal_world, sizeof(portal_world) );
+  render_draw_elems( portal.count, portal.elem_start, portal.vert_start );
   // Draw UI
   rbuffer_vertex_set( 0, state->uibuffer_gpu );
   render_constant_set( state->cam_ui_gpu, 0 );
   rbuffer_update( state->cam_ui_gpu, &uicam, sizeof(uicam) );
   shader_set( SHADER_UI );
-  render_draw_instances(6, 1);
+  // render_draw_instances(6, 1);
   // Draw text
   rbuffer_vertex_set( 0, state->tbuffer_gpu );
   render_constant_set( state->world_gpu, 0 );
   rbuffer_update( state->world_gpu, &uicam.proj, sizeof(uicam.proj) );
   shader_set( SHADER_TEXT );
   u32 text_vert_count = text_vertex_count(&state->tbuffer_cpu);
-  render_draw_ui(text_vert_count);
+  // render_draw_ui(text_vert_count);
   frame_render();
 }
